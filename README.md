@@ -2,6 +2,14 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
+Firstly import the required packages by running the following command on terminal:
+
+```bash
+npm i
+#or
+npm install
+```
+
 First, run the development server:
 
 ```bash
