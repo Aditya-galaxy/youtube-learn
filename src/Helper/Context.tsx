@@ -1,16 +1,18 @@
 "use client";
-import React, {useState} from "react";
+import React, {useState, useContext} from "react";
 import { createContext } from "react";
 import { ReactNode } from "react";
 
-interface Video {
-    id: string;
-    title: string;
-    thumbnail: string;
-    duration: string;
-    channelName: string;
-    views: string;
-    publishedAt: string;
+export interface Video {
+  id: string;
+  title: string;
+  thumbnail: string;
+  duration: string;
+  channelName: string;
+  views: string;
+  publishedAt: string;
+  watched: boolean;
+  inLibrary: boolean;
 }
 
 interface SearchEvent extends React.FormEvent<HTMLFormElement> { }
@@ -26,12 +28,14 @@ interface AppContextType {
   setSearchQuery: React.Dispatch<React.SetStateAction<string>>;
   handleSearch: (e: SearchEvent) => void;
   handleVideoClick: (video: Video) => void;
+  addVideoToLibrary: (video: Video) => void;
+  removeVideoFromLibrary: (videoId: string) => void;
 }
 
 export const AppContext = createContext<AppContextType | null>(null);
 
 const Context = ({ children }: { children: ReactNode }) => {
-  const [videos, setVideos] = useState([
+  const [videos, setVideos] = useState<Video[]>([
     {
       id: '6wf5dIrryoQ', // Example YouTube video ID
       title: 'Introduction to React Hooks - Complete Guide 2024',
@@ -39,7 +43,9 @@ const Context = ({ children }: { children: ReactNode }) => {
       duration: '2:17:46',
       channelName: 'GreatStack',
       views: '125K',
-      publishedAt: '7 months ago'
+      publishedAt: '7 months ago',
+      watched: true,
+      inLibrary:false
     },
     {
     id: 'JRHAM1nAuD4',
@@ -48,7 +54,9 @@ const Context = ({ children }: { children: ReactNode }) => {
     duration: '18:32',
     channelName: 'Zach Star',
     views: '172K',
-    publishedAt: '7 years ago'
+    publishedAt: '7 years ago',
+    watched:true,
+    inLibrary:true
   },
     
   {
@@ -58,7 +66,9 @@ const Context = ({ children }: { children: ReactNode }) => {
     duration: '17:04',
     channelName: '3Blue1Brown',
     views: '9.6M',
-    publishedAt: '7 years ago'
+    publishedAt: '7 years ago',
+    watched:false,
+    inLibrary:false
   },
   {
     id: 'p7HKvqRI_Bo',
@@ -67,7 +77,9 @@ const Context = ({ children }: { children: ReactNode }) => {
     duration: '4:29',
     channelName: 'TED-Ed',
     views: '567K',
-    publishedAt: '5 years ago'
+    publishedAt: '5 years ago',
+    watched:true,
+    inLibrary:false
   },
   {
     id: 'jZKXS5VAzPw',
@@ -76,7 +88,9 @@ const Context = ({ children }: { children: ReactNode }) => {
     duration: '7:21',
     channelName: 'Learn German',
     views: '411K',
-    publishedAt: '7 years ago'
+    publishedAt: '7 years ago',
+    watched: true,
+    inLibrary:false
   },
   {
     id: 'Rt6beTKDtqY',
@@ -85,7 +99,9 @@ const Context = ({ children }: { children: ReactNode }) => {
     duration: '16:33',
     channelName: 'Zach Star',
     views: '488K',
-    publishedAt: '6 years ago'
+    publishedAt: '6 years ago',
+    watched:true,
+    inLibrary:false
 
     },
     {
@@ -95,7 +111,9 @@ const Context = ({ children }: { children: ReactNode }) => {
     duration: '9:56',
     channelName: 'Science ABC',
     views: '786K',
-    publishedAt: '4 years ago'
+    publishedAt: '4 years ago',
+    watched: true,
+    inLibrary:false
   },
   {
     id: 'Qqe4thU-os8',
@@ -104,7 +122,9 @@ const Context = ({ children }: { children: ReactNode }) => {
     duration: '8:11',
     channelName: 'Amoeba Sisters',
     views: '7.7M',
-    publishedAt: '5 years ago'
+    publishedAt: '5 years ago',
+    watched: false,
+    inLibrary:false
   },
   {
     id: 'F1cghFu9zBs',
@@ -113,7 +133,9 @@ const Context = ({ children }: { children: ReactNode }) => {
     duration: '14:33',
     channelName: 'Graham Stephan',
     views: '290K',
-    publishedAt: '10 months ago'
+    publishedAt: '10 months ago',
+    watched:false,
+    inLibrary:false
   },
   {
     id: 'e-P5IFTqB98',
@@ -122,7 +144,9 @@ const Context = ({ children }: { children: ReactNode }) => {
     duration: '5:55',
     channelName: 'Kurzgesagt - In a Nutshell',
     views: '25M',
-    publishedAt: '9 years ago'
+    publishedAt: '9 years ago',
+    watched:true,
+    inLibrary:false
   },
   {
     id: 'yZvFH7B6gKI',
@@ -131,7 +155,9 @@ const Context = ({ children }: { children: ReactNode }) => {
     duration: '9:04',
     channelName: 'CareerFoundry',
     views: '1.5M',
-    publishedAt: '3 years ago'
+    publishedAt: '3 years ago',
+    watched: false,
+    inLibrary:false
   },
   {
     id: 'fE_QTn4daPU',
@@ -140,7 +166,9 @@ const Context = ({ children }: { children: ReactNode }) => {
     duration: '1:47',
     channelName: 'Bloomberg Originals',
     views: '35K',
-    publishedAt: '9 years ago'
+    publishedAt: '9 years ago',
+    watched: false,
+    inLibrary:false
   },
   {
     id: '4Q22hN-1mLI',
@@ -149,7 +177,9 @@ const Context = ({ children }: { children: ReactNode }) => {
     duration: '3:20',
     channelName: 'Japanese Tomato',
     views: '2M',
-    publishedAt: '3 years ago'
+    publishedAt: '3 years ago',
+    watched:false,
+    inLibrary:false
   },
   {
     id: 'ReFqFPJHLhA',
@@ -158,7 +188,9 @@ const Context = ({ children }: { children: ReactNode }) => {
     duration: '3:48',
     channelName: 'Learn Liberty',
     views: '631K',
-    publishedAt: '7 years ago'
+    publishedAt: '7 years ago',
+    watched: false,
+    inLibrary:false
     },
   {
     id: 'TImdsUglGv4',
@@ -167,7 +199,9 @@ const Context = ({ children }: { children: ReactNode }) => {
     duration: '2:48',
     channelName: 'The Wall Street Journal',
     views: '5M',
-    publishedAt: '8 years ago'
+    publishedAt: '8 years ago',
+    watched: true,
+    inLibrary:false
   }
     // ... other video objects
   ]);
@@ -175,8 +209,6 @@ const Context = ({ children }: { children: ReactNode }) => {
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-
-  
 
   function handleSearch(e: SearchEvent) {
     e.preventDefault();
@@ -187,7 +219,45 @@ const Context = ({ children }: { children: ReactNode }) => {
     setSelectedVideo(video);
   }
   
-  const value={videos,setVideos,selectedVideo,setSelectedVideo,loading,setLoading,searchQuery,setSearchQuery,handleSearch,handleVideoClick};
+  function addVideoToLibrary(video: Video) {
+    // Check if video is already in library
+    const isAlreadyInLibrary = videos.some(v => v.id === video.id && v.inLibrary);
+    
+    if (!isAlreadyInLibrary) {
+      setVideos(prevVideos => 
+        prevVideos.map(v => 
+          v.id === video.id 
+            ? {...v, inLibrary: true} 
+            : v
+        )
+      );
+    }
+  }
+
+  function removeVideoFromLibrary(videoId: string) {
+    setVideos(prevVideos => 
+      prevVideos.map(v => 
+        v.id === videoId 
+          ? {...v, inLibrary: false} 
+          : v
+      )
+    );
+  }
+
+  const value = {
+    videos,
+    setVideos,
+    selectedVideo,
+    setSelectedVideo,
+    loading,
+    setLoading,
+    searchQuery,
+    setSearchQuery,
+    handleSearch,
+    handleVideoClick,
+    addVideoToLibrary,
+    removeVideoFromLibrary,
+  };
   return (
     //provide context api data through attribute value
     <div>
@@ -197,3 +267,12 @@ const Context = ({ children }: { children: ReactNode }) => {
 };
 
 export default Context;
+
+// Custom hook for easier context usage
+export const useAppContext = () => {
+  const context = useContext(AppContext);
+  if (!context) {
+    throw new Error('useAppContext must be used within an AppContextProvider');
+  }
+  return context;
+};

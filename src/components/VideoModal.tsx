@@ -1,27 +1,24 @@
-import React, { useContext } from 'react'
+import React from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog'
-import { Button } from './ui/button'
-import { AppContext } from '@/Helper/Context'
-import { X } from 'lucide-react'
+import { useAppContext } from '@/Helper/Context'
 
 const VideoModal = () => {
-    const context = useContext(AppContext);
-    if (!context) {
-        throw new Error("AppContext is null");
-    }
-    const { selectedVideo, setSelectedVideo } = context;
+  const context = useAppContext();
+  const { selectedVideo, setSelectedVideo } = context;
 
-    return (
+  return (
     <Dialog 
         open={selectedVideo !== null} 
         onOpenChange={(open) => !open && setSelectedVideo(null)}
       >
-        <DialogContent className="sm:max-w-[800px] p-0">
-          <DialogHeader className="p-4 pb-0">
-            <DialogTitle className="text-lg font-semibold pr-8">
+        <DialogContent className="sm:max-w-[800px] bg-black p-0">
+          <DialogHeader className="p-4 text-white pb-0">
+            <DialogTitle className="text-lg text-white font-semibold pr-8">
               {selectedVideo?.title}
             </DialogTitle>
+          
           </DialogHeader>
+          
           
           {selectedVideo && (
             <div className="relative pt-[56.25%] mt-4">
@@ -36,9 +33,9 @@ const VideoModal = () => {
           )}
 
           {selectedVideo && (
-            <div className="p-4 border-t mt-4">
-              <h3 className="font-medium">{selectedVideo.channelName}</h3>
-              <p className="text-sm text-gray-500 mt-1">
+            <div className="p-4">
+              <h3 className="font-medium text-gray-50">{selectedVideo.channelName}</h3>
+              <p className="text-sm text-gray-400 mt-1">
                 {selectedVideo.views} views • {selectedVideo.publishedAt}
               </p>
             </div>
