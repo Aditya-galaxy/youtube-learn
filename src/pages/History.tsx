@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 import { useAppContext } from '../Helper/Context';
-import Hero from './Hero';
+import Hero from '../components/Hero';
 
 const History = () => {
   const { videos } = useAppContext();

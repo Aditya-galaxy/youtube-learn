@@ -26,7 +26,7 @@ const Sidebar = forwardRef<HTMLElement, SidebarProps>(({ activeRoute, onNavigati
 
   return (
     <aside
-      className="fixed left-0 top-20 h-[calc(100vh-5rem)] w-44 z-0 bg-black/50 backdrop-blur-xl border-r border-white/5"
+      className="fixed left-0 top-20 h-[calc(100vh-5rem)] w-44 z-0 bg-black/50 backdrop-blur-xl border-r border-white/5 focus:outline-none"
       tabIndex={0}
       ref={ref}
     >
@@ -58,7 +58,7 @@ const Sidebar = forwardRef<HTMLElement, SidebarProps>(({ activeRoute, onNavigati
           <p className="text-xs text-white/50 mb-3">
             Unlock advanced learning tools and exclusive content
           </p>
-          <button className="w-full px-3 py-1.5 rounded-lg bg-purple-500 hover:bg-purple-600 text-white text-sm font-medium transition-colors">
+          <button onClick={() => handleMenuItemClick('/plans')} className="w-full px-3 py-1.5 rounded-lg bg-purple-500 hover:bg-purple-600 text-white text-sm font-medium transition-colors">
             Upgrade Now
           </button>
         </div>

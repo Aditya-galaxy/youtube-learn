@@ -3,11 +3,15 @@ import { BrowserRouter as Router, Routes, Route, useLocation} from 'react-router
 import Navbar from '../Navbar';
 import Sidebar from '../Sidebar';
 import VideoModal from '../VideoModal';
-import Trending from '../Trending';
-import History from '../History';
-import Library from '../Library';
+import Trending from '../../pages/Trending';
+import History from '../../pages/History';
+import Library from '../../pages/Library';
 import { useAppContext } from '@/Helper/Context';
-import Home from '../Home';
+import Home from '../../pages/Home';
+import SavedPage from '../../pages/Saved';
+import SettingsPage from '../../pages/Settings';
+import PlansPage from '@/pages/Plans';
+import AccountPage from '@/pages/Account';
 
 export default function App() {
   const [activeRoute, setActiveRoute] = useState('/');
@@ -32,11 +36,15 @@ export default function App() {
         <div className="flex flex-1">
           <Sidebar ref={sidebarRef} activeRoute={activeRoute} onNavigation={handleNavigation} />
           <main className="flex-1 ml-36 pt-16 pr-1 relative">
-            <Routes>
-              <Route path="/" element={<Home/>} />
+              <Routes>
+                <Route path="/" element={<Home/>} />
                 <Route path="/trending" element={<Trending />}/>
                 <Route path="/library" element={<Library />}/>
-                <Route path="/history" element={<History />}/>
+              b <Route path="/history" element={<History />} />
+                <Route path="/saved" element={<SavedPage/>} />
+                <Route path="/settings" element={<SettingsPage />} />
+                <Route path="/plans" element={<PlansPage />} />
+                <Route path="/profile" element={<AccountPage />}/>
               </Routes>
           </main>
         </div>

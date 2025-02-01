@@ -1,10 +1,16 @@
 import React from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog'
 import { useAppContext } from '@/Helper/Context'
+import { Button } from './ui/button';
+import { X } from 'lucide-react';
 
 const VideoModal = () => {
   const context = useAppContext();
   const { selectedVideo, setSelectedVideo } = context;
+
+  const handleClose = () => {
+    setSelectedVideo(null);
+  };
 
   return (
     <Dialog 
@@ -16,7 +22,13 @@ const VideoModal = () => {
             <DialogTitle className="text-lg text-white font-semibold pr-8">
               {selectedVideo?.title}
             </DialogTitle>
-          
+            {/* <Button
+              onClick={handleClose}
+              variant="ghost"
+              className="absolute right-4 top-4 p-0 h-auto w-auto text-white hover:bg-gray-800"
+            >
+            <X className="h-5 w-5" />
+            </Button> */}
           </DialogHeader>
           
           

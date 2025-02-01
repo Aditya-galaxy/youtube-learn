@@ -53,7 +53,7 @@ const Navbar = () => {
   };
 
   const handleLogout = () => {
-    // Add your logout logic here
+    //Logout logic here
     navigate('/login');
   };
 
@@ -68,6 +68,7 @@ const Navbar = () => {
             variant="ghost" 
             size="icon" 
             className="text-white/70 hover:text-white hover:bg-white/5"
+            onClick={() => navigate('/profile')}
           >
             <Menu className="w-5 h-5" />
           </Button>
@@ -75,7 +76,7 @@ const Navbar = () => {
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center">
               <Sparkles className="w-4 h-4 text-white transform group-hover:scale-110 transition-transform" />
             </div>
-            <span className="text-lg font-semibold text-white">Learn</span>
+            <span className="text-lg font-semibold text-white">yLearn</span>
           </Link>
         </div>
 
