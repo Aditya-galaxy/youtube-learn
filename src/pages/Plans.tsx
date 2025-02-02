@@ -1,8 +1,13 @@
-import React from 'react';
+import React ,{useState} from 'react';
 import { Check } from 'lucide-react';
 import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card';
+import { Dialog, } from '@radix-ui/react-dialog';
+import { DialogHeader, DialogTitle , DialogDescription, DialogContent } from '@/components/ui/dialog';
 
 export const PlansPage = () => {
+  const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
   const plans = [
     {
       name: 'Free',
@@ -49,6 +54,20 @@ export const PlansPage = () => {
     }
   ];
 
+  interface Plan {
+    name: string;
+    price: string;
+    period: string;
+    features: string[];
+    buttonText: string;
+    isPopular: boolean;
+  }
+
+  const handlePlanSelection = (plan: Plan) => {
+    setSelectedPlan(plan);
+    setIsDialogOpen(true);
+  };
+
   return (
     <div className="p-6 max-w-6xl mx-auto">
       <div className="text-center mb-12">
@@ -62,7 +81,7 @@ export const PlansPage = () => {
         {plans.map((plan) => (
           <Card 
             key={plan.name}
-            className={`relative bg-black/50 border-white/5 ${
+            className={`relative bg-black/50 border-white/5 transition-all duration-300 hover:bg-purple-900/20 hover:ring-1 ring-purple-900 ${
               plan.isPopular ? 'ring-2 ring-purple-500' : ''
             }`}
           >
@@ -95,6 +114,7 @@ export const PlansPage = () => {
 
             <CardFooter>
               <button
+                onClick={()=> handlePlanSelection(plan)}
                 className={`w-full py-2 rounded-lg font-medium transition-colors ${
                   plan.isPopular
                     ? 'bg-purple-500 hover:bg-purple-600 text-white'
@@ -107,6 +127,29 @@ export const PlansPage = () => {
           </Card>
         ))}
       </div>
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="bg-gray-900 text-white">
+          <DialogHeader>
+            <DialogTitle>{selectedPlan?.name} Plan</DialogTitle>
+            <DialogDescription>
+              {selectedPlan?.name === 'Free' 
+                ? "You're already on the Free plan."
+                : selectedPlan?.name === 'Team'
+                  ? "Contact our sales team for more information on the Team plan."
+                  : `Upgrade to the ${selectedPlan?.name} plan for ${selectedPlan?.price}/${selectedPlan?.period}`
+              }
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mt-4">
+            <button
+              onClick={() => setIsDialogOpen(false)}
+              className="w-full py-2 rounded-lg font-medium bg-purple-500 hover:bg-purple-600 text-white transition-colors"
+            >
+              {selectedPlan?.name === 'Free' ? 'Close' : selectedPlan?.name === 'Team' ? 'Contact Sales' : 'Confirm Upgrade'}
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
