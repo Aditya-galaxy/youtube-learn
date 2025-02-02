@@ -1,7 +1,13 @@
 import React from 'react';
 import { useAppContext } from '@/Helper/Context';
 import { Video } from '@/Helper/Context';
-import { Play, Clock } from 'lucide-react';
+import { Play, Clock, MoreVertical, Bookmark, Library } from 'lucide-react';
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu';
 
 interface HeroProps {
   title: string;
@@ -9,8 +15,12 @@ interface HeroProps {
 }
 
 const Hero: React.FC<HeroProps> = ({ videos, title }) => {
-  const context = useAppContext();
-  const { loading, handleVideoClick } = context;
+  const { loading, handleVideoClick, addVideoToLibrary } = useAppContext();
+
+  const handleAddToLibrary = (e: React.MouseEvent, video:Video) => {
+    e.stopPropagation();
+    addVideoToLibrary(video);
+  };
 
   return (
     <div className="p-8 ml-12">
@@ -52,9 +62,30 @@ const Hero: React.FC<HeroProps> = ({ videos, title }) => {
               </div>
               
               <div className="mt-4 space-y-2">
-                <h3 className="font-medium text-sm text-white/90 line-clamp-2 group-hover:text-purple-400 transition-colors">
-                  {video.title}
-                </h3>
+                <div className="flex justify-between items-start gap-2">
+                  <h3 className="font-medium text-sm text-white/90 line-clamp-2 group-hover:text-purple-400 transition-colors flex-1">
+                    {video.title}
+                  </h3>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button 
+                        className="mt-0.5 p-1 rounded-full hover:bg-white/10 transition-colors"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <MoreVertical className="w-4 h-4 text-white/50 hover:text-white/90" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-48 bg-zinc-900 border-zinc-800">
+                      <DropdownMenuItem 
+                        className="flex items-center gap-2 text-sm text-white/90 hover:text-white hover:bg-white/10"
+                        onClick={(e) => handleAddToLibrary(e,video)}
+                      >
+                        <Library className="w-4 h-4" />
+                        Add to Library
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
                 <p className="text-sm text-white/50">
                   {video.channelName}
                 </p>

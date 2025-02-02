@@ -5,8 +5,7 @@ import { Button } from './ui/button';
 import { X } from 'lucide-react';
 
 const VideoModal = () => {
-  const context = useAppContext();
-  const { selectedVideo, setSelectedVideo } = context;
+  const { selectedVideo, setSelectedVideo } = useAppContext();
 
   const handleClose = () => {
     setSelectedVideo(null);
