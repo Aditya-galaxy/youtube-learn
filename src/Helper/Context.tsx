@@ -30,6 +30,7 @@ interface AppContextType {
   handleVideoClick: (video: Video) => void;
   addVideoToLibrary: (video: Video) => void;
   removeVideoFromLibrary: (videoId: string) => void;
+  filteredSearchVideos:Video[];
 }
 
 export const AppContext = createContext<AppContextType | null>(null);
@@ -209,10 +210,13 @@ const Context = ({ children }: { children: ReactNode }) => {
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [filteredSearchVideos, setFilteredSearchVideos] = useState<Video[]>([]);
 
   function handleSearch(e: SearchEvent) {
     e.preventDefault();
     // Implement search functionality
+    const filteredSearchVideos = videos.filter(video => video.title.toLowerCase().includes(searchQuery.toLowerCase()));
+    setFilteredSearchVideos(filteredSearchVideos);
   }
 
   function handleVideoClick(video: Video) {
@@ -257,6 +261,7 @@ const Context = ({ children }: { children: ReactNode }) => {
     handleVideoClick,
     addVideoToLibrary,
     removeVideoFromLibrary,
+    filteredSearchVideos
   };
   return (
     //provide context api data through attribute value

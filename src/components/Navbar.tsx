@@ -25,8 +25,7 @@ interface Notification {
 }
 
 const Navbar = () => {
-  const context = useAppContext();
-  const { handleSearch, searchQuery, setSearchQuery } = context;
+  const { handleSearch, searchQuery, setSearchQuery } = useAppContext();
   const navigate = useNavigate();
   
   const [notifications, setNotifications] = useState<Notification[]>([
@@ -97,6 +96,7 @@ const Navbar = () => {
               type="submit"
               variant="secondary"
               className="bg-purple-500 hover:bg-purple-600 text-white border-0"
+              onClick={() => navigate('/search')}
             >
               Search
             </Button>

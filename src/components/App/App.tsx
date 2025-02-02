@@ -12,6 +12,7 @@ import SavedPage from '../../pages/Saved';
 import SettingsPage from '../../pages/Settings';
 import PlansPage from '@/pages/Plans';
 import AccountPage from '@/pages/Account';
+import SearchResults from '../SearchResults';
 
 export default function App() {
   const [activeRoute, setActiveRoute] = useState('/');
@@ -44,7 +45,8 @@ export default function App() {
                 <Route path="/saved" element={<SavedPage/>} />
                 <Route path="/settings" element={<SettingsPage />} />
                 <Route path="/plans" element={<PlansPage />} />
-                <Route path="/profile" element={<AccountPage />}/>
+                <Route path="/profile" element={<AccountPage />} />
+                <Route path="/search" element={<SearchResults />}/>
               </Routes>
           </main>
         </div>
