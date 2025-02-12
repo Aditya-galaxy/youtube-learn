@@ -1,17 +1,17 @@
 import React, {useState, useRef, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation} from 'react-router-dom';
-import Navbar from '../Navbar';
-import Sidebar from '../Sidebar';
+import { BrowserRouter, Routes, Route, useLocation} from 'react-router-dom';
+import Navbar from '../Navbar/Navbar';
+import Sidebar from '../Sidebar/Sidebar';
 import VideoModal from '../VideoModal';
 import Trending from '../../pages/Trending';
 import History from '../../pages/History';
 import Library from '../../pages/Library';
 import { useAppContext } from '@/Helper/Context';
 import Home from '../../pages/Home';
-import SavedPage from '../../pages/Saved';
-import SettingsPage from '../../pages/Settings';
-import PlansPage from '@/pages/Plans';
-import AccountPage from '@/pages/Account';
+import SavedPage from '../../pages/SavedPage';
+import SettingsPage from '../../pages/SettingsPage';
+import PlansPage from '@/components/PlansPage/PlansPage';
+import AccountPage from '@/components/Account/Account';
 import SearchResults from '../SearchResults';
 
 export default function App() {
@@ -31,12 +31,12 @@ export default function App() {
   }, [activeRoute]);
 
   return (
-    <Router>
+    <BrowserRouter>
       <div className="flex flex-col min-h-screen bg-black text-white">
         <Navbar />
         <div className="flex flex-1">
           <Sidebar ref={sidebarRef} activeRoute={activeRoute} onNavigation={handleNavigation} />
-          <main className="flex-1 ml-36 pt-16 pr-1 relative">
+          <main className="flex-1 ml-40 pt-16 pr-1 relative">
               <Routes>
                 <Route path="/" element={<Home/>} />
                 <Route path="/trending" element={<Trending />}/>
@@ -52,6 +52,6 @@ export default function App() {
         </div>
         <VideoModal />
       </div>
-    </Router>
+    </BrowserRouter>
   );
 }

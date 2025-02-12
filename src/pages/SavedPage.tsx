@@ -1,18 +1,16 @@
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Switch } from '@/components/ui/switch';
-import { Bookmark, Clock, Star, Settings as SettingsIcon, Bell, Moon, Shield, User } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Bookmark, Clock, Star, Shield } from 'lucide-react';
 
-// Saved Component
 export const SavedPage = () => {
   const savedItems = [
-    { id: 1, title: 'Introduction to React', type: 'Course', date: '2025-01-15', icon: Clock },
-    { id: 2, title: 'Advanced TypeScript', type: 'Tutorial', date: '2025-01-20', icon: Star },
-    { id: 3, title: 'Web Security Basics', type: 'Article', date: '2025-01-25', icon: Shield }
+    { id: 1, title: 'React Performance Optimization', type: 'Technical Guide', date: 'Jan 15, 2025', icon: Clock },
+    { id: 2, title: 'TypeScript Advanced Patterns', type: 'Professional Development', date: 'Jan 20, 2025', icon: Star },
+    { id: 3, title: 'Enterprise Web Security', type: 'Research Paper', date: 'Jan 25, 2025', icon: Shield }
   ];
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
+    <div className="p-6 max-w-4xl mx-auto bg-black min-h-screen">
       <div className="flex items-center gap-3 mb-6">
         <Bookmark className="w-6 h-6 text-purple-400" />
         <h1 className="text-2xl font-semibold text-white">Saved Items</h1>

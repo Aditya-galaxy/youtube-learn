@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAppContext } from '../Helper/Context';
-import Hero from '../components/Hero';
+import Hero from '../components/Hero/Hero';
 
 const Trending = () => {
   const context = useAppContext();

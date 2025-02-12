@@ -1,29 +1,71 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
-import { Bookmark, Clock, Star, Settings as SettingsIcon, Bell, Moon, Shield, User } from 'lucide-react';
+import { Settings as SettingsIcon, User, Bell, Shield } from 'lucide-react';
+
+interface Settings {
+    pushNotifications: boolean;
+    activityTracking: boolean;
+    dataSharing: boolean;
+  }
+
+  interface Setting {
+    key: keyof Settings;
+    label: string;
+    icon: React.ComponentType;
+  }
+
+  interface SettingsGroup {
+    title: string;
+    icon: React.ComponentType;
+    settings: Setting[];
+  }
 export const SettingsPage = () => {
+  const [settings, setSettings] = useState<Settings>({
+    pushNotifications: false,
+    activityTracking: false,
+    dataSharing: false
+  });
+
+  const toggleSetting = (settingKey: keyof Settings) => {
+    setSettings(prev => ({
+      ...prev,
+      [settingKey]: !prev[settingKey]
+    }));
+  };
+
   const settingsGroups = [
     {
       title: 'Account',
       icon: User,
       settings: [
-        { id: 'notifications', label: 'Push Notifications', icon: Bell },
-        { id: 'darkMode', label: 'Dark Mode', icon: Moon },
+        { 
+          key: 'pushNotifications', 
+          label: 'Push Notifications', 
+          icon: Bell 
+        }
       ]
     },
     {
       title: 'Privacy',
       icon: Shield,
       settings: [
-        { id: 'activityTracking', label: 'Activity Tracking', icon: Clock },
-        { id: 'dataSharing', label: 'Data Sharing', icon: Star },
+        { 
+          key: 'activityTracking', 
+          label: 'Activity Tracking', 
+          icon: Bell 
+        },
+        { 
+          key: 'dataSharing', 
+          label: 'Data Sharing', 
+          icon: Shield 
+        }
       ]
     }
   ];
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
+    <div className="p-6 max-w-4xl mx-auto bg-black min-h-screen">
       <div className="flex items-center gap-3 mb-6">
         <SettingsIcon className="w-6 h-6 text-purple-400" />
         <h1 className="text-2xl font-semibold text-white">Settings</h1>
@@ -41,12 +83,15 @@ export const SettingsPage = () => {
             <CardContent>
               <div className="space-y-4">
                 {group.settings.map((setting) => (
-                  <div key={setting.id} className="flex items-center justify-between">
+                  <div key={setting.key} className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <setting.icon className="w-4 h-4 text-white/60" />
                       <span className="text-sm text-white/80">{setting.label}</span>
                     </div>
-                    <Switch />
+                    <Switch 
+                      checked={settings[setting.key as keyof Settings]} 
+                      onCheckedChange={() => toggleSetting(setting.key as keyof Settings)}
+                    />
                   </div>
                 ))}
               </div>
