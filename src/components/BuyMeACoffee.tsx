@@ -2,7 +2,7 @@ import React from 'react';
 
 const BuyMeACoffee = () => {
   const handleSupport = () => {
-    window.open('https://www.buymeacoffee.com/aditya.galaxy', '_blank');
+    window.open(`https://www.buymeacoffee.com/${process.env.NEXT_PUBLIC_BUYMEACOFFEE_USERNAME}`, '_blank');
   };
 
   return (
