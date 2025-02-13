@@ -47,6 +47,7 @@ export default function App() {
                 <Route path="/plans" element={<PlansPage />} />
                 <Route path="/profile" element={<AccountPage />} />
                 <Route path="/search" element={<SearchResults />}/>
+              
               </Routes>
           </main>
         </div>

@@ -4,6 +4,7 @@ import { Home, TrendingUp, Library, History, Bookmark, Settings } from 'lucide-r
 
 import SidebarNavigation from './Navigation';
 import ProFeaturesBanner from './ProFeatures';
+import BuyMeACoffee from '../BuyMeACoffee';
 
 type SidebarProps = {
   activeRoute: string;
@@ -40,6 +41,8 @@ const Sidebar = forwardRef<HTMLElement, SidebarProps>(({ activeRoute, onNavigati
         />
         
         <ProFeaturesBanner onUpgradeClick={() => handleMenuItemClick('/plans')} />
+        
+        <BuyMeACoffee />
       </div>
     </aside>
   );
