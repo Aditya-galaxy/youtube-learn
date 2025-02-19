@@ -13,6 +13,7 @@ import SettingsPage from '../SettingsPage';
 import PlansPage from '@/components/PlansPage/PlansPage';
 import AccountPage from '@/components/Account/Account';
 import SearchResults from '../SearchResults';
+import ErrorBoundary from '../ErrorBoundary';
 
 export default function App() {
   const [activeRoute, setActiveRoute] = useState('/');
@@ -31,6 +32,7 @@ export default function App() {
   }, [activeRoute]);
 
   return (
+    <ErrorBoundary>
     <BrowserRouter>
       <div className="flex flex-col min-h-screen bg-black text-white">
         <Navbar />
@@ -41,18 +43,18 @@ export default function App() {
                 <Route path="/" element={<Home/>} />
                 <Route path="/trending" element={<Trending />}/>
                 <Route path="/library" element={<Library />}/>
-              b <Route path="/history" element={<History />} />
+                <Route path="/history" element={<History />} />
                 <Route path="/saved" element={<SavedPage/>} />
                 <Route path="/settings" element={<SettingsPage />} />
                 <Route path="/plans" element={<PlansPage />} />
                 <Route path="/profile" element={<AccountPage />} />
                 <Route path="/search" element={<SearchResults />}/>
-              
               </Routes>
           </main>
         </div>
         <VideoModal />
       </div>
-    </BrowserRouter>
+      </BrowserRouter>
+    </ErrorBoundary>
   );
 }

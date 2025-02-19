@@ -31,17 +31,18 @@ export function formatDuration(duration: string) {
 }
 
 // Format view count with appropriate suffix (K, M, B)
-export function formatViewCount(count: number) {
+export function formatViewCount(countstr: string): string {
+  const count = parseInt(countstr);
   if (count >= 1e9) {
-    return (count / 1e9).toFixed(1) + 'B'
+    return (count / 1e9).toFixed(1) + 'B';
   }
   if (count >= 1e6) {
-    return (count / 1e6).toFixed(1) + 'M'
+    return (count / 1e6).toFixed(1) + 'M';
   }
   if (count >= 1e3) {
-    return (count / 1e3).toFixed(1) + 'K'
+    return (count / 1e3).toFixed(1) + 'K';
   }
-  return count.toString()
+  return countstr.toString()
 }
 
 // Format relative time (e.g., "2 hours ago", "3 days ago")

@@ -3,6 +3,7 @@ import { Video } from '../../../types/video';
 import { useAppContext } from '@/Helper/Context';
 import VideoThumbnail from './VideoThumbnail';
 import VideoActions from './VideoActions';
+import { formatViewCount } from '@/lib/utils';
 
 interface VideoCardProps {
   video: Video;
@@ -33,7 +34,7 @@ const VideoCard: React.FC<VideoCardProps> = ({ video }) => {
               {video.channelName}
             </span>
             <div className="flex items-center gap-2">
-              <span>{video.views}</span>
+              <span>{formatViewCount(video.views)} views</span>
               <span>•</span>
               <span>{video.publishedAt}</span>
             </div>

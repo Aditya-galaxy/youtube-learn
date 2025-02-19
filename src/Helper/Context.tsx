@@ -4,7 +4,6 @@ import { createContext } from "react";
 import { ReactNode } from "react";
 import { Video } from "../../types/video";
 
-interface SearchEvent extends React.FormEvent<HTMLFormElement> { }
 
 interface AppContextType {
   videos: Video[];
@@ -18,7 +17,8 @@ interface AppContextType {
   // setSearchQuery: React.Dispatch<React.SetStateAction<string>>;
   setSearchQuery: (query: string) => void;
   // handleSearch: (e: SearchEvent) => void;
-  handleSearch: (e: React.FormEvent) => void;
+  // handleSearch: (e: React.FormEvent) => void;
+  handleSearch: (query: string) => void;
   handleVideoClick: (video: Video) => void;
   addVideoToLibrary: (video: Video) => void;
   removeVideoFromLibrary: (videoId: string) => void;
@@ -194,13 +194,9 @@ const Context = ({ children }: { children: ReactNode }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredSearchVideos, setFilteredSearchVideos] = useState<Video[]>([]);
 
-  const handleSearch = useCallback((e: React.FormEvent) => {
-  e.preventDefault();
-  setFilteredSearchVideos(videos.filter(video => 
-    video.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    video.description.toLowerCase().includes(searchQuery.toLowerCase())
-  ));
-  }, [searchQuery, videos]);
+  const handleSearch = (query: string) => {
+    setSearchQuery(query.trim());
+  };
 
   function handleVideoClick(video: Video) {
     setSelectedVideo(video);

@@ -10,32 +10,43 @@ import { useToast } from '@/hooks/use-toast';
 import { useAppContext } from '@/Helper/Context';
 import { Video } from '../../../types/video';
 import { formatDuration } from '@/lib/utils';
+import './hero.css';
 
 interface HeroProps {
-    title: string;
+  title: string;
+  contextVideos: Video[];
 }
 
-const Hero: React.FC<HeroProps> = ({ title }) => {
+const Hero: React.FC<HeroProps> = ({ title , contextVideos }) => {
   const [videos, setVideos] = useState<Video[]>([]);
   const [loading, setLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [pageToken, setPageToken] = useState<string | undefined>();
   const { data: session } = useSession();
   const { toast } = useToast();
-  const { videos: contextVideos, searchQuery } = useAppContext();
+  const { searchQuery } = useAppContext();
   
   const [ref, inView] = useInView({
     threshold: 0,
     rootMargin: '100px',
   });
 
+  const filterContextVideos = (query: string) => {
+    if (!query.trim()) {
+      return contextVideos; // Return all videos if query is empty
+    }
+    return contextVideos.filter(video => {
+      const searchTerms = query.toLowerCase().split(' ');
+      const videoText = `${video.title} ${video.description} ${video.channelName}`.toLowerCase();
+      return searchTerms.every(term => videoText.includes(term));
+    });
+  };
+
   const fetchVideos = async (loadMore = false, query?: string) => {
     if (!session?.accessToken) {
       // Handle unauthenticated users with context videos
-      const filteredVideos = contextVideos.filter(video =>
-        video.title.toLowerCase().includes((query || '').toLowerCase()) ||
-        video.description.toLowerCase().includes((query || '').toLowerCase())
-      );
+      const filteredVideos = filterContextVideos(query || '');
+      
       setVideos(filteredVideos);
       setLoading(false);
       return;
@@ -44,7 +55,6 @@ const Hero: React.FC<HeroProps> = ({ title }) => {
     try {
       setIsLoadingMore(loadMore);
       
-      // Build query parameters
       const params = new URLSearchParams({
         refresh: 'true'
       });
@@ -57,46 +67,25 @@ const Hero: React.FC<HeroProps> = ({ title }) => {
         params.append('pageToken', pageToken);
       }
       
-      console.log(`Fetching videos with params: ${params.toString()}`);
       const response = await fetch(`/api/videos?${params.toString()}`);
       
       if (!response.ok) {
-        let errorMessage = `Failed to fetch videos: ${response.status} ${response.statusText}`;
-        try {
-          const errorData = await response.json();
-          if (errorData.error) {
-            errorMessage = errorData.error;
-          }
-        } catch (e) {
-          console.error('Error parsing error response:', e);
-        }
-        throw new Error(errorMessage);
+        throw new Error(`Failed to fetch videos: ${response.status}`);
       }
       
       const data = await response.json();
-      
-      if (!Array.isArray(data.videos)) {
-        console.error('Invalid response format:', data);
-        throw new Error('Invalid response format from server');
-      }
       
       const formattedVideos = data.videos.map((video: Video) => ({
         ...video,
         duration: formatDuration(video.duration)
       }));
       
-      // Filter out duplicates when loading more
       const newVideos = formattedVideos.filter((newVideo: Video) => 
         !videos.some(existingVideo => existingVideo.id === newVideo.id)
       );
       
       setVideos(loadMore ? [...videos, ...newVideos] : newVideos);
       setPageToken(data.nextPageToken);
-
-      // If no new videos were loaded, try loading more
-      if (loadMore && newVideos.length === 0 && data.nextPageToken) {
-        await fetchVideos(true, query);
-      }
     } catch (error) {
       console.error('Video fetch error:', error);
       toast({
@@ -105,14 +94,11 @@ const Hero: React.FC<HeroProps> = ({ title }) => {
         variant: 'destructive',
       });
       
-      if (!videos.length) {
-        // Fallback to context videos only if we have no videos
-        const filteredVideos = contextVideos.filter(video =>
-          video.title.toLowerCase().includes((query || '').toLowerCase()) ||
-          video.description.toLowerCase().includes((query || '').toLowerCase())
-        );
-        setVideos(filteredVideos);
-      }
+      // Fallback to context videos
+      const filteredVideos = query 
+        ? filterContextVideos(query)
+        : contextVideos;
+      setVideos(filteredVideos);
     } finally {
       setLoading(false);
       setIsLoadingMore(false);
@@ -132,7 +118,7 @@ const Hero: React.FC<HeroProps> = ({ title }) => {
 
   return (
     <div 
-      className="p-4 sm:p-8 ml-4 sm:ml-12 bg-background/70 backdrop-blur-xl min-h-screen overflow-y-auto font-normal text-lg"
+      className="hero p-4 sm:p-8 ml-4 sm:ml-12 bg-background/70 backdrop-blur-xl min-h-screen overflow-y-auto font-normal"
       style={{ height: 'calc(100vh - 5rem)' }}
     >
       <div className="flex flex-col sm:flex-row justify-between items-center mb-6">

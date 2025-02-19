@@ -7,10 +7,10 @@ const Trending = () => {
   const { videos } = context;
 
   // Filter trending videos (example: videos with > 400K views)
-  const trendingVideos = videos.filter(video => video.views > "400K");
+  const trendingVideos = videos.filter(video => video.views > "100K");
 
   return (
-    <Hero title="Trending" videos={ trendingVideos} />
+    <Hero title="Trending" contextVideos={ trendingVideos} />
   );
 };
 

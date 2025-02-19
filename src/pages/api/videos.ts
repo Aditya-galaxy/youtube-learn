@@ -27,27 +27,6 @@ interface Video {
   inLibrary: boolean;
 }
 
-const APPROVED_CHANNELS = [
-  // Universities
-  'UCEBb1b_L6zDS3xTUrIALZOw', // MIT OpenCourseWare
-  'UC4a-Gbdw7vOaccHmFo40b9g', // Stanford Online
-  'UCBh7IAqDpBRp-zarWpCHGzg', // Harvard Online Learning
-  'UC-pX2ECPePDPGxBckhYkLWg', // Berkeley Online
-  'UCnFmWQbVW_YbqPQZGNuq8sA', // Stanford
-  'UCCpVpF6R0KiN8_jm08pKzqw', // Harvard University
-  
-  // Major Educational Channels
-  'UCBZiUUYeLfS5rqz9XQKbWYA', // Coursera
-  'UC4EY_qnSeAP1xGsh61eOoJA', // EdX
-  'UCWN3xxRkmTPmbKwht9FuE5A', // Siraj Raval
-  'UCX6b17PVsYBQ0ip5gyeme-Q', // CrashCourse
-  'UCkw4JCwteGrDHIsyIIKo4tQ', // 3Blue1Brown
-  'UCEBb1b_L6zDS3xTUrIALZOw', // MIT OCW
-  'UCBInYo5zOgKpZ3NBh3HRwZg', // Udacity
-  'UC4xKdmAXFh4ACyhpiQ_3qBw', // TechLead
-  'UCsvqVGtbbyHaMoevxPAq9Fg', // Computerphile
-  'UCYovEHexmZxYhgjhyHqwqEg'  // Khan Academy
-];
 
 interface ChannelInfo {
   id: string;
@@ -71,6 +50,27 @@ const QuerySchema = z.object({
   region: z.string().optional().default('US')
 });
 
+async function ensureUserExists(user: { id: string; email?: string | null; name?: string | null; image?: string | null }) {
+  try {
+    await prisma.user.upsert({
+      where: { id: user.id },
+      update: {
+        email: user.email,
+        name: user.name,
+        image: user.image,
+      },
+      create: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        image: user.image,
+      },
+    });
+  } catch (error) {
+    console.error('Error ensuring user exists:', error);
+  }
+}
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<VideoResponse | { error: string }>
@@ -93,6 +93,8 @@ export default async function handler(
     if (!session?.user?.id) {
       return res.status(401).json({ error: 'Authentication required' });
     }
+
+    await ensureUserExists(session.user);
 
     // Check YouTube API credentials
     if (!process.env.YOUTUBE_API_KEY) {
@@ -171,31 +173,33 @@ async function handleTokenUsage(userId: string): Promise<{ tokensRemaining: numb
   const hour = now.getHours();
 
   try {
-    const userTokens = await prisma.userTokens.findUnique({
-      where: { userId }
-    });
+    return await prisma.$transaction(async (tx) => {
+      const userTokens = await tx.userTokens.findUnique({
+        where: { userId }
+      });
 
-    const needsReset = !userTokens || userTokens.lastResetHour !== hour;
-    const newTokensUsed = needsReset ? TOKENS_PER_REQUEST : userTokens.tokensUsed + TOKENS_PER_REQUEST;
+      const needsReset = !userTokens || userTokens.lastResetHour !== hour;
+      const newTokensUsed = needsReset ? TOKENS_PER_REQUEST : userTokens.tokensUsed + TOKENS_PER_REQUEST;
 
-    if (newTokensUsed > HOURLY_TOKEN_LIMIT) {
-      return { error: 'Hourly token limit reached' };
-    }
-
-    await prisma.userTokens.upsert({
-      where: { userId },
-      update: {
-        tokensUsed: newTokensUsed,
-        lastResetHour: needsReset ? hour : userTokens.lastResetHour
-      },
-      create: {
-        userId,
-        tokensUsed: TOKENS_PER_REQUEST,
-        lastResetHour: hour
+      if (newTokensUsed > HOURLY_TOKEN_LIMIT) {
+        return { error: 'Hourly token limit reached' };
       }
-    });
 
-    return { tokensRemaining: HOURLY_TOKEN_LIMIT - newTokensUsed };
+      await tx.userTokens.upsert({
+        where: { userId },
+        update: {
+          tokensUsed: newTokensUsed,
+          lastResetHour: needsReset ? hour : userTokens.lastResetHour
+        },
+        create: {
+          userId,
+          tokensUsed: TOKENS_PER_REQUEST,
+          lastResetHour: hour
+        }
+      });
+
+      return { tokensRemaining: HOURLY_TOKEN_LIMIT - newTokensUsed };
+    });
   } catch (error) {
     console.error('Token usage error:', error);
     return { error: 'Failed to process token usage' };
@@ -236,23 +240,22 @@ async function fetchYouTubeVideos({
   region: string;
 }): Promise<{ videos: Video[]; nextPageToken?: string } | { error: string }> {
   try {
-    // First, get search results
+    // First, get search results with academic focus
     const searchResponse = await youtube.search.list({
       part: ['snippet'],
       maxResults: MAX_RESULTS,
       type: ['video'],
-      videoCategoryId: category,
+      videoCategoryId: category || '27', // Education category
       order: 'relevance',
       pageToken,
       q: searchQuery 
-        ? `${searchQuery} (course|tutorial|lecture|lesson|educational) -shorts -gaming -music`
-        : '(course|tutorial|lecture|lesson) -shorts -gaming -music',
+        ? `${searchQuery} (lecture|course|education) site:edu`
+        : 'university lecture course site:edu',
       relevanceLanguage: language,
       regionCode: region,
       safeSearch: 'moderate',
-      videoDefinition: 'high',
-      videoDuration: 'medium', // Only medium or long videos (> 4 minutes)
-      videoType: 'videoTypeUnspecified', // Exclude episodes and movies
+      // videoDefinition: 'high',
+      // videoDuration: 'long', // Focus on full lectures
     });
 
     if (!searchResponse.data.items?.length) {
@@ -295,9 +298,7 @@ async function fetchYouTubeVideos({
         // Skip videos with very low views (likely not quality content)
         Number(videoDetail.statistics?.viewCount || 0) < 100 ||
         // Skip videos with suspicious titles
-        hasSuspiciousTitle(searchItem.snippet?.title || '') ||
-        // Skip videos with suspicious descriptions
-        hasSuspiciousDescription(searchItem.snippet?.description || '')
+        hasSuspiciousTitle(searchItem.snippet?.title || '')
       ) {
         continue;
       }
