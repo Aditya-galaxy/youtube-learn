@@ -6,7 +6,7 @@ const Home = () => {
     const { videos } = useAppContext();
     
     return (
-        <Hero videos={videos} title='Recommended Videos' />
+        <Hero contextVideos={videos} title='Recommended Videos' />
     )
 }
 

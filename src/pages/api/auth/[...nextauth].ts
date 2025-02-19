@@ -1,22 +1,10 @@
-import NextAuth from "next-auth"
-import GoogleProvider from "next-auth/providers/google"
-import type { NextAuthOptions } from "next-auth"
-import type { JWT } from "next-auth/jwt"
+import NextAuth from 'next-auth';
+import GoogleProvider from 'next-auth/providers/google';
+import { PrismaAdapter } from '@next-auth/prisma-adapter';
+import { prisma } from '@/lib/prisma';
 
-// Extend the Session type to include accessToken
-declare module "next-auth" {
-  interface Session {
-    user: {
-      id?: string;
-      name?: string;
-      email?: string;
-      image?: string;
-    };
-    accessToken?: string;
-  }
-}
-
-export const authOptions: NextAuthOptions = {
+export const authOptions = {
+  adapter: PrismaAdapter(prisma),
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -24,69 +12,47 @@ export const authOptions: NextAuthOptions = {
       authorization: {
         params: {
           scope: [
-            'https://www.googleapis.com/auth/youtube.readonly',
-            'https://www.googleapis.com/auth/userinfo.profile',
-            'https://www.googleapis.com/auth/userinfo.email',
-          ].join(' ')
+            'openid',
+            'email',
+            'profile',
+            'https://www.googleapis.com/auth/youtube.force-ssl'
+          ].join(' '),
+          prompt: 'consent',
+          access_type: 'offline',
+          response_type: 'code'
         }
       }
-    }),
+    })
   ],
   callbacks: {
-    async jwt({ token, account, profile, user }): Promise<JWT> {
-      // Initial sign in
-      if (account && user) {
-        return {
-          ...token,
-          accessToken: account.access_token,
-          id: user.id,
-          profile
+    async session({ session, token, user }: { session: any, token: any, user: any }) {
+      if (token) {
+        session.accessToken = token.accessToken;
+        if (token.sub) {
+          session.user = {
+            ...session.user,
+            id: token.sub
+          };
         }
       }
-      return token
+      return session;
     },
-    async session({ session, token }) {
-      if (session.user) {
-        session.user.id = token.sub ?? token.id as string
-        session.accessToken = token.accessToken as string
+    async jwt({ token, user, account, profile, trigger, isNewUser, session }: { token: any, user: any, account: any, profile?: any, trigger?: any, isNewUser?: boolean, session?: any }) {
+      if (account) {
+        token.accessToken = account.access_token;
       }
-      return session
+      if (profile) {
+        token.profile = profile;
+      }
+      return token;
     }
   },
   pages: {
     signIn: '/auth/signin',
-    error: '/auth/error',
   },
-  // Add events for logging user authentication
-  events: {
-    async signIn({ user }) {
-      console.log(`User signed in: ${user.email}`)
-      console.log(`User logged in: ${user.name}`)
-      try {
-        // Example: Log to your analytics or monitoring service
-        await fetch('/api/user-logs', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            userId: user.id,
-            email: user.email,
-            event: 'signin',
-            timestamp: new Date().toISOString()
-          })
-        })
-      } catch (error) {
-        console.error('Failed to log user signin:', error)
-      }
-    },
-    async signOut({ session }) {
-      if (session?.user) {
-        console.log(`User signed out: ${session.user.email}`)
-      }
-    }
+  session: {
+    strategy: 'jwt' as const,
   },
-  secret: process.env.NEXTAUTH_SECRET,
-}
+};
 
-export default NextAuth(authOptions)
+export default NextAuth(authOptions);

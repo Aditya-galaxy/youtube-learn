@@ -1,14 +1,24 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useAppContext } from '@/Helper/Context';
 import Hero from './Hero/Hero';
+import { useSearchParams } from 'react-router-dom';
 
 const SearchResults: React.FC = () => {
-  const { filteredSearchVideos, searchQuery } = useAppContext();
-  const titleMessage= (searchQuery) ? `Search Results for "${searchQuery}"` : 'Recommended Videos'
+  const { videos,searchQuery, setSearchQuery } = useAppContext();
+  const [searchParams] = useSearchParams();
+  
+  useEffect(() => {
+    const query = searchParams.get('q');
+    if (query) {
+      setSearchQuery(query);
+    }
+  }, [searchParams, setSearchQuery]);
 
-  return (
-    <Hero title={titleMessage} videos={filteredSearchVideos} />
-  );
+  const titleMessage = searchQuery 
+    ? `Educational Content: "${searchQuery}"`
+    : 'Recommended Educational Videos';
+
+  return <Hero title={titleMessage} contextVideos={videos}/>;
 };
 
 export default SearchResults;

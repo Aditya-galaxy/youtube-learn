@@ -7,7 +7,7 @@ const Library = () => {
   const libVideos = videos.filter(video => video.inLibrary == true);
   
   return (
-    <Hero title='Library' videos={libVideos}/>
+    <Hero title='Library' contextVideos={libVideos}/>
   )
 }
 

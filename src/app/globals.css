@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+html {
+  font-size: 112.5%;
+}
+
 body {
   font-family: Times New Roman, Times New Roman, serif;
 }

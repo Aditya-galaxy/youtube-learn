@@ -9,7 +9,7 @@ const History = () => {
   const watchedVideos = videos.filter(video => video.watched==true);
 
   return (
-    <Hero title="Watch History" videos={watchedVideos}/>
+    <Hero title="Watch History" contextVideos={watchedVideos}/>
   );
 };
 

@@ -1,39 +1,43 @@
-"use client"
 import React from 'react';
-import { Video } from '@/Helper/Context';
+import { Video } from '../../../types/video';
 import { useAppContext } from '@/Helper/Context';
 import VideoThumbnail from './VideoThumbnail';
 import VideoActions from './VideoActions';
-import { useParams } from 'next/navigation';
 
 interface VideoCardProps {
   video: Video;
 }
 
 const VideoCard: React.FC<VideoCardProps> = ({ video }) => {
-    const { handleVideoClick } = useAppContext();
+  const { handleVideoClick } = useAppContext();
 
-    return (
-    <div 
-      className="group cursor-pointer"
-      onClick={() => handleVideoClick(video)}
-    >
-      <VideoThumbnail video={video} />
-      
-      <div className="mt-4 space-y-2">
-        <div className="flex justify-between items-start gap-2">
-          <h3 className="font-medium text-sm text-white/90 line-clamp-2 group-hover:text-purple-400 transition-colors flex-1">
-            {video.title}
-          </h3>
-          <VideoActions video={video} />
-        </div>
-        <p className="text-sm text-white/50">
-          {video.channelName}
-        </p>
-        <div className="flex items-center gap-2 text-xs text-white/30">
-          <span>{video.views} views</span>
-          <span className="w-1 h-1 rounded-full bg-white/30" />
-          <span>{video.publishedAt}</span>
+  return (
+    <div className="group relative bg-card rounded-xl overflow-hidden hover:shadow-lg transition-all duration-200 hover:-translate-y-1">
+      <div 
+        className="cursor-pointer"
+        onClick={() => handleVideoClick(video)}
+      >
+        <VideoThumbnail video={video} />
+        
+        <div className="p-4">
+          <div className="flex justify-between items-start">
+            <h3 className="font-semibold line-clamp-2 text-base flex-1 mr-2">
+              {video.title}
+            </h3>
+            <div className="flex-shrink-0">
+              <VideoActions video={video} />
+            </div>
+          </div>
+          <div className="flex flex-col gap-1 text-sm text-muted-foreground mt-2">
+            <span className="font-medium hover:text-foreground transition-colors">
+              {video.channelName}
+            </span>
+            <div className="flex items-center gap-2">
+              <span>{video.views}</span>
+              <span>•</span>
+              <span>{video.publishedAt}</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>

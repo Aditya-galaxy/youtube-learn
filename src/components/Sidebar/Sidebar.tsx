@@ -4,7 +4,7 @@ import { Home, TrendingUp, Library, History, Bookmark, Settings } from 'lucide-r
 
 import SidebarNavigation from './Navigation';
 import ProFeaturesBanner from './ProFeatures';
-import BuyMeACoffee from '../BuyMeACoffee';
+import BuyMeACoffee from './BuyMeACoffee';
 
 type SidebarProps = {
   activeRoute: string;
