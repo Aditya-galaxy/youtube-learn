@@ -28,7 +28,7 @@ const VideoModal = () => {
   // Create iframe source with additional parameters to better control playback
   const getIframeSrc = () => {
     if (!selectedVideo) return '';
-    return `https://www.youtube.com/embed/${selectedVideo.id}?autoplay=1&enablejsapi=1&origin=${window.location.origin}`;
+    return `https://www.youtube.com/embed/${selectedVideo.id}?autoplay=1&enablejsapi=1&origin=${window.location.origin}&mute=1`;
   };
 
   return (
