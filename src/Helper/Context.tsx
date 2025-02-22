@@ -3,7 +3,7 @@ import React, {useState, useContext, useCallback} from "react";
 import { createContext } from "react";
 import { ReactNode } from "react";
 import { Video } from "../../types/video";
-
+import { useSession } from "next-auth/react";
 
 interface AppContextType {
   videos: Video[];
@@ -14,20 +14,20 @@ interface AppContextType {
   loading: boolean;
   setLoading: React.Dispatch<React.SetStateAction<boolean>>;
   searchQuery: string;
-  // setSearchQuery: React.Dispatch<React.SetStateAction<string>>;
   setSearchQuery: (query: string) => void;
-  // handleSearch: (e: SearchEvent) => void;
-  // handleSearch: (e: React.FormEvent) => void;
   handleSearch: (query: string) => void;
   handleVideoClick: (video: Video) => void;
   addVideoToLibrary: (video: Video) => void;
   removeVideoFromLibrary: (videoId: string) => void;
   filteredSearchVideos: Video[];
+  error: string | null;
+  clearSearch: () => void;
 }
 
 export const AppContext = createContext<AppContextType | undefined>(undefined);
 
 const Context = ({ children }: { children: ReactNode }) => {
+  const { data: session } = useSession();
   const [videos, setVideos] = useState<Video[]>([
     {
     id: 'JRHAM1nAuD4',  // id of the video on youtube
@@ -192,11 +192,60 @@ const Context = ({ children }: { children: ReactNode }) => {
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [error, setError] = useState<string | null>(null);
   const [filteredSearchVideos, setFilteredSearchVideos] = useState<Video[]>([]);
 
-  const handleSearch = (query: string) => {
-    setSearchQuery(query.trim());
-  };
+  // Initialize filteredSearchVideos with all videos
+  React.useEffect(() => {
+    setFilteredSearchVideos(videos);
+  }, [videos]);
+
+  const handleSearch = useCallback(async (query: string) => {
+    if (!query.trim()) {
+      setFilteredSearchVideos(videos);
+      setSearchQuery('');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      if (session) {
+        const response = await fetch(`/api/videos?q=${encodeURIComponent(query)}`);
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to fetch videos');
+        }
+
+        setVideos(data.videos);
+        setFilteredSearchVideos(data.videos);
+      } else {
+        const searchResults = videos.filter(video => {
+          const searchTerm = query.toLowerCase();
+          return (
+            video.title.toLowerCase().includes(searchTerm) ||
+            video.description.toLowerCase().includes(searchTerm) ||
+            video.channelName.toLowerCase().includes(searchTerm)
+          );
+        });
+        
+        setFilteredSearchVideos(searchResults);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+      setFilteredSearchVideos([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [videos, session]);
+
+  const clearSearch = useCallback(() => {
+    setSearchQuery('');
+    setFilteredSearchVideos(videos);
+    setError(null);
+  }, [videos]);
 
   function handleVideoClick(video: Video) {
     setSelectedVideo(video);
@@ -227,10 +276,10 @@ const Context = ({ children }: { children: ReactNode }) => {
     );
   }
 
-  
 
   const value = {
     videos,
+    error,
     setVideos,
     selectedVideo,
     setSelectedVideo,
@@ -242,7 +291,8 @@ const Context = ({ children }: { children: ReactNode }) => {
     handleVideoClick,
     addVideoToLibrary,
     removeVideoFromLibrary,
-    filteredSearchVideos
+    filteredSearchVideos,
+    clearSearch,
   };
   return (
     //provide context api data through attribute value

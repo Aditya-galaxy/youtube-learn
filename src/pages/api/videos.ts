@@ -37,7 +37,7 @@ interface ChannelInfo {
 // Constants
 const HOURLY_TOKEN_LIMIT = 10000;
 const TOKENS_PER_REQUEST = 50;
-const MAX_RESULTS = 50;
+const MAX_RESULTS = 12;
 const HOURS_24 = 24 * 60 * 60 * 1000;
 
 // Request validation schema
@@ -87,14 +87,18 @@ export default async function handler(
       return res.status(400).json({ error: `Invalid query parameters: ${queryResult.error.message}` });
     }
     const { q: searchQuery, pageToken, refresh, category, language, region } = queryResult.data;
-
+    
     // Session handling
     const session = await getServerSession(req, res, authOptions);
     if (!session?.user?.id) {
       return res.status(401).json({ error: 'Authentication required' });
     }
 
-    await ensureUserExists(session.user);
+    if (session.user.id) {
+      await ensureUserExists(session.user as { id: string; email?: string | null; name?: string | null; image?: string | null });
+    } else {
+      return res.status(401).json({ error: 'User ID is missing' });
+    }
 
     // Check YouTube API credentials
     if (!process.env.YOUTUBE_API_KEY) {
@@ -173,7 +177,7 @@ async function handleTokenUsage(userId: string): Promise<{ tokensRemaining: numb
   const hour = now.getHours();
 
   try {
-    return await prisma.$transaction(async (tx) => {
+    return await prisma.$transaction(async (tx:any) => {
       const userTokens = await tx.userTokens.findUnique({
         where: { userId }
       });
@@ -215,7 +219,7 @@ async function getViewedVideos(userId: string): Promise<string[]> {
       },
       select: { videoId: true }
     });
-    return viewedVideos.map(v => v.videoId);
+    return viewedVideos.map((v:any) => v.videoId);
   } catch (error) {
     console.error('Error fetching viewed videos:', error);
     return [];
@@ -325,6 +329,12 @@ async function fetchYouTubeVideos({
       nextPageToken: searchResponse.data.nextPageToken ?? undefined
     };
   } catch (error) {
+    // Check for YouTube API quota exceeded errors
+    if ((error as any).code === 403 && (error as any).message?.includes('quota')) {
+      return { 
+        error: 'YouTube API token limit reached. Please try again later.' 
+      };
+    }
     console.error('YouTube API error:', error);
     return { error: 'Failed to fetch videos from YouTube' };
   }
@@ -332,17 +342,19 @@ async function fetchYouTubeVideos({
 
 async function updateViewedVideos(userId: string, videos: Video[]) {
   try {
-    await prisma.viewedVideos.createMany({
-      data: videos.map(video => ({
-        userId,
-        videoId: video.id,
-        viewedAt: new Date(),
-        user: { connect: { id: userId } }
-      })),
-      skipDuplicates: true
+    await prisma.$transaction(async (tx:any) => {
+      await Promise.all(videos.map(async (video) => {
+        await tx.viewedVideos.create({
+          data: {
+            userId,
+            videoId: video.id,
+            viewedAt: new Date(),
+          }
+        });
+      }));
     });
   } catch (error) {
-    console.error('Failed to update viewed videos:', error);
+    console.error('Error updating viewed videos:', error);
   }
 }
 

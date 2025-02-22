@@ -1,26 +1,18 @@
-import NextAuth from "next-auth"
-import GoogleProvider from "next-auth/providers/google"
-import type { NextAuthOptions } from "next-auth"
+import NextAuth from 'next-auth'
 import { PrismaAdapter } from '@next-auth/prisma-adapter'
+import GoogleProvider from 'next-auth/providers/google'
 import { prisma } from '@/lib/prisma'
+import type { NextAuthOptions } from 'next-auth'
 
-// Extend the Session type for better TypeScript support
 declare module "next-auth" {
   interface Session {
     user: {
-      id: string;
-      name?: string | null;
-      email?: string | null;
-      image?: string | null;
-    };
-    accessToken?: string;
-  }
-  
-  interface User {
-    id: string;
-    name?: string | null;
-    email?: string | null;
-    image?: string | null;
+      id?: string
+      name?: string
+      email?: string
+      image?: string
+    }
+    accessToken?: string
   }
 }
 
@@ -36,63 +28,105 @@ export const authOptions: NextAuthOptions = {
             'openid',
             'email',
             'profile',
-            'https://www.googleapis.com/auth/youtube.readonly',
-            'https://www.googleapis.com/auth/youtube.force-ssl'
-          ].join(' '),
-          prompt: 'consent',
-          access_type: 'offline',
-          response_type: 'code'
+            'https://www.googleapis.com/auth/youtube.readonly'
+          ].join(' ')
         }
       }
     })
   ],
   callbacks: {
+    async signIn({ user, account, profile, email }) {
+      // Only allow Google sign-in
+      if (account?.provider !== 'google') {
+        return false
+      }
+      
+      // Ensure we have an email
+      if (!user.email) {
+        return false
+      }
+
+      // Check if user exists
+      const existingUser = await prisma.user.findUnique({
+        where: { email: user.email },
+        include: { accounts: true }
+      })
+
+      if (existingUser) {
+        // If the user exists but doesn't have a Google account linked,
+        // we should link it
+        if (!existingUser.accounts.some((acc:any) => acc.provider === 'google')) {
+          await prisma.account.create({
+            data: {
+              userId: existingUser.id,
+              type: account.type,
+              provider: account.provider,
+              providerAccountId: account.providerAccountId,
+              access_token: account.access_token,
+              token_type: account.token_type,
+              scope: account.scope,
+              expires_at: account.expires_at,
+              refresh_token: account.refresh_token,
+              id_token: account.id_token,
+            }
+          })
+        }
+      }
+
+      return true
+    },
     async session({ session, token, user }) {
       if (session.user) {
-        session.user.id = token.sub ?? user.id;
-        session.accessToken = token.accessToken as string;
+        session.user.id = token.sub
+        session.accessToken = token.accessToken as string
       }
-      return session;
+      return session
     },
-    async jwt({ token, account, profile, user }) {
-      // Initial sign in
-      if (account && user) {
-        token.accessToken = account.access_token;
-        token.profile = profile;
+    async jwt({ token, account }) {
+      if (account) {
+        token.accessToken = account.access_token
       }
-      return token;
+      return token
     }
   },
   events: {
     async signIn({ user }) {
-      console.log(`User signed in: ${user.email}`);
       try {
-        await prisma.userLoginEvent.create({
-          data: {
-            userId: user.id,
-            email: user.email || '',
-            eventType: 'SIGNIN',
-            timestamp: new Date()
-          }
-        });
+        await prisma.user.upsert({
+          where: { email: user.email! },
+          create: {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            emailVerified: new Date(),
+            image: user.image,
+            lastSignIn: new Date(),
+            loginCount: 1,
+          },
+          update: {
+            name: user.name,
+            image: user.image,
+            lastSignIn: new Date(),
+            loginCount: {
+              increment: 1
+            }
+          },
+        })
       } catch (error) {
-        console.error('Failed to log user signin:', error);
+        console.error('Error in signIn event:', error)
       }
     },
     async signOut({ session }) {
-      if (session?.user) {
-        console.log(`User signed out: ${session.user.email}`);
+      if (session?.user?.id) {
         try {
-          await prisma.UserLoginEvent.create({
+          await prisma.user.update({
+            where: { id: session.user.id },
             data: {
-              userId: session.user.id,
-              email: session.user.email || '',
-              eventType: 'SIGNOUT',
-              timestamp: new Date()
+              lastSignOut: new Date()
             }
-          });
+          })
         } catch (error) {
-          console.error('Failed to log user signout:', error);
+          console.error('Error in signOut event:', error)
         }
       }
     }
@@ -105,6 +139,6 @@ export const authOptions: NextAuthOptions = {
     strategy: 'jwt',
   },
   secret: process.env.NEXTAUTH_SECRET,
-};
+}
 
-export default NextAuth(authOptions);
+export default NextAuth(authOptions)

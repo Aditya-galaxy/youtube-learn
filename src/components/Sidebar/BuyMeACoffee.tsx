@@ -6,7 +6,7 @@ const BuyMeACoffee = () => {
   };
 
   return (
-    <div className="mt-6">
+    <div className="mt-12">
       <button
         onClick={handleSupport}
         className="w-full px-2 py-2 rounded-lg flex items-center space-x-0.5 bg-purple-500 hover:bg-purple-600 text-white text-sm font-medium transition-colors"

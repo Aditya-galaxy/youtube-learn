@@ -1,54 +1,34 @@
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog'
 import { useAppContext } from '@/Helper/Context'
 
 const VideoModal = () => {
   const { selectedVideo, setSelectedVideo } = useAppContext();
-  const [iframeKey, setIframeKey] = useState(0);
-  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [iframeKey, setIframeKey] = useState(0); // Add state to force re-render
 
-  // Clean up when component unmounts
+  // Clean up function to remove any existing iframes when modal closes
   useEffect(() => {
     return () => {
-      cleanupIframes();
+      const existingIframes = document.querySelectorAll('iframe[src*="youtube.com"]');
+      existingIframes.forEach(iframe => iframe.remove());
     };
   }, []);
 
-  // Clean up when video changes
-  useEffect(() => {
-    if (!selectedVideo) {
-      cleanupIframes();
-    }
-  }, [selectedVideo]);
-
-  const cleanupIframes = () => {
-    // Remove only iframes that aren't the current one
-    const existingIframes = document.querySelectorAll('iframe[src*="youtube.com"]');
-    existingIframes.forEach(iframe => {
-      if (iframe !== iframeRef.current) {
-        iframe.remove();
-      }
-    });
-  };
-
   const handleOpenChange = (open: boolean) => {
     if (!open) {
-      // Stop video playback by setting src to empty
-      if (iframeRef.current) {
-        iframeRef.current.src = '';
-      }
-      // Clean up iframes
-      cleanupIframes();
-      // Update state
+      // When closing, first remove the iframe to stop any sound
+      const iframes = document.querySelectorAll('iframe[src*="youtube.com"]');
+      iframes.forEach(iframe => iframe.remove());
+      // Then update the state
       setSelectedVideo(null);
-      setIframeKey(prevKey => prevKey + 1);
+      setIframeKey(prevKey => prevKey + 1); // Force re-render by updating key
     }
   };
 
+  // Create iframe source with additional parameters to better control playback
   const getIframeSrc = () => {
     if (!selectedVideo) return '';
-    // Add additional parameters to prevent autoplay issues
-    return `https://www.youtube.com/embed/${selectedVideo.id}?autoplay=1&enablejsapi=1&origin=${window.location.origin}&playsinline=1&rel=0&mute=1`;
+    return `https://www.youtube.com/embed/${selectedVideo.id}?autoplay=1&enablejsapi=1&origin=${window.location.origin}`;
   };
 
   return (
@@ -66,8 +46,7 @@ const VideoModal = () => {
         {selectedVideo && (
           <div className="relative pt-[56.25%] mt-4">
             <iframe
-              ref={iframeRef}
-              key={iframeKey}
+              key={iframeKey} // Use state key to force re-render
               src={getIframeSrc()}
               title={selectedVideo.title}
               className="absolute top-0 left-0 w-full h-full"

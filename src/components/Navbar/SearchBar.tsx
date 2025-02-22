@@ -6,7 +6,7 @@ import { useAppContext } from '../../Helper/Context';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
 const SearchBar = () => {
-  const { handleSearch } = useAppContext();
+  const { handleSearch, clearSearch } = useAppContext();
   const [localQuery, setLocalQuery] = useState('');
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -22,8 +22,7 @@ const SearchBar = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!localQuery.trim()) {
-    navigate('/');
-    handleSearch('');
+    handleClear();
     return;
   }
 
@@ -34,10 +33,10 @@ const SearchBar = () => {
   };
 
   const handleClear = () => {
-  setLocalQuery('');
-  navigate('/');
-  handleSearch('');
-};
+    setLocalQuery('');
+    clearSearch();
+    navigate('/');
+  };
 
   return (
     <div className="hidden md:flex flex-1 max-w-xl mx-4">
