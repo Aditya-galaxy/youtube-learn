@@ -42,27 +42,52 @@ model Session {
 }
 
 model User {
-  id            String    @id @default(cuid())
+  id            String           @id @default(cuid())
   name          String?
-  email         String?   @unique
+  email         String?          @unique
   emailVerified DateTime?
   image         String?
   accounts      Account[]
   sessions      Session[]
+  loginEvents   UserLoginEvent[]
+  viewedVideos  ViewedVideos[]
+  tokens        UserTokens?
 }
 
 model UserTokens {
-  userId     String   @id
-  tokensUsed Int     @default(0)
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  tokensUsed    Int      @default(0)
   lastResetHour Int
-  @@unique([userId])
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model ViewedVideos {
-  id       String   @id @default(cuid())
-  userId   String
-  videoId  String   @unique
-  viewedAt DateTime
+  id        String   @id @default(cuid())
+  userId    String
+  videoId   String
+  viewedAt  DateTime
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@unique([userId, videoId])
   @@index([userId, viewedAt])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model UserLoginEvent {
+  id        String   @id @default(cuid())
+  userId    String
+  email     String
+  eventType String   // 'SIGNIN' or 'SIGNOUT'
+  timestamp DateTime
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, timestamp])
 }

@@ -336,7 +336,8 @@ async function updateViewedVideos(userId: string, videos: Video[]) {
       data: videos.map(video => ({
         userId,
         videoId: video.id,
-        viewedAt: new Date()
+        viewedAt: new Date(),
+        user: { connect: { id: userId } }
       })),
       skipDuplicates: true
     });

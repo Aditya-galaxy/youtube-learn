@@ -1,4 +1,5 @@
-import React, {useState, useRef, useEffect } from 'react';
+"use client"
+import React, { useState, useRef, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, useLocation} from 'react-router-dom';
 import Navbar from '../Navbar/Navbar';
 import Sidebar from '../Sidebar/Sidebar';
