@@ -1,6 +1,6 @@
 "use client"
 import React from 'react';
-import { Video } from '@/Helper/Context';
+import { Video } from '../../../types/video';
 import { MoreVertical, Library } from 'lucide-react';
 import { 
   DropdownMenu,

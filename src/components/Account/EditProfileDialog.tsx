@@ -58,6 +58,15 @@ export const EditProfileDialog: React.FC<EditProfileDialogProps> = ({
     onClose();
   };
 
+  // Helper function to ensure string values
+  const getStringValue = (value: any): string => {
+    if (typeof value === 'string') {
+      return value;
+    }
+    // If it's not a string, convert to string or return empty string
+    return String(value) || '';
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="bg-gray-800 text-white">
@@ -73,7 +82,7 @@ export const EditProfileDialog: React.FC<EditProfileDialogProps> = ({
             <div key={field}>
               <label className="text-sm text-gray-400">{label}</label>
               <Input
-                value={editForm[field as keyof typeof editForm]}
+                value={getStringValue(editForm[field as keyof typeof editForm])}
                 onChange={(e) => setEditForm(prev => ({ ...prev, [field]: e.target.value }))}
                 className="bg-gray-700 border-gray-600 text-white"
               />
@@ -83,7 +92,7 @@ export const EditProfileDialog: React.FC<EditProfileDialogProps> = ({
           <div>
             <label className="text-sm text-gray-400">Bio</label>
             <Textarea
-              value={editForm.bio}
+              value={getStringValue(editForm.bio)}
               onChange={(e) => setEditForm(prev => ({ ...prev, bio: e.target.value }))}
               className="bg-gray-700 border-gray-600 text-white"
             />

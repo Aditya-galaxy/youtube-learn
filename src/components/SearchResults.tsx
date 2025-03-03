@@ -19,10 +19,12 @@ const SearchResults: React.FC = () => {
   const { data: session } = useSession();
 
   useEffect(() => {
-    const query = searchParams.get('q');
-    if (query) {
-      setSearchQuery(query);
-      handleSearch(query);
+    if (searchParams) {
+      const query = searchParams.get('q');
+      if (query) {
+        setSearchQuery(query);
+        handleSearch(query);
+      }
     }
   }, [searchParams, setSearchQuery, handleSearch]);
 
@@ -30,11 +32,12 @@ const SearchResults: React.FC = () => {
     return <LoadingSpinner />;
   }
 
-  const titleMessage = searchParams.get('q')
-    ? `Search Results: "${searchParams.get('q')}"`
+  const query = searchParams?.get('q') || '';
+  const titleMessage = query 
+    ? `Search Results: "${query}"`
     : 'Recommended Educational Videos';
 
-  const displayVideos = searchParams.get('q') 
+  const displayVideos = query
     ? filteredSearchVideos 
     : contextVideos;
 

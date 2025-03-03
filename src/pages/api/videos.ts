@@ -381,22 +381,6 @@ function hasSuspiciousTitle(title: string): boolean {
   return suspiciousPatterns.some(pattern => pattern.test(title));
 }
 
-// Helper function to check for suspicious descriptions
-function hasSuspiciousDescription(description: string): boolean {
-  const suspiciousPatterns = [
-    /\b(subscribe|like|comment|notification|bell|merch)\b/i,
-    /\b(giveaway|free|win|contest|lottery)\b/i,
-    /\b(affiliate|sponsored|promotion|ad|advertisement)\b/i,
-    /\b(gaming|gameplay|stream|streaming|streamer)\b/i,
-    /\b(follow me|social media|instagram|twitter|tiktok)\b/i
-  ];
-
-  // Check if description is too short (might indicate non-educational content)
-  if (description.length < 50) return true;
-
-  return suspiciousPatterns.some(pattern => pattern.test(description));
-}
-
 function handleApiError(error: any, res: NextApiResponse) {
   console.error('Handling API error:', {
     message: error.message,
