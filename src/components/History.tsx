@@ -1,3 +1,4 @@
+"use client"
 import React, { useContext } from 'react';
 import { useAppContext } from '../Helper/Context';
 import Hero from '../components/Hero/Hero';

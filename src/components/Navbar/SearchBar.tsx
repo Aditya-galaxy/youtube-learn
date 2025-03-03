@@ -1,41 +1,43 @@
-import React, { useState } from 'react';
+"use client"
+import React, { useState, useEffect } from 'react';
 import { Search } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { useAppContext } from '../../Helper/Context';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 const SearchBar = () => {
   const { handleSearch, clearSearch } = useAppContext();
   const [localQuery, setLocalQuery] = useState('');
-  const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
   // Initialize local query from URL params
-  React.useEffect(() => {
-    const queryParam = searchParams.get('q');
-    if (queryParam) {
-      setLocalQuery(queryParam);
+  useEffect(() => {
+    if (searchParams) {
+      const queryParam = searchParams.get('q');
+      if (queryParam) {
+        setLocalQuery(queryParam);
+      }
     }
   }, [searchParams]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!localQuery.trim()) {
-    handleClear();
-    return;
-  }
+      handleClear();
+      return;
+    }
 
-    // Update URL with search query
-    navigate(`/search?q=${encodeURIComponent(localQuery.trim())}`);
-    // Trigger search only when form is submitted
-    handleSearch(localQuery.trim());
+    const encodedQuery = encodeURIComponent(localQuery.trim());
+    await handleSearch(localQuery.trim());
+    router.push(`/search?q=${encodedQuery}`);
   };
 
   const handleClear = () => {
     setLocalQuery('');
     clearSearch();
-    navigate('/');
+    router.push('/');
   };
 
   return (
@@ -55,7 +57,10 @@ const SearchBar = () => {
               type="button"
               onClick={handleClear}
               className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/40 hover:text-white/60"
-            >×</button>)}
+            >
+              ×
+            </button>
+          )}
         </div>
         <Button 
           type="submit"

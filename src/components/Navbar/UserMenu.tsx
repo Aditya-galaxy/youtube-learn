@@ -1,6 +1,9 @@
+"use client"
+
 import React from "react";
-import { useSession, signOut } from "next-auth/react";
+import { useSession, signOut, signIn } from "next-auth/react";
 import { UserCircle, LogOut } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { Button } from '../ui/button';
 import {
   DropdownMenu,
@@ -9,20 +12,17 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
-import { useNavigate } from 'react-router-dom';
 import SignInButton from '../auth/SignInButton';
-import { signIn } from "next-auth/react";
 
 const UserMenu = () => {
   const { data: session } = useSession();
-  const navigate = useNavigate();
+  const router = useRouter();
 
   const handleLogout = async () => {
     await signOut({ redirect: true, callbackUrl: '/' });
   };
 
   if (!session) {
-   
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -47,7 +47,7 @@ const UserMenu = () => {
               <span className="text-white/40">Don't have an account? </span>
               <button 
                 className="text-purple-400 hover:text-purple-300"
-                onClick={(e) => signIn('google', { callbackUrl: '/' })}
+                onClick={() => signIn('google', { callbackUrl: '/' })}
               >
                 Sign up
               </button>
@@ -66,7 +66,7 @@ const UserMenu = () => {
           className="bg-white/5 hover:bg-white/10 text-white border-0"
         >
           <img 
-            src={session.user.image ?? ''}
+            src={session.user?.image ?? ''}
             alt="Profile"
             className="h-5 w-5 rounded-full"
           />
@@ -76,7 +76,7 @@ const UserMenu = () => {
       <DropdownMenuContent align="end" className="w-56 bg-black/90 border-white/10">
         <DropdownMenuItem
           className="focus:bg-white/5"
-          onClick={() => navigate('/profile')}
+          onClick={() => router.push('/profile')}
         >
           <UserCircle className="w-4 h-4 mr-2" />
           <span>Profile</span>

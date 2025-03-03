@@ -9,8 +9,12 @@ const nextConfig = {
         tls: false,
         dns: false,
         path: false,
+        punycode: false,
       };
     }
+
+    // Suppress punycode warning
+    config.ignoreWarnings = [{ module: /node_modules\/punycode/ }];
     return config;
   },
 
@@ -39,12 +43,6 @@ const nextConfig = {
       process.env.NODE_ENV === "production"
         ? { exclude: ["error", "warn"] }
         : false,
-  },
-
-  // Experimental features
-  experimental: {
-    optimizeCss: true,
-    scrollRestoration: true,
   },
 
   // External packages configuration

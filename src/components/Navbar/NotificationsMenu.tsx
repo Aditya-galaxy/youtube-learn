@@ -1,5 +1,5 @@
-import React from 'react';
-import { useState } from 'react';
+"use client"
+import React,{ useState } from 'react';
 import { Bell } from 'lucide-react';
 import { Button } from '../ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '../ui/dropdown-menu';

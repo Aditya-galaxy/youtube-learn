@@ -1,3 +1,4 @@
+"use client"
 import React from 'react';
 import { Video } from '../../../types/video';
 import { useAppContext } from '@/Helper/Context';

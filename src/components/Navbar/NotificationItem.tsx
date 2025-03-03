@@ -1,3 +1,4 @@
+"use client"
 import React from 'react';
 import { DropdownMenuItem } from '../ui/dropdown-menu';
 import { Notification } from './types';

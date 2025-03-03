@@ -1,10 +1,7 @@
 "use client";
 import React from 'react';
-import App from '@/components/App/App';
+import Home from "@/components/Home";
 
-export default function YoutubeLearn() {
-
-  return (
-    <App/>
-  );
+export default function HomePage() {
+  return <Home />;
 }

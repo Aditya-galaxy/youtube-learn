@@ -1,11 +1,13 @@
+"use client"
+
 import React from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Sparkles, Menu } from 'lucide-react';
 import { Button } from '../ui/button';
-import { useNavigate } from 'react-router-dom';
 
 const Logo = () => {
-  const navigate = useNavigate();
+  const router = useRouter();
 
   return (
     <div className="flex items-center gap-4">
@@ -13,7 +15,7 @@ const Logo = () => {
         variant="ghost" 
         size="icon" 
         className="text-white/70 hover:text-white hover:bg-white/5"
-        onClick={() => navigate('/profile')}
+        onClick={() => router.push('/profile')}
       >
         <Menu className="w-5 h-5" />
       </Button>

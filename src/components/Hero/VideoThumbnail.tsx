@@ -1,3 +1,4 @@
+"use client"
 import React from 'react';
 import { Video } from '@/Helper/Context';
 import { Play, Clock } from 'lucide-react';

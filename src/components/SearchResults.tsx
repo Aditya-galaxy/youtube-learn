@@ -1,7 +1,9 @@
+"use client"
+
 import React, { useEffect } from 'react';
 import { useAppContext } from '@/Helper/Context';
 import Hero from './Hero/Hero';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'next/navigation';
 import LoadingSpinner from './Hero/LoadingSpinner';
 import { useSession } from 'next-auth/react';
 
@@ -13,7 +15,7 @@ const SearchResults: React.FC = () => {
     loading,
     handleSearch 
   } = useAppContext();
-  const [searchParams] = useSearchParams();
+  const searchParams = useSearchParams();
   const { data: session } = useSession();
 
   useEffect(() => {

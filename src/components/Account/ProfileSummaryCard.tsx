@@ -1,3 +1,4 @@
+"use client"
 import React from 'react';
 import { Mail, Phone, MapPin, Calendar, Edit2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';

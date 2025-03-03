@@ -1,3 +1,4 @@
+"use client"
 import React, { useEffect, useState } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog'
 import { useAppContext } from '@/Helper/Context'

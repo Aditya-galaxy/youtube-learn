@@ -1,51 +1,43 @@
-import React, { forwardRef, Ref } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Home, TrendingUp, Library, History, Bookmark, Settings } from 'lucide-react';
+"use client"
 
-import SidebarNavigation from './Navigation';
+import React, { useMemo } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
+import { Home, TrendingUp, Library, History, Bookmark, Settings } from 'lucide-react';
+import Navigation from './Navigation';
 import ProFeaturesBanner from './ProFeatures';
 import BuyMeACoffee from './BuyMeACoffee';
 
-type SidebarProps = {
-  activeRoute: string;
-  onNavigation: (path: string) => void;
-};
+const Sidebar = () => {
+  const router = useRouter();
 
-const menuItems = [
-  { icon: Home, label: 'Home', path: '/' },
-  { icon: TrendingUp, label: 'Trending', path: '/trending' },
-  { icon: Library, label: 'Library', path: '/library' },
-  { icon: History, label: 'History', path: '/history' },
-  { icon: Bookmark, label: 'Saved', path: '/saved' },
-  { icon: Settings, label: 'Settings', path: '/settings' }
-];
+  const menuItems = useMemo(() => [
+    { icon: Home, label: 'Home', path: '/' },
+    { icon: TrendingUp, label: 'Trending', path: '/trending' },
+    { icon: Library, label: 'Library', path: '/library' },
+    { icon: History, label: 'History', path: '/history' },
+    { icon: Bookmark, label: 'Saved', path: '/saved' },
+    { icon: Settings, label: 'Settings', path: '/settings' }
+  ], []);
 
-const Sidebar = forwardRef<HTMLElement, SidebarProps>(({ activeRoute, onNavigation }, ref: Ref<HTMLElement>) => {
-  const navigate = useNavigate();
-
-  const handleMenuItemClick = (path: string) => {
-    onNavigation(path);
-    navigate(path);
+  const handleNavigation = (path: string) => {
+    router.prefetch(path); // Prefetch the next route
+    router.push(path);
   };
 
   return (
-    <aside
-      className="fixed left-0 top-20 h-[calc(100vh-5rem)] w-44 z-0 bg-black/50 backdrop-blur-xl border-r border-white/5 focus:outline-none"
-      tabIndex={0}
-      ref={ref}
-    >
+    <aside className="fixed left-0 top-20 h-[calc(100vh-5rem)] w-44 z-0 bg-black/50 backdrop-blur-xl border-r border-white/5 focus:outline-none">
       <div className="p-4">
-        <SidebarNavigation 
+        <Navigation 
           menuItems={menuItems} 
-          onMenuItemClick={handleMenuItemClick}
+          onNavigate={handleNavigation}
         />
-        
-        <ProFeaturesBanner onUpgradeClick={() => handleMenuItemClick('/plans')} />
-        
+        <ProFeaturesBanner 
+          onUpgradeClick={() => handleNavigation('/plans')} 
+        />
         <BuyMeACoffee />
       </div>
     </aside>
   );
-});
+};
 
-export default Sidebar;
+export default React.memo(Sidebar);
