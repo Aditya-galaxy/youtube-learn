@@ -62,7 +62,7 @@ YouTube Learn is a sophisticated web application that provides an enhanced video
 
 2. Install dependencies
    ```bash
-   cd youtube-learn
+   cd youtubelearn
    npm install
    ```
 
