@@ -57,7 +57,7 @@ YouTube Learn is a sophisticated web application that provides an enhanced video
 ### Installation Steps
 1. Clone the repository
    ```bash
-   git clone https://github.com/yourusername/youtube-learn.git
+   git clone https://github.com/Aditya-galaxy/YouTubeLearn.git
    ```
 
 2. Install dependencies
