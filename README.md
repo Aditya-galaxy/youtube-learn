@@ -132,7 +132,7 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 ## 📄 License
 
-This project is licensed under my License.
+This project is licensed under my free and fair use License.🤣
 
 ## 🛟 Support
 
