@@ -85,12 +85,22 @@ YouTube Learn is a sophisticated web application that provides an enhanced video
 4. Initialize database
    ```bash
    npx prisma migrate dev
+   #or
+   npx prisma generate
    ```
 
 5. Run development server
    ```bash
    npm run dev
+   # or
+   yarn dev
+   # or
+   pnpm dev
+   # or
+   bun dev
    ```
+
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
 ## 🔒 Environment Variables
 
