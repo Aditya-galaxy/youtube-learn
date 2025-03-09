@@ -120,7 +120,8 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 - `next-auth`: Authentication
 - `@prisma/client`: Database ORM
 - `@next-auth/prisma-adapter`: Prisma adapter for NextAuth
-- `youtube-api-v3`: YouTube API interactions
+- `next-auth/providers/google`: Sign in with Google account
+- `googleapis`: YouTube API interactions
 
 ## 🤝 Contributing
 
