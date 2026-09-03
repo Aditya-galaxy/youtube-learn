@@ -1,14 +1,7 @@
-"use client"
-import React from 'react'
-import Hero from '../components/Hero/Hero'
-import { useAppContext } from '@/Helper/Context'
+"use client";
+import React from "react";
+import Hero from "./Hero/Hero";
 
-const Home = () => {
-    const { videos } = useAppContext();
-    
-    return (
-        <Hero contextVideos={videos} title='Recommended Videos' />
-    )
-}
+const Home = () => <Hero title="Recommended Videos" />;
 
-export default Home
+export default Home;

@@ -1,169 +1,189 @@
-"use client"
-import React, { useEffect, useState } from 'react';
-import { useSession } from 'next-auth/react';
-import { Loader2 } from 'lucide-react';
-import { useInView } from 'react-hook-inview';
-import VideoHeader from './VideoHeader';
-import LoadingSpinner from './LoadingSpinner';
-import VideoCard from './VideoCard';
-import VideoModal from './VideoModal';
-import { useToast } from '@/hooks/use-toast';
-import { useAppContext } from '@/Helper/Context';
-import { Video } from '../../../types/video';
-import { formatDuration } from '@/lib/utils';
-import './hero.css';
+"use client";
+
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useSession } from "next-auth/react";
+import { Loader2 } from "lucide-react";
+import { useInView } from "react-hook-inview";
+import { useToast } from "@/hooks/use-toast";
+import { useAppContext } from "@/Helper/Context";
+import type { Video } from "../../../types/video";
+import VideoGrid from "./VideoGrid";
 
 interface HeroProps {
   title: string;
-  contextVideos: Video[];
+  /** Search term. Empty/undefined renders the default recommendation feed. */
+  query?: string;
+  order?: "relevance" | "viewCount" | "date";
 }
 
-const Hero: React.FC<HeroProps> = ({ title , contextVideos }) => {
+interface VideosResponse {
+  videos: Video[];
+  nextPageToken?: string;
+  error?: string;
+}
+
+function matchesQuery(video: Video, query: string) {
+  const terms = query.toLowerCase().split(/\s+/).filter(Boolean);
+  const haystack =
+    `${video.title} ${video.description} ${video.channelName}`.toLowerCase();
+  return terms.every((term) => haystack.includes(term));
+}
+
+/**
+ * The one component that talks to /api/videos.
+ *
+ * Search state lives in the URL and arrives here as a prop. It previously lived
+ * in React context alongside a `handleSearch` that both read and wrote the video
+ * list; because `handleSearch` was in a `useEffect` dependency array, every
+ * fetch changed its identity and re-triggered the effect, so a single search
+ * looped indefinitely and burned YouTube quota on every pass.
+ */
+const Hero: React.FC<HeroProps> = ({ title, query, order = "relevance" }) => {
+  const { data: session, status } = useSession();
+  const { demoVideos, isInLibrary } = useAppContext();
+  const { toast } = useToast();
+
   const [videos, setVideos] = useState<Video[]>([]);
+  const [pageToken, setPageToken] = useState<string | undefined>();
   const [loading, setLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [pageToken, setPageToken] = useState<string | undefined>();
-  const { data: session } = useSession();
-  const { toast } = useToast();
-  const { searchQuery } = useAppContext();
-  
-  const [ref, inView] = useInView({
-    threshold: 0,
-    rootMargin: '100px',
-  });
+  const [exhausted, setExhausted] = useState(false);
 
-  const filterContextVideos = (query: string) => {
-    if (!query.trim()) {
-      return contextVideos; // Return all videos if query is empty
-    }
-    return contextVideos.filter(video => {
-      const searchTerms = query.toLowerCase().split(' ');
-      const videoText = `${video.title} ${video.description} ${video.channelName}`.toLowerCase();
-      return searchTerms.every(term => videoText.includes(term));
-    });
-  };
+  // Guards against a slow response for an old query overwriting a newer one.
+  const requestIdRef = useRef(0);
 
-  const fetchVideos = async (loadMore = false, query?: string) => {
-    if (!session?.accessToken) {
-      // Handle unauthenticated users with context videos
-      const filteredVideos = filterContextVideos(query || '');
-      
-      setVideos(filteredVideos);
-      setLoading(false);
-      return;
-    }
+  const [sentinelRef, inView] = useInView({ threshold: 0, rootMargin: "200px" });
 
-    try {
-      setIsLoadingMore(loadMore);
-      
-      const params = new URLSearchParams({
-        refresh: 'true'
-      });
-      
-      if (query) {
-        params.append('q', query.trim());
+  const trimmedQuery = query?.trim() ?? "";
+  const isAuthenticated = status === "authenticated" && Boolean(session);
+
+  const loadPage = useCallback(
+    async (token?: string) => {
+      const requestId = ++requestIdRef.current;
+      const isFirstPage = !token;
+
+      if (isFirstPage) setLoading(true);
+      else setIsLoadingMore(true);
+
+      // Signed-out visitors get the local sample feed; there is no API budget
+      // to spend on them and the endpoint requires a session anyway.
+      if (!isAuthenticated) {
+        const filtered = trimmedQuery
+          ? demoVideos.filter((video) => matchesQuery(video, trimmedQuery))
+          : demoVideos;
+        if (requestId === requestIdRef.current) {
+          setVideos(filtered);
+          setPageToken(undefined);
+          setExhausted(true);
+          setLoading(false);
+          setIsLoadingMore(false);
+        }
+        return;
       }
 
-      if (loadMore && pageToken) {
-        params.append('pageToken', pageToken);
+      try {
+        const params = new URLSearchParams();
+        if (trimmedQuery) params.set("q", trimmedQuery);
+        if (order !== "relevance") params.set("order", order);
+        if (token) params.set("pageToken", token);
+
+        const response = await fetch(`/api/videos?${params.toString()}`);
+        const data: VideosResponse = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error || `Request failed (${response.status})`);
+        }
+        if (requestId !== requestIdRef.current) return;
+
+        const incoming = data.videos ?? [];
+        setVideos((prev) => {
+          if (isFirstPage) return incoming;
+          const known = new Set(prev.map((v) => v.id));
+          return [...prev, ...incoming.filter((v) => !known.has(v.id))];
+        });
+        setPageToken(data.nextPageToken);
+        // A page that yields nothing new ends the scroll; without this an
+        // always-visible sentinel would keep requesting the same page.
+        setExhausted(!data.nextPageToken || incoming.length === 0);
+      } catch (error) {
+        if (requestId !== requestIdRef.current) return;
+        console.error("Video fetch error:", error);
+        toast({
+          title: "Could not load videos",
+          description:
+            error instanceof Error ? error.message : "An unexpected error occurred",
+          variant: "destructive",
+        });
+        if (isFirstPage) {
+          const fallback = trimmedQuery
+            ? demoVideos.filter((video) => matchesQuery(video, trimmedQuery))
+            : demoVideos;
+          setVideos(fallback);
+        }
+        setExhausted(true);
+      } finally {
+        if (requestId === requestIdRef.current) {
+          setLoading(false);
+          setIsLoadingMore(false);
+        }
       }
-      
-      const response = await fetch(`/api/videos?${params.toString()}`);
-      
-      if (!response.ok) {
-        throw new Error(`Failed to fetch videos: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      
-      const formattedVideos = data.videos.map((video: Video) => ({
-        ...video,
-        duration: formatDuration(video.duration)
-      }));
-      
-      const newVideos = formattedVideos.filter((newVideo: Video) => 
-        !videos.some(existingVideo => existingVideo.id === newVideo.id)
-      );
-      
-      setVideos(loadMore ? [...videos, ...newVideos] : newVideos);
-      setPageToken(data.nextPageToken);
-    } catch (error) {
-      console.error('Video fetch error:', error);
-      toast({
-        title: 'Error fetching videos',
-        description: error instanceof Error ? error.message : 'An unexpected error occurred',
-        variant: 'destructive',
-      });
-      
-      // Fallback to context videos
-      const filteredVideos = query 
-        ? filterContextVideos(query)
-        : contextVideos;
-      setVideos(filteredVideos);
-    } finally {
-      setLoading(false);
-      setIsLoadingMore(false);
-    }
-  };
+    },
+    [isAuthenticated, trimmedQuery, order, demoVideos, toast]
+  );
 
   useEffect(() => {
-    setPageToken(undefined); // Reset page token when search query changes
-    fetchVideos(false, searchQuery);
-  }, [session, searchQuery]);
+    // Wait for NextAuth to resolve, otherwise the first render fetches the
+    // signed-out feed and immediately refetches the signed-in one.
+    if (status === "loading") return;
+    setPageToken(undefined);
+    setExhausted(false);
+    loadPage(undefined);
+  }, [status, trimmedQuery, order, loadPage]);
 
   useEffect(() => {
-    if (inView && !loading && !isLoadingMore && pageToken) {
-      fetchVideos(true, searchQuery);
+    if (inView && !loading && !isLoadingMore && !exhausted && pageToken) {
+      loadPage(pageToken);
     }
-  }, [inView]);
+  }, [inView, loading, isLoadingMore, exhausted, pageToken, loadPage]);
+
+  const decorated = videos.map((video) => ({
+    ...video,
+    inLibrary: isInLibrary(video.id),
+  }));
 
   return (
-    <div 
-      className="hero p-4 sm:p-8 ml-4 sm:ml-12 bg-background/70 backdrop-blur-xl min-h-screen overflow-y-auto font-normal"
-      style={{ height: 'calc(100vh - 5rem)' }}
-    >
-      <div className="flex flex-col sm:flex-row justify-between items-center mb-6">
-        <VideoHeader 
-          title={session ? title : 'Recommended Videos'} 
-          videoCount={videos.length} 
-        />
-      </div>
-
-      {loading ? (
-        <LoadingSpinner />
-      ) : (
-        <div className="max-w-full sm:max-w-[2000px] mx-auto">
-          {videos.length === 0 ? (
-            <div className="text-center text-muted-foreground py-8">
-              No videos found. Try a different search term.
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-6 sm:gap-x-6 sm:gap-y-8">
-              {videos.map((video) => (
-                <VideoCard key={video.id} video={video} />
-              ))}
-            </div>
-          )}
-          
-          <div ref={ref} className="h-20 flex items-center justify-center mt-8">
+    <>
+      <VideoGrid
+        title={title}
+        videos={decorated}
+        loading={loading}
+        emptyMessage={
+          trimmedQuery
+            ? `No videos found for "${trimmedQuery}". Try a different search term.`
+            : "No videos found."
+        }
+        footer={
+          <div
+            ref={sentinelRef}
+            className="mt-8 flex h-20 items-center justify-center"
+          >
             {isLoadingMore && (
               <div className="flex items-center gap-2">
                 <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                <span className="text-sm text-muted-foreground">Loading more videos...</span>
+                <span className="text-sm text-muted-foreground">
+                  Loading more videos...
+                </span>
               </div>
             )}
           </div>
-        </div>
-      )}
-      
-      <div className="text-center text-sm text-muted-foreground mt-8">
-        {!session && (
-          <p>Sign in to see personalized recommendations</p>
-        )}
-      </div>
+        }
+      />
 
-      <VideoModal />
-    </div>
+      {!isAuthenticated && status !== "loading" && (
+        <p className="pb-8 text-center text-sm text-muted-foreground">
+          Sign in to see personalised recommendations.
+        </p>
+      )}
+    </>
   );
 };
 

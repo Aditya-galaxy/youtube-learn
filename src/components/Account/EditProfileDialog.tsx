@@ -1,5 +1,5 @@
 "use client"
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -21,6 +21,16 @@ export const EditProfileDialog: React.FC<EditProfileDialogProps> = ({
 }) => {
   const [editForm, setEditForm] = useState(profile);
   const [newInterest, setNewInterest] = useState('');
+
+  // `useState(profile)` only reads its argument on the first render, so the
+  // form kept showing the placeholder profile after the session loaded and
+  // saving wrote those stale values back. Reset whenever the dialog opens.
+  useEffect(() => {
+    if (isOpen) {
+      setEditForm(profile);
+      setNewInterest('');
+    }
+  }, [isOpen, profile]);
 
   const addInterest = () => {
     if (!newInterest) return;
@@ -69,7 +79,7 @@ export const EditProfileDialog: React.FC<EditProfileDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-gray-800 text-white">
+      <DialogContent className="bg-popover text-foreground">
         <DialogHeader>
           <DialogTitle>Edit Profile</DialogTitle>
         </DialogHeader>
@@ -80,31 +90,37 @@ export const EditProfileDialog: React.FC<EditProfileDialogProps> = ({
             { label: 'Location', field: 'location' },
           ].map(({ label, field }) => (
             <div key={field}>
-              <label className="text-sm text-gray-400">{label}</label>
+              <label className="text-sm text-muted-foreground">{label}</label>
               <Input
                 value={getStringValue(editForm[field as keyof typeof editForm])}
                 onChange={(e) => setEditForm(prev => ({ ...prev, [field]: e.target.value }))}
-                className="bg-gray-700 border-gray-600 text-white"
+                className="bg-muted border-border text-foreground"
               />
             </div>
           ))}
           
           <div>
-            <label className="text-sm text-gray-400">Bio</label>
+            <label className="text-sm text-muted-foreground">Bio</label>
             <Textarea
               value={getStringValue(editForm.bio)}
               onChange={(e) => setEditForm(prev => ({ ...prev, bio: e.target.value }))}
-              className="bg-gray-700 border-gray-600 text-white"
+              className="bg-muted border-border text-foreground"
             />
           </div>
 
           <div>
-            <label className="text-sm text-gray-400">Interests</label>
+            <label className="text-sm text-muted-foreground">Interests</label>
             <div className="flex gap-2">
               <Input
                 value={newInterest}
                 onChange={(e) => setNewInterest(e.target.value)}
-                className="bg-gray-700 border-gray-600 text-white"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    addInterest();
+                  }
+                }}
+                className="bg-muted border-border text-foreground"
                 placeholder="Add new interest"
               />
               <Button onClick={addInterest} className="bg-purple-500 hover:bg-purple-600 text-white">
@@ -133,7 +149,7 @@ export const EditProfileDialog: React.FC<EditProfileDialogProps> = ({
             <Button
               variant="outline"
               onClick={onClose}
-              className="border-gray-600 text-gray-300 hover:bg-gray-700"
+              className="border-border text-muted-foreground hover:bg-muted"
             >
               Cancel
             </Button>

@@ -11,17 +11,17 @@ interface NotificationItemProps {
 const NotificationItem = ({ notification, onClick }: NotificationItemProps) => {
   return (
     <DropdownMenuItem
-      className="px-4 py-3 focus:bg-white/5 cursor-pointer"
+      className="px-4 py-3 focus:bg-muted cursor-pointer"
       onClick={() => onClick(notification.id)}
     >
       <div className="flex flex-col gap-1">
         <div className="flex items-center justify-between">
-          <span className={`text-sm ${notification.read ? 'text-white/70' : 'text-white font-medium'}`}>
+          <span className={`text-sm ${notification.read ? 'text-muted-foreground' : 'text-foreground font-medium'}`}>
             {notification.title}
           </span>
-          <span className="text-xs text-white/50">{notification.time}</span>
+          <span className="text-xs text-muted-foreground">{notification.time}</span>
         </div>
-        <span className="text-xs text-white/50">{notification.message}</span>
+        <span className="text-xs text-muted-foreground">{notification.message}</span>
       </div>
     </DropdownMenuItem>
   );

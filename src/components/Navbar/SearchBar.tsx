@@ -1,72 +1,73 @@
-"use client"
-import React, { useState, useEffect } from 'react';
-import { Search } from 'lucide-react';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import { useAppContext } from '../../Helper/Context';
-import { useRouter, useSearchParams } from 'next/navigation';
+"use client";
 
+import React, { useEffect, useState } from "react";
+import { Search, X } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+
+/**
+ * Search is a pure URL navigation now. It used to call the context's
+ * `handleSearch` (firing a request) *and* push to /search, where the results
+ * page fired the same request again — two to three YouTube calls per submit.
+ */
 const SearchBar = () => {
-  const { handleSearch, clearSearch } = useAppContext();
-  const [localQuery, setLocalQuery] = useState('');
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [query, setQuery] = useState("");
 
-  // Initialize local query from URL params
+  // Keeps the field in step with back/forward navigation, and clears it when
+  // the user leaves the search page.
   useEffect(() => {
-    if (searchParams) {
-      const queryParam = searchParams.get('q');
-      if (queryParam) {
-        setLocalQuery(queryParam);
-      }
-    }
+    setQuery(searchParams?.get("q") ?? "");
   }, [searchParams]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!localQuery.trim()) {
-      handleClear();
+    const trimmed = query.trim();
+    if (!trimmed) {
+      router.push("/");
       return;
     }
-
-    const encodedQuery = encodeURIComponent(localQuery.trim());
-    await handleSearch(localQuery.trim());
-    router.push(`/search?q=${encodedQuery}`);
+    router.push(`/search?q=${encodeURIComponent(trimmed)}`);
   };
 
   const handleClear = () => {
-    setLocalQuery('');
-    clearSearch();
-    router.push('/');
+    setQuery("");
+    router.push("/");
   };
 
   return (
-    <div className="hidden md:flex flex-1 max-w-xl mx-4">
-      <form onSubmit={handleSubmit} className="w-full flex items-center gap-2">
+    <div className="hidden flex-1 max-w-xl md:flex">
+      <form onSubmit={handleSubmit} role="search" className="flex w-full items-center gap-2">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-white/40" />
-          <Input
-            type="text"
-            value={localQuery}
-            onChange={(e) => setLocalQuery(e.target.value)}
-            placeholder="Search for courses, tutorials, and educational content..."
-            className="w-full pl-10 border-white/10 bg-white/5 focus:bg-white/10 hover:bg-white/8 text-white placeholder:text-white/40"
+          <Search
+            aria-hidden
+            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
           />
-          {localQuery && (
+          <Input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            aria-label="Search educational videos"
+            placeholder="Search for courses, tutorials, and educational content..."
+            className="w-full pl-10 pr-9"
+          />
+          {query && (
             <button
               type="button"
               onClick={handleClear}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/40 hover:text-white/60"
+              aria-label="Clear search"
+              className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:text-foreground"
             >
-              ×
+              <X className="h-4 w-4" />
             </button>
           )}
         </div>
-        <Button 
+        <Button
           type="submit"
-          variant="secondary"
-          className="bg-purple-500 hover:bg-purple-600 text-white border-0"
-          disabled={!localQuery.trim()}
+          className="bg-purple-500 text-white hover:bg-purple-600"
+          disabled={!query.trim()}
         >
           Search
         </Button>

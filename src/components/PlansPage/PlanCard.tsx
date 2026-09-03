@@ -11,7 +11,7 @@ interface PlanCardProps {
 
 export const PlanCard: React.FC<PlanCardProps> = ({ plan, onSelect }) => (
   <Card 
-    className={`relative bg-black/50 border-white/5 transition-all duration-300 hover:bg-purple-900/20 hover:ring-1 ring-purple-900 ${
+    className={`relative bg-card/50 border-border transition-all duration-300 hover:bg-purple-900/20 hover:ring-1 ring-primary/40 ${
       plan.isPopular ? 'ring-2 ring-purple-500' : ''
     }`}
   >
@@ -24,10 +24,10 @@ export const PlanCard: React.FC<PlanCardProps> = ({ plan, onSelect }) => (
     )}
     
     <CardHeader className="text-center">
-      <h3 className="text-xl font-semibold text-white mb-2">{plan.name}</h3>
+      <h3 className="text-xl font-semibold text-foreground mb-2">{plan.name}</h3>
       <div className="mb-2">
-        <span className="text-3xl font-bold text-white">{plan.price}</span>
-        <span className="text-white/60 text-sm">/{plan.period}</span>
+        <span className="text-3xl font-bold text-foreground">{plan.price}</span>
+        <span className="text-muted-foreground text-sm">/{plan.period}</span>
       </div>
     </CardHeader>
 
@@ -45,7 +45,7 @@ export const PlanCard: React.FC<PlanCardProps> = ({ plan, onSelect }) => (
         className={`w-full py-2 rounded-lg font-medium transition-colors ${
           plan.isPopular
             ? 'bg-purple-500 hover:bg-purple-600 text-white'
-            : 'bg-white/10 hover:bg-white/20 text-white'
+            : 'bg-accent hover:bg-accent text-foreground'
         }`}
       >
         {plan.buttonText}

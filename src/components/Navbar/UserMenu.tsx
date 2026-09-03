@@ -1,6 +1,7 @@
 "use client"
 
 import React from "react";
+import Image from "next/image";
 import { useSession, signOut, signIn } from "next-auth/react";
 import { UserCircle, LogOut } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -35,16 +36,16 @@ const UserMenu = () => {
         </DropdownMenuTrigger>
         <DropdownMenuContent 
           align="end" 
-          className="w-80 p-4 bg-black/90 border-white/10"
+          className="w-80 p-4 bg-popover border-border"
         >
           <div className="space-y-4">
             <div className="text-center">
-              <h3 className="text-lg font-semibold text-white">Welcome to YTLearn</h3>
-              <p className="text-sm text-white/60">Sign in to continue learning</p>
+              <h3 className="text-lg font-semibold text-foreground">Welcome to YTLearn</h3>
+              <p className="text-sm text-muted-foreground">Sign in to continue learning</p>
             </div>
             <SignInButton />
             <div className="text-center text-sm">
-              <span className="text-white/40">Don't have an account? </span>
+              <span className="text-muted-foreground">Don't have an account? </span>
               <button 
                 className="text-purple-400 hover:text-purple-300"
                 onClick={() => signIn('google', { callbackUrl: '/' })}
@@ -63,27 +64,33 @@ const UserMenu = () => {
       <DropdownMenuTrigger asChild>
         <Button
           variant="secondary" 
-          className="bg-white/5 hover:bg-white/10 text-white border-0"
+          className="bg-muted hover:bg-accent text-foreground border-0"
         >
-          <img 
-            src={session.user?.image ?? ''}
-            alt="Profile"
-            className="h-5 w-5 rounded-full"
-          />
+          {session.user?.image ? (
+            <Image
+              src={session.user.image}
+              alt=""
+              width={20}
+              height={20}
+              className="rounded-full"
+            />
+          ) : (
+            <UserCircle className="h-5 w-5" />
+          )}
           {session.user?.name || 'Account'}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56 bg-black/90 border-white/10">
+      <DropdownMenuContent align="end" className="w-56 bg-popover border-border">
         <DropdownMenuItem
-          className="focus:bg-white/5"
+          className="focus:bg-muted"
           onClick={() => router.push('/profile')}
         >
           <UserCircle className="w-4 h-4 mr-2" />
           <span>Profile</span>
         </DropdownMenuItem>
-        <DropdownMenuSeparator className="bg-white/10" />
+        <DropdownMenuSeparator className="bg-accent" />
         <DropdownMenuItem
-          className="focus:bg-white/5 text-purple-400 focus:text-purple-500"
+          className="focus:bg-muted text-purple-400 focus:text-purple-500"
           onClick={handleLogout}
         >
           <LogOut className="w-4 h-4 mr-2" />

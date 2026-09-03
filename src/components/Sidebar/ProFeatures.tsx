@@ -8,10 +8,10 @@ type ProFeaturesProps = {
 const ProFeatures: React.FC<ProFeaturesProps> = ({ onUpgradeClick }) => {
   return (
     <div className="mt-8 p-4 rounded-xl bg-gradient-to-br from-purple-500/20 to-purple-700/20 border border-purple-500/20">
-      <h2 className="font-medium text-white/90 mb-2">
+      <h2 className="font-medium text-foreground mb-2">
         Pro Features
       </h2>
-      <p className="text-xs text-white/50 mb-3">
+      <p className="text-xs text-muted-foreground mb-3">
         Unlock advanced learning tools and exclusive content
       </p>
       <button 

@@ -1,16 +1,12 @@
-import { withAuth } from "next-auth/middleware"
+export { default } from "next-auth/middleware";
 
-export default withAuth({
-  callbacks: {
-    authorized({ req, token }) {
-      // Customize your authorization logic here
-      const isLoggedIn = !!token
-      const isProtectedRoute = req.nextUrl.pathname.startsWith('/dashboard')
-      return isLoggedIn || !isProtectedRoute
-    },
-  },
-})
-
+/**
+ * Only /dashboard requires a session. The matcher used to also list
+ * /profile, but the `authorized` callback returned true for anything outside
+ * /dashboard, so the middleware ran on /profile and then allowed it through —
+ * the rule was dead. /profile intentionally has a signed-out preview state, so
+ * it stays public and the matcher now says so.
+ */
 export const config = {
-  matcher: ["/dashboard/:path*", "/profile/:path*"]
-}
+  matcher: ["/dashboard/:path*"],
+};

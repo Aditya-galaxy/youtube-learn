@@ -1,406 +1,364 @@
-import { NextApiRequest, NextApiResponse } from 'next';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from './auth/[...nextauth]';
-import { google, youtube_v3 } from 'googleapis';
-import { prisma } from '@/lib/prisma';
-import { z } from 'zod';
+import type { NextApiRequest, NextApiResponse } from "next";
+import { getServerSession } from "next-auth/next";
+import { google, youtube_v3 } from "googleapis";
+import { randomUUID } from "crypto";
+import { z } from "zod";
+import { prisma } from "@/lib/prisma";
+import { authOptions } from "@/lib/auth";
+import type { Video } from "../../../types/video";
 
-// Types
 interface VideoResponse {
   videos: Video[];
   nextPageToken?: string;
   tokensRemaining: number;
-  message?: string;
 }
 
-interface Video {
-  id: string;
-  title: string;
-  thumbnail: string;
-  channelName: string;
-  channelId: string;
-  publishedAt: string;
-  duration: string;
-  views: string;
-  description: string;
-  watched: boolean;
-  inLibrary: boolean;
+interface ErrorResponse {
+  error: string;
+  tokensRemaining?: number;
 }
 
-
-interface ChannelInfo {
-  id: string;
-  title: string;
-  isEducational: boolean;
-}
-
-// Constants
-const HOURLY_TOKEN_LIMIT = 10000;
+// Quota accounting. A search.list + videos.list pair costs ~101 real YouTube
+// units; TOKENS_PER_REQUEST is our own per-user budget unit, not YouTube's.
+const HOURLY_TOKEN_LIMIT = 10_000;
 const TOKENS_PER_REQUEST = 50;
 const MAX_RESULTS = 12;
 const HOURS_24 = 24 * 60 * 60 * 1000;
+const MIN_DURATION_SECONDS = 120;
+const MIN_VIEW_COUNT = 100;
+const EDUCATION_CATEGORY_ID = "27";
+const DEFAULT_FEED_QUERY = "university lecture";
 
-// Request validation schema
 const QuerySchema = z.object({
-  q: z.string().optional(),
-  pageToken: z.string().optional(),
-  refresh: z.enum(['true', 'false']).optional(),
-  category: z.string().optional(),
-  language: z.string().optional().default('en'),
-  region: z.string().optional().default('US')
+  q: z.string().trim().min(1).max(200).optional(),
+  pageToken: z.string().max(1024).optional(),
+  refresh: z.enum(["true", "false"]).optional(),
+  // YouTube rejects a non-numeric videoCategoryId and a malformed
+  // regionCode/relevanceLanguage with a 400, so validate before we spend quota.
+  category: z
+    .string()
+    .regex(/^\d{1,3}$/, "category must be a numeric YouTube category id")
+    .optional(),
+  language: z
+    .string()
+    .regex(/^[a-z]{2}(-[A-Za-z]{2})?$/, "language must be an ISO 639-1 code")
+    .optional()
+    .default("en"),
+  region: z
+    .string()
+    .regex(/^[A-Z]{2}$/, "region must be an ISO 3166-1 alpha-2 code")
+    .optional()
+    .default("US"),
+  order: z
+    .enum(["relevance", "viewCount", "date", "rating"])
+    .optional()
+    .default("relevance"),
 });
 
-async function ensureUserExists(user: { id: string; email?: string | null; name?: string | null; image?: string | null }) {
+/**
+ * Charges the caller's hourly budget atomically.
+ *
+ * The window is an *epoch* hour (hours since 1970) rather than a wall-clock
+ * hour-of-day. The previous version stored `getHours()`, so a user returning
+ * exactly 24h later saw `lastResetHour === hour` and kept their stale balance
+ * instead of getting a fresh window. Epoch hours keep the column an Int, so no
+ * migration is needed, and old 0-23 values simply read as "long expired".
+ *
+ * The read-then-write inside an interactive transaction it replaces was racy
+ * under READ COMMITTED: parallel requests both read the old total and both
+ * wrote the same incremented value. `ON CONFLICT DO UPDATE` takes a row lock,
+ * so concurrent charges serialise.
+ */
+async function chargeTokens(
+  userId: string
+): Promise<{ tokensRemaining: number } | { error: string; status: 429 | 500 }> {
+  const window = Math.floor(Date.now() / 3_600_000);
+
   try {
-    await prisma.user.upsert({
-      where: { id: user.id },
-      update: {
-        email: user.email,
-        name: user.name,
-        image: user.image,
-      },
-      create: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        image: user.image,
-      },
-    });
+    const rows = await prisma.$queryRaw<Array<{ tokensUsed: number }>>`
+      INSERT INTO user_tokens ("id", "userId", "tokensUsed", "lastResetHour")
+      VALUES (${randomUUID()}, ${userId}, ${TOKENS_PER_REQUEST}, ${window})
+      ON CONFLICT ("userId") DO UPDATE SET
+        "tokensUsed" = CASE
+          WHEN user_tokens."lastResetHour" = ${window}
+            THEN user_tokens."tokensUsed" + ${TOKENS_PER_REQUEST}
+          ELSE ${TOKENS_PER_REQUEST}
+        END,
+        "lastResetHour" = ${window}
+      RETURNING "tokensUsed"
+    `;
+
+    const tokensUsed = rows[0]?.tokensUsed ?? TOKENS_PER_REQUEST;
+    if (tokensUsed > HOURLY_TOKEN_LIMIT) {
+      return {
+        error: "Hourly request limit reached. Please try again later.",
+        status: 429,
+      };
+    }
+    return { tokensRemaining: HOURLY_TOKEN_LIMIT - tokensUsed };
   } catch (error) {
-    console.error('Error ensuring user exists:', error);
+    console.error("Token usage error:", error);
+    return { error: "Failed to process token usage", status: 500 };
   }
 }
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse<VideoResponse | { error: string }>
-) {
-  if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
+async function getRecentlySeenVideoIds(userId: string): Promise<string[]> {
   try {
-    // Validate query parameters
-    const queryResult = QuerySchema.safeParse(req.query);
-    if (!queryResult.success) {
-      console.error('Query validation error:', queryResult.error);
-      return res.status(400).json({ error: `Invalid query parameters: ${queryResult.error.message}` });
-    }
-    const { q: searchQuery, pageToken, refresh, category, language, region } = queryResult.data;
-    
-    // Session handling
-    const session = await getServerSession(req, res, authOptions);
-    if (!session?.user?.id) {
-      return res.status(401).json({ error: 'Authentication required' });
-    }
-
-    if (session.user.id) {
-      await ensureUserExists(session.user as { id: string; email?: string | null; name?: string | null; image?: string | null });
-    } else {
-      return res.status(401).json({ error: 'User ID is missing' });
-    }
-
-    // Check YouTube API credentials
-    if (!process.env.YOUTUBE_API_KEY) {
-      console.error('Missing YouTube API credentials');
-      return res.status(500).json({ 
-        error: 'Server configuration error: YouTube API key not found' 
-      });
-    }
-    
-    // Token usage management
-    const tokenResult = await handleTokenUsage(session.user.id);
-    if ('error' in tokenResult) {
-      return res.status(429).json({
-        error: `Rate limit: ${tokenResult.error}`,
-        tokensRemaining: 0
-      });
-    }
-
-    // YouTube client initialization
-    let youtube;
-    try {
-      youtube = google.youtube({
-        version: 'v3',
-        auth: process.env.YOUTUBE_API_KEY
-      });
-    } catch (error) {
-      console.error('YouTube client initialization error:', error);
-      return res.status(500).json({ 
-        error: 'Failed to initialize YouTube client' 
-      });
-    }
-
-    // Fetch viewed videos
-    const viewedVideoIds = await getViewedVideos(session.user.id);
-
-    // Fetch videos from YouTube
-    const result = await fetchYouTubeVideos({
-      youtube,
-      searchQuery,
-      pageToken,
-      viewedVideoIds,
-      category,
-      language,
-      region
+    const seen = await prisma.viewedVideos.findMany({
+      where: { userId, viewedAt: { gte: new Date(Date.now() - HOURS_24) } },
+      select: { videoId: true },
     });
-
-    if ('error' in result) {
-      return res.status(500).json({ error: result.error });
-    }
-
-    // Update viewed videos if not refreshing
-    if (refresh !== 'true' && result.videos.length > 0) {
-      await updateViewedVideos(session.user.id, result.videos);
-    }
-
-    // Return successful response
-    return res.status(200).json({
-      videos: result.videos,
-      nextPageToken: result.nextPageToken,
-      tokensRemaining: tokenResult.tokensRemaining
-    });
-
-  } catch (error: any) {
-    console.error('API Error:', {
-      message: error.message,
-      stack: error.stack,
-      code: error.code,
-      response: error.response?.data
-    });
-    return handleApiError(error, res);
-  }
-}
-
-async function handleTokenUsage(userId: string): Promise<{ tokensRemaining: number } | { error: string }> {
-  const now = new Date();
-  const hour = now.getHours();
-
-  try {
-    return await prisma.$transaction(async (tx:any) => {
-      const userTokens = await tx.userTokens.findUnique({
-        where: { userId }
-      });
-
-      const needsReset = !userTokens || userTokens.lastResetHour !== hour;
-      const newTokensUsed = needsReset ? TOKENS_PER_REQUEST : userTokens.tokensUsed + TOKENS_PER_REQUEST;
-
-      if (newTokensUsed > HOURLY_TOKEN_LIMIT) {
-        return { error: 'Hourly token limit reached' };
-      }
-
-      await tx.userTokens.upsert({
-        where: { userId },
-        update: {
-          tokensUsed: newTokensUsed,
-          lastResetHour: needsReset ? hour : userTokens.lastResetHour
-        },
-        create: {
-          userId,
-          tokensUsed: TOKENS_PER_REQUEST,
-          lastResetHour: hour
-        }
-      });
-
-      return { tokensRemaining: HOURLY_TOKEN_LIMIT - newTokensUsed };
-    });
+    return seen.map((v) => v.videoId);
   } catch (error) {
-    console.error('Token usage error:', error);
-    return { error: 'Failed to process token usage' };
-  }
-}
-
-async function getViewedVideos(userId: string): Promise<string[]> {
-  try {
-    const viewedVideos = await prisma.viewedVideos.findMany({
-      where: {
-        userId,
-        viewedAt: { gte: new Date(Date.now() - HOURS_24) }
-      },
-      select: { videoId: true }
-    });
-    return viewedVideos.map((v:any) => v.videoId);
-  } catch (error) {
-    console.error('Error fetching viewed videos:', error);
+    console.error("Error fetching viewed videos:", error);
     return [];
   }
+}
+
+/**
+ * `create()` per video inside a transaction used to abort the whole batch the
+ * first time a video was returned twice, because of @@unique([userId, videoId]).
+ */
+async function recordSeenVideos(userId: string, videos: Video[]) {
+  if (videos.length === 0) return;
+  try {
+    await prisma.viewedVideos.createMany({
+      data: videos.map((video) => ({ userId, videoId: video.id })),
+      skipDuplicates: true,
+    });
+  } catch (error) {
+    console.error("Error updating viewed videos:", error);
+  }
+}
+
+function parseIsoDuration(duration: string): number {
+  const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+  if (!match) return 0;
+  const [, h, m, s] = match;
+  return Number(h ?? 0) * 3600 + Number(m ?? 0) * 60 + Number(s ?? 0);
+}
+
+/**
+ * Rejects obviously non-educational uploads. Deliberately narrower than the
+ * previous list, which also dropped legitimate results: "live", "stream",
+ * "daily" and "clips" all appear in real lecture titles ("Live coding",
+ * "Streaming algorithms", "Daily astronomy").
+ */
+function hasSuspiciousTitle(title: string): boolean {
+  const suspiciousPatterns = [
+    /\b(prank|reaction|gameplay|tiktok|shorts)\b/i,
+    /\b(click\s*bait|clickbait|click\s*here|must\s*watch)\b/i,
+    /\b(fortnite|minecraft|roblox|game\s*play)\b/i,
+    /\b(vlog|unboxing|challenge\s*video)\b/i,
+    /[\u{1F600}-\u{1F64F}\u{1F3AE}-\u{1F3B2}]/u,
+  ];
+  return suspiciousPatterns.some((pattern) => pattern.test(title));
 }
 
 async function fetchYouTubeVideos({
   youtube,
   searchQuery,
   pageToken,
-  viewedVideoIds,
+  seenVideoIds,
   category,
   language,
-  region
+  region,
+  order,
 }: {
   youtube: youtube_v3.Youtube;
   searchQuery?: string;
   pageToken?: string;
-  viewedVideoIds: string[];
+  seenVideoIds: string[];
   category?: string;
   language: string;
   region: string;
+  order: "relevance" | "viewCount" | "date" | "rating";
 }): Promise<{ videos: Video[]; nextPageToken?: string } | { error: string }> {
   try {
-    // First, get search results with academic focus
     const searchResponse = await youtube.search.list({
-      part: ['snippet'],
+      part: ["snippet"],
       maxResults: MAX_RESULTS,
-      type: ['video'],
-      videoCategoryId: category || '27', // Education category
-      order: 'relevance',
+      type: ["video"],
+      videoCategoryId: category || EDUCATION_CATEGORY_ID,
+      order,
       pageToken,
-      q: searchQuery 
-        ? `${searchQuery} (lecture|course|education) site:edu`
-        : 'university lecture course site:edu',
+      // The old query appended `site:edu` and `(lecture|course|education)`.
+      // YouTube's search API supports neither Google's `site:` operator nor
+      // parenthesised alternation, so both were matched as literal text and
+      // starved the result set. The Education category filter below is what
+      // actually constrains the topic.
+      q: searchQuery || DEFAULT_FEED_QUERY,
       relevanceLanguage: language,
       regionCode: region,
-      safeSearch: 'moderate',
-      // videoDefinition: 'high',
-      // videoDuration: 'long', // Focus on full lectures
+      safeSearch: "moderate",
+      // Every result is rendered in an iframe, so exclude anything that cannot
+      // legally be embedded — those used to render as "Video unavailable".
+      videoEmbeddable: "true",
+      videoSyndicated: "true",
     });
 
-    if (!searchResponse.data.items?.length) {
+    const searchItems = searchResponse.data.items ?? [];
+    if (searchItems.length === 0) {
       return { videos: [], nextPageToken: undefined };
     }
 
-    const videoIds = searchResponse.data.items
-      .map(item => item.id?.videoId)
-      .filter(Boolean) as string[];
+    const videoIds = searchItems
+      .map((item) => item.id?.videoId)
+      .filter((id): id is string => Boolean(id));
 
-    // Get detailed video information
+    if (videoIds.length === 0) {
+      return { videos: [], nextPageToken: undefined };
+    }
+
     const videoDetails = await youtube.videos.list({
-      part: ['contentDetails', 'statistics', 'snippet'],
-      id: videoIds
+      part: ["contentDetails", "statistics", "snippet"],
+      id: videoIds,
     });
 
-    if (!videoDetails.data.items?.length) {
-      return { videos: [], nextPageToken: undefined };
-    }
+    const detailsById = new Map(
+      (videoDetails.data.items ?? []).map((item) => [item.id, item])
+    );
+    const seen = new Set(seenVideoIds);
 
-    // Filter and process videos
     const videos: Video[] = [];
-    
-    for (let i = 0; i < searchResponse.data.items.length; i++) {
-      const searchItem = searchResponse.data.items[i];
-      const videoDetail = videoDetails.data.items?.find(
-        v => v.id === searchItem.id?.videoId
-      );
+    for (const searchItem of searchItems) {
+      const videoId = searchItem.id?.videoId;
+      if (!videoId) continue;
 
-      if (!videoDetail) continue;
+      const detail = detailsById.get(videoId);
+      if (!detail) continue;
 
-      // Parse duration to seconds
-      const duration = videoDetail.contentDetails?.duration || '';
-      const durationInSeconds = parseDuration(duration);
+      const duration = detail.contentDetails?.duration ?? "";
+      const viewCount = Number(detail.statistics?.viewCount ?? 0);
 
-      // Skip videos that don't meet our criteria
       if (
-        // Skip videos shorter than 2 minutes (likely not full courses)
-        durationInSeconds < 120 ||
-        // Skip videos with very low views (likely not quality content)
-        Number(videoDetail.statistics?.viewCount || 0) < 100 ||
-        // Skip videos with suspicious titles
-        hasSuspiciousTitle(searchItem.snippet?.title || '')
+        parseIsoDuration(duration) < MIN_DURATION_SECONDS ||
+        viewCount < MIN_VIEW_COUNT ||
+        hasSuspiciousTitle(searchItem.snippet?.title ?? "")
       ) {
         continue;
       }
 
       videos.push({
-        id: searchItem.id?.videoId || '',
-        title: searchItem.snippet?.title || '',
-        thumbnail: searchItem.snippet?.thumbnails?.medium?.url || '',
-        channelName: searchItem.snippet?.channelTitle || '',
-        channelId: searchItem.snippet?.channelId || '',
-        publishedAt: searchItem.snippet?.publishedAt 
-          ? new Date(searchItem.snippet.publishedAt).toLocaleDateString()
-          : '',
-        duration: duration,
-        views: videoDetail.statistics?.viewCount || '0',
-        description: searchItem.snippet?.description || '',
-        watched: viewedVideoIds.includes(searchItem.id?.videoId || ''),
-        inLibrary: false
+        id: videoId,
+        title: searchItem.snippet?.title ?? "",
+        thumbnail:
+          searchItem.snippet?.thumbnails?.medium?.url ??
+          `https://i.ytimg.com/vi/${videoId}/mqdefault.jpg`,
+        channelName: searchItem.snippet?.channelTitle ?? "",
+        channelId: searchItem.snippet?.channelId ?? "",
+        // Kept as an ISO string so the client can format it in the viewer's
+        // locale; `toLocaleDateString()` on the server used the server locale.
+        publishedAt: searchItem.snippet?.publishedAt ?? "",
+        duration,
+        views: detail.statistics?.viewCount ?? "0",
+        description: searchItem.snippet?.description ?? "",
+        watched: seen.has(videoId),
+        inLibrary: false,
       });
     }
 
     return {
       videos,
-      nextPageToken: searchResponse.data.nextPageToken ?? undefined
+      nextPageToken: searchResponse.data.nextPageToken ?? undefined,
     };
   } catch (error) {
-    // Check for YouTube API quota exceeded errors
-    if ((error as any).code === 403 && (error as any).message?.includes('quota')) {
-      return { 
-        error: 'YouTube API token limit reached. Please try again later.' 
+    const err = error as { code?: number; message?: string };
+    if (err.code === 403 && err.message?.includes("quota")) {
+      return {
+        error: "YouTube API quota exceeded for today. Please try again later.",
       };
     }
-    console.error('YouTube API error:', error);
-    return { error: 'Failed to fetch videos from YouTube' };
+    console.error("YouTube API error:", error);
+    return { error: "Failed to fetch videos from YouTube" };
   }
 }
 
-async function updateViewedVideos(userId: string, videos: Video[]) {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse<VideoResponse | ErrorResponse>
+) {
+  if (req.method !== "GET") {
+    res.setHeader("Allow", "GET");
+    return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  // Per-user results must never be stored by a shared cache.
+  res.setHeader("Cache-Control", "private, no-store");
+
   try {
-    await prisma.$transaction(async (tx:any) => {
-      await Promise.all(videos.map(async (video) => {
-        await tx.viewedVideos.create({
-          data: {
-            userId,
-            videoId: video.id,
-            viewedAt: new Date(),
-          }
-        });
-      }));
+    const queryResult = QuerySchema.safeParse(req.query);
+    if (!queryResult.success) {
+      // Log the detail, return a generic message: the raw Zod error echoed the
+      // caller's input straight back into the response body.
+      console.warn("Query validation error:", queryResult.error.flatten());
+      return res.status(400).json({ error: "Invalid query parameters" });
+    }
+    const { q, pageToken, refresh, category, language, region, order } =
+      queryResult.data;
+
+    const session = await getServerSession(req, res, authOptions);
+    const userId = session?.user?.id;
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    if (!process.env.YOUTUBE_API_KEY) {
+      console.error("Missing YOUTUBE_API_KEY");
+      return res
+        .status(500)
+        .json({ error: "Server configuration error: YouTube API key not set" });
+    }
+
+    const tokenResult = await chargeTokens(userId);
+    if ("error" in tokenResult) {
+      return res
+        .status(tokenResult.status)
+        .json({ error: tokenResult.error, tokensRemaining: 0 });
+    }
+
+    const youtube = google.youtube({
+      version: "v3",
+      auth: process.env.YOUTUBE_API_KEY,
+    });
+
+    const seenVideoIds = await getRecentlySeenVideoIds(userId);
+
+    const result = await fetchYouTubeVideos({
+      youtube,
+      searchQuery: q,
+      pageToken,
+      seenVideoIds,
+      category,
+      language,
+      region,
+      order,
+    });
+
+    if ("error" in result) {
+      return res.status(502).json({ error: result.error });
+    }
+
+    if (refresh !== "true") {
+      await recordSeenVideos(userId, result.videos);
+    }
+
+    return res.status(200).json({
+      videos: result.videos,
+      nextPageToken: result.nextPageToken,
+      tokensRemaining: tokenResult.tokensRemaining,
     });
   } catch (error) {
-    console.error('Error updating viewed videos:', error);
+    const err = error as { code?: unknown; message?: string };
+    console.error("API Error:", err.message, err.code);
+    if (err.code === "ECONNREFUSED") {
+      return res.status(503).json({ error: "YouTube service unavailable" });
+    }
+    if (err.code === "ETIMEDOUT") {
+      return res.status(504).json({ error: "Request timed out" });
+    }
+    // Never forward the upstream error text: it can contain the API key and
+    // internal endpoint details.
+    return res.status(500).json({ error: "Internal server error" });
   }
-}
-
-// Helper function to parse ISO 8601 duration to seconds
-function parseDuration(duration: string): number {
-  const match = duration.match(/PT(\d+H)?(\d+M)?(\d+S)?/);
-  const hours = (parseInt(match?.[1] ?? '0')) || 0;
-  const minutes = (parseInt(match?.[2] ?? '0')) || 0;
-  const seconds = (parseInt(match?.[3] ?? '0')) || 0;
-  return hours * 3600 + minutes * 60 + seconds;
-}
-
-// Helper function to check for suspicious titles
-function hasSuspiciousTitle(title: string): boolean {
-  const suspiciousPatterns = [
-    /\b(funny|prank|reaction|gameplay|stream|shorts|short|tiktok)\b/i,
-    /\b(click\s*bait|clickbait|click\s*here|must\s*watch)\b/i,
-    /\b(fortnite|minecraft|roblox|gaming|game\s*play)\b/i,
-    /\b(vlog|blog|daily|diary|live|stream)\b/i,
-    /\b(compilation|highlights|moments|clips)\b/i,
-    /[😂🤣😍🎮🎲🎯🎪]/u // Emojis often used in non-educational content
-  ];
-
-  return suspiciousPatterns.some(pattern => pattern.test(title));
-}
-
-function handleApiError(error: any, res: NextApiResponse) {
-  console.error('Handling API error:', {
-    message: error.message,
-    code: error.code,
-    response: error.response?.data
-  });
-
-  if (error.code === 401 || error.message?.includes('invalid_grant')) {
-    return res.status(401).json({ error: 'Authentication failed' });
-  }
-  if (error.code === 'ECONNREFUSED') {
-    return res.status(503).json({ error: 'YouTube service unavailable' });
-  }
-  if (error.code === 'ETIMEDOUT') {
-    return res.status(504).json({ error: 'Request timed out' });
-  }
-  if (error.response?.data?.error?.message) {
-    return res.status(500).json({ 
-      error: `YouTube API error: ${error.response.data.error.message}` 
-    });
-  }
-  return res.status(500).json({ error: 'Internal server error' });
 }

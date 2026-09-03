@@ -1,16 +1,26 @@
-"use client"
-import React, { useContext } from 'react';
-import { useAppContext } from '../Helper/Context';
-import Hero from '../components/Hero/Hero';
+"use client";
+
+import React from "react";
+import { Button } from "@/components/ui/button";
+import { useAppContext } from "@/Helper/Context";
+import VideoGrid from "./Hero/VideoGrid";
 
 const History = () => {
-  const { videos } = useAppContext();
-
-  // Filter watched videos
-  const watchedVideos = videos.filter(video => video.watched==true);
+  const { watched, clearWatched } = useAppContext();
 
   return (
-    <Hero title="Watch History" contextVideos={watchedVideos}/>
+    <VideoGrid
+      title="Watch History"
+      videos={watched}
+      emptyMessage="Nothing here yet. Videos you open show up in your history."
+      headerAction={
+        watched.length > 0 ? (
+          <Button variant="ghost" size="sm" onClick={clearWatched}>
+            Clear history
+          </Button>
+        ) : null
+      }
+    />
   );
 };
 

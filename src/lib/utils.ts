@@ -1,109 +1,79 @@
-import { clsx, type ClassValue } from "clsx"
-import { twMerge } from "tailwind-merge"
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
 
-// Merges Tailwind classes
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+  return twMerge(clsx(inputs));
 }
 
-// Format video duration from ISO 8601 duration string
-export function formatDuration(duration: string) {
-  const match = duration.match(/PT(\d+H)?(\d+M)?(\d+S)?/)
-  
-  if (!match) return '0:00'
-  
-  const hours = parseInt((match[1] || '').replace('H', '') || '0')
-  const minutes = parseInt((match[2] || '').replace('M', '') || '0')
-  const seconds = ((match[3] || '').replace('S', '') || '0').toString()
-  
-  // Handle cases with no hours and no minutes
-  if (hours === 0 && minutes === 0) {
-    return `${parseInt(seconds)}`
-  }
-  
-  // Handle cases with no hours
-  if (hours === 0) {
-    return `${minutes}:${seconds.padStart(2, '0')}`
-  }
-  
-  // Handle cases with all values
-  return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.padStart(2, '0')}`
+/**
+ * Formats an ISO-8601 duration ("PT1H2M3S") as "1:02:03".
+ *
+ * Sub-minute videos previously came back as a bare number ("45" instead of
+ * "0:45"), and the minute/second groups were parsed with `.replace()` on an
+ * already-captured group, which mis-parsed "PT1H30S" as 1:30 rather than 1:00:30.
+ */
+export function formatDuration(duration: string): string {
+  if (!duration) return "0:00";
+
+  // Already display-formatted (e.g. "17:04") — pass through unchanged.
+  if (/^\d{1,2}(:\d{2}){1,2}$/.test(duration)) return duration;
+
+  const match = duration.match(/^P(?:\d+D)?T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$/);
+  if (!match) return "0:00";
+
+  const hours = Number(match[1] ?? 0);
+  const minutes = Number(match[2] ?? 0);
+  const seconds = Number(match[3] ?? 0);
+
+  const pad = (n: number) => n.toString().padStart(2, "0");
+
+  return hours > 0
+    ? `${hours}:${pad(minutes)}:${pad(seconds)}`
+    : `${minutes}:${pad(seconds)}`;
 }
 
-// Format view count with appropriate suffix (K, M, B)
-export function formatViewCount(countstr: string): string {
-  const count = parseInt(countstr);
-  if (count >= 1e9) {
-    return (count / 1e9).toFixed(1) + 'B';
-  }
-  if (count >= 1e6) {
-    return (count / 1e6).toFixed(1) + 'M';
-  }
-  if (count >= 1e3) {
-    return (count / 1e3).toFixed(1) + 'K';
-  }
-  return countstr.toString()
+/** Formats a raw view count ("1234567") as "1.2M". */
+export function formatViewCount(count: string | number): string {
+  const value = typeof count === "number" ? count : Number(count);
+  if (!Number.isFinite(value)) return typeof count === "string" ? count : "0";
+
+  // `toFixed(1)` unconditionally rendered round numbers as "172.0K"/"5.0M".
+  const compact = (n: number, suffix: string) =>
+    `${Number(n.toFixed(1))}${suffix}`;
+
+  if (value >= 1e9) return compact(value / 1e9, "B");
+  if (value >= 1e6) return compact(value / 1e6, "M");
+  if (value >= 1e3) return compact(value / 1e3, "K");
+  return value.toLocaleString("en-US");
 }
 
-// Format relative time (e.g., "2 hours ago", "3 days ago")
-export function formatRelativeTime(date: string | Date) {
-  const now = new Date()
-  const past = new Date(date)
-  const diffInSeconds = Math.floor((now.getTime() - past.getTime()) / 1000)
-  
-  const intervals = {
-    year: 31536000,
-    month: 2592000,
-    week: 604800,
-    day: 86400,
-    hour: 3600,
-    minute: 60
+/** Formats a date as "3 days ago". Returns the input unchanged if unparseable. */
+export function formatRelativeTime(date: string | Date): string {
+  if (!date) return "";
+
+  const past = date instanceof Date ? date : new Date(date);
+  if (Number.isNaN(past.getTime())) {
+    return typeof date === "string" ? date : "";
   }
-  
-  for (const [unit, seconds] of Object.entries(intervals)) {
-    const interval = Math.floor(diffInSeconds / seconds)
+
+  const diffInSeconds = Math.floor((Date.now() - past.getTime()) / 1000);
+  if (diffInSeconds < 0) return "just now";
+
+  const intervals: Array<[Intl.RelativeTimeFormatUnit, number]> = [
+    ["year", 31_536_000],
+    ["month", 2_592_000],
+    ["week", 604_800],
+    ["day", 86_400],
+    ["hour", 3_600],
+    ["minute", 60],
+  ];
+
+  for (const [unit, seconds] of intervals) {
+    const interval = Math.floor(diffInSeconds / seconds);
     if (interval >= 1) {
-      return `${interval} ${unit}${interval === 1 ? '' : 's'} ago`
+      return `${interval} ${unit}${interval === 1 ? "" : "s"} ago`;
     }
   }
-  
-  return 'just now'
-}
 
-// Truncate text with ellipsis
-export function truncateText(text: string, maxLength: number) {
-  if (text.length <= maxLength) return text
-  return text.slice(0, maxLength) + '...'
-}
-
-// Generate random color from string (useful for avatar backgrounds)
-export function stringToColor(str: string) {
-  let hash = 0
-  for (let i = 0; i < str.length; i++) {
-    hash = str.charCodeAt(i) + ((hash << 5) - hash)
-  }
-  let color = '#'
-  for (let i = 0; i < 3; i++) {
-    const value = (hash >> (i * 8)) & 0xFF
-    color += ('00' + value.toString(16)).substr(-2)
-  }
-  return color
-}
-
-// Debounce function for search inputs etc.
-export function debounce<T extends (...args: any[]) => any>(
-  func: T,
-  wait: number
-): (...args: Parameters<T>) => void {
-  let timeout: NodeJS.Timeout
-  
-  return function executedFunction(...args: Parameters<T>) {
-    const later = () => {
-      clearTimeout(timeout)
-      func(...args)
-    }
-    
-    clearTimeout(timeout)
-    timeout = setTimeout(later, wait)
-  }
+  return "just now";
 }
