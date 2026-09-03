@@ -1,18 +1,12 @@
-"use client"
-import React from 'react';
-import { useAppContext } from '../Helper/Context';
-import Hero from '../components/Hero/Hero';
+"use client";
+import React from "react";
+import Hero from "./Hero/Hero";
 
-const Trending = () => {
-  const context = useAppContext();
-  const { videos } = context;
-
-  // Filter trending videos (example: videos with > 400K views)
-  const trendingVideos = videos.filter(video => video.views > "100K");
-
-  return (
-    <Hero title="Trending" contextVideos={ trendingVideos} />
-  );
-};
+/**
+ * Ranked by view count server-side. This used to filter the local sample list
+ * with `video.views > "100K"` — a lexicographic string comparison that, for
+ * example, rated "1.5M" as less popular than "100K".
+ */
+const Trending = () => <Hero title="Trending" order="viewCount" />;
 
 export default Trending;

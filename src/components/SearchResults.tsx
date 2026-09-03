@@ -1,47 +1,25 @@
-"use client"
+"use client";
 
-import React, { useEffect } from 'react';
-import { useAppContext } from '@/Helper/Context';
-import Hero from './Hero/Hero';
-import { useSearchParams } from 'next/navigation';
-import LoadingSpinner from './Hero/LoadingSpinner';
-import { useSession } from 'next-auth/react';
+import React from "react";
+import { useSearchParams } from "next/navigation";
+import Hero from "./Hero/Hero";
 
+/**
+ * Search is driven entirely by the `q` search param, so a results page can be
+ * linked to, reloaded and shared. The previous version mirrored the query into
+ * React context from an effect that also depended on the context updater, which
+ * re-fired on every response.
+ */
 const SearchResults: React.FC = () => {
-  const { 
-    setSearchQuery, 
-    videos: contextVideos, 
-    filteredSearchVideos,
-    loading,
-    handleSearch 
-  } = useAppContext();
   const searchParams = useSearchParams();
-  const { data: session } = useSession();
+  const query = searchParams?.get("q")?.trim() ?? "";
 
-  useEffect(() => {
-    if (searchParams) {
-      const query = searchParams.get('q');
-      if (query) {
-        setSearchQuery(query);
-        handleSearch(query);
-      }
-    }
-  }, [searchParams, setSearchQuery, handleSearch]);
-
-  if (loading) {
-    return <LoadingSpinner />;
-  }
-
-  const query = searchParams?.get('q') || '';
-  const titleMessage = query 
-    ? `Search Results: "${query}"`
-    : 'Recommended Educational Videos';
-
-  const displayVideos = query
-    ? filteredSearchVideos 
-    : contextVideos;
-
-  return <Hero title={titleMessage} contextVideos={displayVideos} />;
+  return (
+    <Hero
+      title={query ? `Search results for "${query}"` : "Recommended Videos"}
+      query={query}
+    />
+  );
 };
 
 export default SearchResults;

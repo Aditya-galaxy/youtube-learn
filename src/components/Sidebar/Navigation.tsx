@@ -1,42 +1,37 @@
-"use client"
+"use client";
 
-import React from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { LucideIcon } from 'lucide-react';
-import { cn } from '@/lib/utils';
-
-type MenuItem = {
-  icon: LucideIcon;
-  label: string;
-  path: string;
-};
+import React from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
+import { NAV_ITEMS } from "@/config/navigation";
 
 type NavigationProps = {
-  menuItems: MenuItem[];
+  onNavigate?: () => void;
 };
 
-const Navigation = React.memo(({ menuItems }: NavigationProps) => {
+const Navigation = React.memo(({ onNavigate }: NavigationProps) => {
   const pathname = usePathname();
 
   return (
     <nav className="space-y-2">
-      {menuItems.map((item) => {
+      {NAV_ITEMS.map((item) => {
         const isActive = pathname === item.path;
-        
+
         return (
           <Link
-            key={item.label}
+            key={item.path}
             href={item.path}
-            prefetch={true}
+            onClick={onNavigate}
+            aria-current={isActive ? "page" : undefined}
             className={cn(
-              "w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors",
+              "flex w-full items-center gap-3 rounded-lg px-3 py-2 transition-colors",
               isActive
                 ? "bg-purple-500 text-white shadow-lg shadow-purple-500/20"
-                : "text-white/70 hover:bg-purple-500/20 hover:text-white"
+                : "text-muted-foreground hover:bg-purple-500/20 hover:text-foreground"
             )}
           >
-            <item.icon className="w-4 h-4" />
+            <item.icon className="h-4 w-4" />
             <span className="text-sm font-medium">{item.label}</span>
           </Link>
         );
@@ -45,6 +40,6 @@ const Navigation = React.memo(({ menuItems }: NavigationProps) => {
   );
 });
 
-Navigation.displayName = 'Navigation';
+Navigation.displayName = "Navigation";
 
 export default Navigation;

@@ -30,8 +30,8 @@ export const PlansPage: React.FC = () => {
   return (
     <div className="p-6 max-w-6xl mx-auto">
       <div className="text-center mb-12">
-        <h1 className="text-3xl font-bold text-white mb-4">Choose Your Plan</h1>
-        <p className="text-white/60 max-w-2xl mx-auto">
+        <h1 className="text-3xl font-bold text-foreground mb-4">Choose Your Plan</h1>
+        <p className="text-muted-foreground max-w-2xl mx-auto">
           Unlock advanced features and accelerate your learning journey with our premium plans
         </p>
       </div>

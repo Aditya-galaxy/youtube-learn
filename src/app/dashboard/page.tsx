@@ -1,5 +1,6 @@
+import Image from "next/image"
 import { getServerSession } from "next-auth/next"
-import { authOptions } from "@/pages/api/auth/[...nextauth]"
+import { authOptions } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import SignOutButton from "@/components/auth/SignOutButton"
 
@@ -18,11 +19,15 @@ export default async function DashboardPage() {
       </div>
       <div className="mt-4">
         <p>Welcome, {session.user.name}</p>
-        <img 
-          src={session.user.image ?? ''}
-          alt="Profile"
-          className="mt-2 h-12 w-12 rounded-full"
-        />
+        {session.user.image && (
+          <Image
+            src={session.user.image}
+            alt=""
+            width={48}
+            height={48}
+            className="mt-2 rounded-full"
+          />
+        )}
       </div>
     </div>
   )

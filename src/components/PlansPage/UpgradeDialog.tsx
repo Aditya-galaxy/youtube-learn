@@ -17,7 +17,7 @@ export const UpgradeDialog: React.FC<UpgradeDialogProps> = ({
   onConfirm 
 }) => (
   <Dialog open={isOpen} onOpenChange={onOpenChange}>
-    <DialogContent className="bg-gray-900 text-white">
+    <DialogContent className="bg-popover text-foreground">
       <DialogHeader>
         <DialogTitle>{plan?.name} Plan</DialogTitle>
         <DialogDescription>

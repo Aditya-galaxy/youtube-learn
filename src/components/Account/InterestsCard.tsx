@@ -12,9 +12,9 @@ export const InterestsCard: React.FC<InterestsCardProps> = ({ interests }) => {
   if (!Array.isArray(interests) || interests.length === 0) return null;
 
   return (
-    <Card className="bg-black/50 border-gray-700">
+    <Card className="bg-card/50 border-border">
       <CardHeader>
-        <CardTitle className="text-white">Interests</CardTitle>
+        <CardTitle className="text-foreground">Interests</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="flex flex-wrap gap-2">

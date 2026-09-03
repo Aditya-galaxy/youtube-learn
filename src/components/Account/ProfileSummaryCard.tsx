@@ -32,14 +32,21 @@ export const ProfileSummaryCard: React.FC<ProfileSummaryCardProps> = ({
   ];
 
   return (
-    <Card className="md:col-span-1 bg-black/50 border-gray-700">
+    <Card className="md:col-span-1 bg-card/50 border-border">
       <CardHeader className="text-center">
         <div className="flex justify-center mb-4">
           <div className="relative group">
+            {/* The fallback URL used to call Math.random() during render, so
+                the server and client produced different markup (a hydration
+                mismatch) and the avatar changed on every re-render. The seed
+                now lives in state, owned by the parent. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={status === 'authenticated' ? profile.image : `https://picsum.photos/seed/${Math.floor(Math.random() * 1000)}/150/150`}
-              alt="Profile"
-              className="w-24 h-24 rounded-full object-cover"
+              src={profile.image}
+              alt=""
+              width={96}
+              height={96}
+              className="h-24 w-24 rounded-full object-cover"
             />
             <div className="absolute -bottom-2 -right-2 flex gap-2">
               {!session && (
@@ -65,15 +72,15 @@ export const ProfileSummaryCard: React.FC<ProfileSummaryCardProps> = ({
             </div>
           </div>
         </div>
-        <CardTitle className="text-xl font-bold text-white">
+        <CardTitle className="text-xl font-bold text-foreground">
           {profile.name}
         </CardTitle>
-        <p className="text-gray-400 text-sm mt-1">{profile.bio}</p>
+        <p className="text-muted-foreground text-sm mt-1">{profile.bio}</p>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
           {contactInfo.map(({ icon: Icon, text }, index) => (
-            <div key={index} className="flex items-center text-gray-400">
+            <div key={index} className="flex items-center text-muted-foreground">
               <Icon className="w-4 h-4 mr-2" />
               <span className="text-sm">{text}</span>
             </div>

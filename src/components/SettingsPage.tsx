@@ -66,19 +66,19 @@ export const SettingsPage = () => {
   ];
 
   return (
-    <div className="p-6 max-w-4xl mx-auto bg-black min-h-screen">
+    <div className="p-6 max-w-4xl mx-auto">
       <div className="flex items-center gap-3 mb-6">
         <SettingsIcon className="w-6 h-6 text-purple-400" />
-        <h1 className="text-2xl font-semibold text-white">Settings</h1>
+        <h1 className="text-2xl font-semibold text-foreground">Settings</h1>
       </div>
 
       <div className="grid gap-6">
         {settingsGroups.map((group) => (
-          <Card key={group.title} className="bg-black/50 border-white/5">
+          <Card key={group.title} className="bg-card/50 border-border">
             <CardHeader className="pb-2">
               <div className="flex items-center gap-2">
                 <group.icon className="w-5 h-5 text-purple-400" />
-                <CardTitle className="text-lg text-white">{group.title}</CardTitle>
+                <CardTitle className="text-lg text-foreground">{group.title}</CardTitle>
               </div>
             </CardHeader>
             <CardContent>
@@ -86,8 +86,8 @@ export const SettingsPage = () => {
                 {group.settings.map((setting) => (
                   <div key={setting.key} className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <setting.icon className="w-4 h-4 text-white/60" />
-                      <span className="text-sm text-white/80">{setting.label}</span>
+                      <setting.icon className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-sm text-foreground">{setting.label}</span>
                     </div>
                     <Switch 
                       checked={settings[setting.key as keyof Settings]} 

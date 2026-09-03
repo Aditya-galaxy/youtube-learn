@@ -1,146 +1,128 @@
-# 🎥 YouTube Learn: Educational Video Discovery Platform
+# YouTube Learn
 
-## 📌 Project Overview
+A video-discovery app for educational content on YouTube. Sign in with Google, browse an
+Education-category feed from the YouTube Data API, search it, and keep a library, a saved
+list and a watch history.
 
-YouTube Learn is a sophisticated web application that provides an enhanced video discovery and learning experience, leveraging the YouTube Data API to help users find and explore educational content seamlessly.
+Built with Next.js 15 (App Router + a small Pages-Router API surface), React 19, TypeScript,
+Tailwind, shadcn/ui, NextAuth and Prisma/PostgreSQL.
 
-## ✨ Features
+## Features
 
-### 🔍 Advanced Search Functionality
-- Comprehensive video search across YouTube
-- Intelligent filtering options
-- Keyword-based and category-based search
+- **Google sign-in** via NextAuth with a Prisma adapter and JWT sessions.
+- **Educational feed** from the YouTube Data API, filtered to the Education category and to
+  videos that are embeddable, long enough to be substantive, and not obviously clickbait.
+- **Search** with results driven entirely by the URL, so a result page can be shared and reloaded.
+- **Infinite scroll** using YouTube page tokens.
+- **Library / Saved / History**, persisted per-browser in `localStorage`.
+- **Per-user rate limiting** on the API so a single account cannot burn the project's daily
+  YouTube quota.
+- **Light and dark themes.**
+- Signed-out visitors get a local sample feed instead of an error.
 
-### 📊 Smart Recommendation System
-- Personalized video suggestions
-- Learning path recommendations
-- Category-based content discovery
-
-### 🔐 Secure Authentication
-- Google OAuth integration
-- Seamless user authentication
-- Secure session management
-
-### 💾 User-Centric Experience
-- Save favorite videos
-- Create custom playlists
-- Track learning progress
-
-## 🛠 Tech Stack
-
-### Frontend
-- Next.js 14
-- React
-- TypeScript
-- Tailwind CSS
-
-### Backend
-- Prisma ORM
-- NextAuth.js
-- PostgreSQL
-
-### Authentication
-- Google OAuth
-- JWT-based authentication
-
-### External APIs
-- YouTube Data API v3
-
-## 🚀 Getting Started
+## Getting started
 
 ### Prerequisites
-- Node.js (v18+)
-- npm or yarn
-- Google Cloud Console Account
-- PostgreSQL Database
 
-### Installation Steps
-1. Clone the repository
-   ```bash
-   git clone https://github.com/Aditya-galaxy/YouTubeLearn.git
-   ```
+- Node.js 18.18 or newer
+- A PostgreSQL database
+- A Google Cloud project with the **YouTube Data API v3** enabled and an OAuth 2.0 client
 
-2. Install dependencies
-   ```bash
-   cd youtubelearn
-   npm install
-   ```
+### Setup
 
-3. Set up environment variables
-   - Create `.env` file
-   - Add necessary configurations:
-     ```
-     GOOGLE_CLIENT_ID=
-     GOOGLE_CLIENT_SECRET=
-     NEXTAUTH_SECRET=
-     DATABASE_URL=
-     NEXT_PUBLIC_API_URL=
-     YOUTUBE_API_KEY=
-     DIRECT URL=
-     NEXTAUTH_URL=
-     NEXT_PUBLIC_MAX_SEARCH_RESULTS=
-     NEXT_PUBLIC_CACHE_DURATION=
-     ```
+```bash
+git clone https://github.com/Aditya-galaxy/youtube-learn.git
+cd youtube-learn
+npm install
+cp .env.example .env.local
+```
 
-4. Initialize database
-   ```bash
-   npx prisma migrate dev
-   #or
-   npx prisma generate
-   ```
+Fill in `.env.local` — every variable is documented in [`.env.example`](.env.example). In the
+Google Cloud console, add `http://localhost:3000/api/auth/callback/google` as an authorised
+redirect URI.
 
-5. Run development server
-   ```bash
-   npm run dev
-   # or
-   yarn dev
-   # or
-   pnpm dev
-   # or
-   bun dev
-   ```
+Push the Prisma schema to your database:
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+```bash
+npx prisma db push
+```
 
-## 🔒 Environment Variables
+Then start the dev server:
 
-- `GOOGLE_CLIENT_ID`: Google OAuth Client ID
-- `GOOGLE_CLIENT_SECRET`: Google OAuth Client Secret
-- `NEXTAUTH_SECRET`: NextAuth encryption key
-- `DATABASE_URL`: PostgreSQL connection string
-- `NEXT_PUBLIC_API_URL`: Application base URL
-- `YOUTUBE_API_KEY`: YouTube Data API Key
-- `DIRECT URL`: Database quick transfers
-- `NEXTAUTH_URL`: Application base URL
-- `NEXT_PUBLIC_MAX_SEARCH_RESULTS`: Max results
-- `NEXT_PUBLIC_CACHE_DURATION`: Cache Retention Duration
+```bash
+npm run dev
+```
 
-## 📦 Key Dependencies
+The app runs at http://localhost:3000.
 
-- `next-auth`: Authentication
-- `@prisma/client`: Database ORM
-- `@next-auth/prisma-adapter`: Prisma adapter for NextAuth
-- `next-auth/providers/google`: Sign in with Google account
-- `googleapis`: YouTube API interactions
+### Scripts
 
-## 🤝 Contributing
+| Command | Description |
+| --- | --- |
+| `npm run dev` | Start the development server |
+| `npm run build` | Generate the Prisma client and build for production |
+| `npm start` | Serve the production build |
+| `npm run lint` | Run ESLint |
+| `npm run typecheck` | Run `tsc --noEmit` |
 
-1. Fork the repository
-2. Create your feature branch
-3. Commit changes
-4. Push to the branch
-5. Create pull request
+## Environment variables
 
-## 📄 License
+| Variable | Required | Purpose |
+| --- | --- | --- |
+| `DATABASE_URL` | yes | Pooled PostgreSQL connection used at runtime |
+| `DIRECT_URL` | yes | Unpooled connection used by Prisma migrations |
+| `NEXTAUTH_URL` | yes | Canonical URL of the deployment |
+| `NEXTAUTH_SECRET` | yes | Session encryption key (`openssl rand -base64 32`) |
+| `GOOGLE_CLIENT_ID` | yes | Google OAuth client ID |
+| `GOOGLE_CLIENT_SECRET` | yes | Google OAuth client secret |
+| `YOUTUBE_API_KEY` | yes | Server-side YouTube Data API v3 key |
+| `NEXT_PUBLIC_BUYMEACOFFEE_USERNAME` | no | Shows the sidebar support button when set |
 
-This project is licensed under my free and fair use License.🤣
+## Project structure
 
-## 🛟 Support
+```
+src/
+  app/                 App Router pages, layout, and the /api/user-logs route
+  pages/api/           NextAuth handler and the YouTube feed endpoint
+  components/          UI, grouped by feature; components/ui is shadcn/ui
+  Helper/Context.tsx   Client state: selected video, library, saved, history
+  lib/                 auth options, Prisma client, formatters, sample feed
+  config/navigation.ts Nav items shared by the sidebar and mobile sheet
+prisma/schema.prisma   User, Account, Session, UserTokens, ViewedVideos
+```
 
-For issues or questions, please open a GitHub issue or contact me .
+## API
 
-## 📊 Project Status
+### `GET /api/videos`
 
-![Static Badge](https://img.shields.io/badge/version-1.0.0-blue)
-![Static Badge](https://img.shields.io/badge/status-active-green)
-![Static Badge](https://img.shields.io/badge/build-passing-brightgreen)
+Requires a session. Returns a page of videos plus the caller's remaining hourly budget.
+
+| Query param | Default | Notes |
+| --- | --- | --- |
+| `q` | — | Search term; omit for the default feed |
+| `pageToken` | — | YouTube page token for the next page |
+| `order` | `relevance` | `relevance`, `viewCount`, `date` or `rating` |
+| `category` | `27` (Education) | Numeric YouTube category id |
+| `language` | `en` | ISO 639-1 |
+| `region` | `US` | ISO 3166-1 alpha-2 |
+| `refresh` | — | `true` skips recording results as already-seen |
+
+Responses: `200`, `400` invalid params, `401` no session, `429` hourly budget exhausted,
+`502` YouTube unavailable or over quota.
+
+### `POST /api/user-logs`
+
+Requires a session. Accepts `{ event, timestamp? }`. The user identity is taken from the
+session, never from the request body.
+
+## Known limitations
+
+- Library, Saved and History live in `localStorage`, so they do not follow a user across
+  devices. Moving them server-side needs new Prisma models and endpoints.
+- Profile edits on `/profile` are in-memory only; there is no profile write endpoint.
+- `/plans` and `/settings` are UI only — there is no payment provider and settings are not stored.
+- Notifications in the navbar are placeholder content.
+
+## License
+
+Free and fair use.

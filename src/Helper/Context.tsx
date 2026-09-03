@@ -1,314 +1,203 @@
 "use client";
-import React, {useState, useContext, useCallback} from "react";
-import { createContext } from "react";
-import { ReactNode } from "react";
-import { Video } from "../../types/video";
-import { useSession } from "next-auth/react";
+
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
+import type { Video } from "../../types/video";
+import { DEMO_VIDEOS } from "@/lib/demoVideos";
 
 interface AppContextType {
-  videos: Video[];
-  // setVideos: React.Dispatch<React.SetStateAction<Video[]>>;
-  setVideos: (videos: Video[]) => void;
+  /** Videos shown to signed-out visitors and used as an offline fallback. */
+  demoVideos: Video[];
   selectedVideo: Video | null;
-  setSelectedVideo: React.Dispatch<React.SetStateAction<Video | null>>;
-  loading: boolean;
-  setLoading: React.Dispatch<React.SetStateAction<boolean>>;
-  searchQuery: string;
-  setSearchQuery: (query: string) => void;
-  handleSearch: (query: string) => void;
-  handleVideoClick: (video: Video) => void;
-  addVideoToLibrary: (video: Video) => void;
-  removeVideoFromLibrary: (videoId: string) => void;
-  filteredSearchVideos: Video[];
-  error: string | null;
-  clearSearch: () => void;
+  openVideo: (video: Video) => void;
+  closeVideo: () => void;
+  library: Video[];
+  saved: Video[];
+  watched: Video[];
+  isInLibrary: (videoId: string) => boolean;
+  isSaved: (videoId: string) => boolean;
+  toggleLibrary: (video: Video) => boolean;
+  toggleSaved: (video: Video) => boolean;
+  clearWatched: () => void;
 }
 
-export const AppContext = createContext<AppContextType | undefined>(undefined);
+const AppContext = createContext<AppContextType | undefined>(undefined);
+
+const STORAGE_KEYS = {
+  library: "ytlearn.library",
+  saved: "ytlearn.saved",
+  watched: "ytlearn.watched",
+} as const;
+
+const MAX_WATCHED = 200;
+
+function readStored(key: string): Video[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(key);
+    if (!raw) return [];
+    const parsed: unknown = JSON.parse(raw);
+    // Storage is user-writable, so never trust its shape.
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(
+      (item): item is Video =>
+        Boolean(item) &&
+        typeof item === "object" &&
+        typeof (item as Video).id === "string"
+    );
+  } catch {
+    return [];
+  }
+}
+
+function writeStored(key: string, videos: Video[]) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(key, JSON.stringify(videos));
+  } catch {
+    // Quota exceeded or storage disabled — the list simply will not persist.
+  }
+}
 
 const Context = ({ children }: { children: ReactNode }) => {
-  const { data: session } = useSession();
-  const [videos, setVideos] = useState<Video[]>([
-    {
-    id: 'JRHAM1nAuD4',  // id of the video on youtube
-    channelId: 'UCZ9qFEC82qM6Pk-54Q4TVWA',
-    title: 'Artificial Intelligence | Research and Which Majors to Pick',
-    thumbnail: 'https://img.youtube.com/vi/JRHAM1nAuD4/hqdefault.jpg',
-    duration: '18:32',
-    channelName: 'Zach Star',
-    views: '172K',
-    publishedAt: '7 years ago',
-    watched:true,
-    inLibrary:true,
-    description: 'A video about AI research and majors to pick.'
-  },
-    
-  {
-    id: 'WUvTyaaNkzM',
-    channelId: 'UCYO_jab_esuFRV4b17AJtAw',
-    title: 'The essence of calculus',
-    thumbnail: 'https://img.youtube.com/vi/WUvTyaaNkzM/hqdefault.jpg',
-    duration: '17:04',
-    channelName: '3Blue1Brown',
-    views: '9.6M',
-    publishedAt: '7 years ago',
-    watched:false,
-    inLibrary:false,
-    description: 'A video explaining the essence of calculus.'
-  },
-  {
-    id: 'p7HKvqRI_Bo',
-    channelId: 'UCsooa4yRKGN_zEE8iknghZA',
-    title: 'How does the stock market work? - Oliver Elfenbaum',
-    thumbnail: 'https://img.youtube.com/vi/p7HKvqRI_Bo/hqdefault.jpg',
-    duration: '4:29',
-    channelName: 'TED-Ed',
-    views: '567K',
-    publishedAt: '5 years ago',
-    watched:true,
-    inLibrary:false,
-    description: 'A video explaining how the stock market works.'
-  },
-  {
-    id: 'Rt6beTKDtqY',
-    channelId: 'UCZ9qFEC82qM6Pk-54Q4TVWA',
-    title: 'The Mathematics of Machine Learning',
-    thumbnail: 'https://img.youtube.com/vi/Rt6beTKDtqY/hqdefault.jpg',
-    duration: '16:33',
-    channelName: 'Zach Star',
-    views: '488K',
-    publishedAt: '6 years ago',
-    watched:true,
-    inLibrary:false,
-    description: 'A video about the mathematics of machine learning.'
-    },
-    {
-    id: 'fkAAbXPEAtU',
-    channelId: 'UC7DdEm33SyaTDtWYGO2CwdA',
-    title: 'Quantum Entanglement Explained Simply',
-    thumbnail: 'https://img.youtube.com/vi/fkAAbXPEAtU/hqdefault.jpg',
-    duration: '9:56',
-    channelName: 'Science ABC',
-    views: '786K',
-    publishedAt: '4 years ago',
-    watched: true,
-    inLibrary:false,
-    description: 'A video explaining quantum entanglement simply.'
-  },
-  {
-    id: 'Qqe4thU-os8',
-    channelId: 'UCb1GdqUqArXMQ3RS86lqqOw',
-    title: 'DNA Replication (Updated)',
-    thumbnail: 'https://img.youtube.com/vi/Qqe4thU-os8/hqdefault.jpg',
-    duration: '8:11',
-    channelName: 'Amoeba Sisters',
-    views: '7.7M',
-    publishedAt: '5 years ago',
-    watched: false,
-    inLibrary:false,
-    description: 'A video about DNA replication.'
-  },
-  {
-    id: 'F1cghFu9zBs',
-    channelId: 'UCV6KDgJskWaEckne5aPA0aQ',
-    title: 'How To Build Wealth In Your 20s (Realistically)',
-    thumbnail: 'https://img.youtube.com/vi/F1cghFu9zBs/hqdefault.jpg',
-    duration: '14:33',
-    channelName: 'Graham Stephan',
-    views: '290K',
-    publishedAt: '10 months ago',
-    watched:false,
-    inLibrary:false,
-    description: 'A video about building wealth in your 20s.'
-  },
-  {
-    id: 'e-P5IFTqB98',
-    channelId: 'UCsXVk37bltHxD1rDPwtNM8Q',
-    title: 'Black Holes Explained - From Birth to Death',
-    thumbnail: 'https://img.youtube.com/vi/e-P5IFTqB98/hqdefault.jpg',
-    duration: '5:55',
-    channelName: 'Kurzgesagt - In a Nutshell',
-    views: '25M',
-    publishedAt: '9 years ago',
-    watched:true,
-    inLibrary:false,
-    description: 'A video explaining black holes from birth to death.'
-  },
-  {
-    id: 'yZvFH7B6gKI',
-    channelId: 'UCz8J7E5w3Wp3yFoZpC3y7mw',
-    title: 'What Is Data Analytics? - An Introduction (Full Guide)',
-    thumbnail: 'https://img.youtube.com/vi/yZvFH7B6gKI/hqdefault.jpg',
-    duration: '9:04',
-    channelName: 'CareerFoundry',
-    views: '1.5M',
-    publishedAt: '3 years ago',
-    watched: false,
-    inLibrary:false,
-    description: 'A video introducing data analytics.'
-  },
-  {
-    id: 'fE_QTn4daPU',
-    channelId: 'UCUMZ7gohGI9HcU9VNsr2FJQ',
-    title: 'The Science Behind Climate Change, Explained in 2 Minutes',
-    thumbnail: 'https://img.youtube.com/vi/fE_QTn4daPU/hqdefault.jpg',
-    duration: '1:47',
-    channelName: 'Bloomberg Originals',
-    views: '35K',
-    publishedAt: '9 years ago',
-    watched: false,
-    inLibrary:false,
-    description: 'A video explaining the science behind climate change in 2 minutes.'
-  },
-  {
-    id: 'ReFqFPJHLhA',
-    channelId: 'UCn7dB9UMTBDjKtEKBy_XISw',
-    title: 'Heuristics and biases in decision making, explained',
-    thumbnail: 'https://img.youtube.com/vi/ReFqFPJHLhA/hqdefault.jpg',
-    duration: '3:48',
-    channelName: 'Learn Liberty',
-    views: '631K',
-    publishedAt: '7 years ago',
-    watched: false,
-    inLibrary:false,
-    description: 'A video explaining heuristics and biases in decision making.'
-    },
-  {
-    id: 'TImdsUglGv4',
-    channelId: 'UCW4J0Z1pL9J4G9Uq8i4e0wA',
-    title: 'How Encryption Works - and How It Can Be Bypassed',
-    thumbnail: 'https://img.youtube.com/vi/TImdsUglGv4/hqdefault.jpg',
-    duration: '2:48',
-    channelName: 'The Wall Street Journal',
-    views: '5M',
-    publishedAt: '8 years ago',
-    watched: true,
-    inLibrary:false,
-    description: 'A video explaining how encryption works and how it can be bypassed.'
-  }
-    // ... other video objects
-  ]);
-  
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  const [filteredSearchVideos, setFilteredSearchVideos] = useState<Video[]>([]);
+  const [library, setLibrary] = useState<Video[]>([]);
+  const [saved, setSaved] = useState<Video[]>([]);
+  const [watched, setWatched] = useState<Video[]>([]);
+  // Reading localStorage during render would make the server and client markup
+  // disagree, so we hydrate after mount and only start writing once we have.
+  const [hydrated, setHydrated] = useState(false);
 
-  // Initialize filteredSearchVideos with all videos
-  React.useEffect(() => {
-    setFilteredSearchVideos(videos);
-  }, [videos]);
+  useEffect(() => {
+    setLibrary(readStored(STORAGE_KEYS.library));
+    setSaved(readStored(STORAGE_KEYS.saved));
+    setWatched(readStored(STORAGE_KEYS.watched));
+    setHydrated(true);
+  }, []);
 
-  const handleSearch = useCallback(async (query: string) => {
-    if (!query.trim()) {
-      setFilteredSearchVideos(videos);
-      setSearchQuery('');
-      return;
-    }
+  useEffect(() => {
+    if (hydrated) writeStored(STORAGE_KEYS.library, library);
+  }, [library, hydrated]);
 
-    try {
-      setLoading(true);
-      setError(null);
+  useEffect(() => {
+    if (hydrated) writeStored(STORAGE_KEYS.saved, saved);
+  }, [saved, hydrated]);
 
-      if (session) {
-        const response = await fetch(`/api/videos?q=${encodeURIComponent(query)}`);
-        const data = await response.json();
+  useEffect(() => {
+    if (hydrated) writeStored(STORAGE_KEYS.watched, watched);
+  }, [watched, hydrated]);
 
-        if (!response.ok) {
-          throw new Error(data.error || 'Failed to fetch videos');
-        }
-
-        setVideos(data.videos);
-        setFilteredSearchVideos(data.videos);
-      } else {
-        const searchResults = videos.filter(video => {
-          const searchTerm = query.toLowerCase();
-          return (
-            video.title.toLowerCase().includes(searchTerm) ||
-            video.description.toLowerCase().includes(searchTerm) ||
-            video.channelName.toLowerCase().includes(searchTerm)
-          );
-        });
-        
-        setFilteredSearchVideos(searchResults);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-      setFilteredSearchVideos([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [videos, session]);
-
-  const clearSearch = useCallback(() => {
-    setSearchQuery('');
-    setFilteredSearchVideos(videos);
-    setError(null);
-  }, [videos]);
-
-  function handleVideoClick(video: Video) {
+  const openVideo = useCallback((video: Video) => {
     setSelectedVideo(video);
-  }
-  
-  function addVideoToLibrary(video: Video) {
-    // Check if video is already in library
-    const isAlreadyInLibrary = videos.some(v => v.id === video.id && v.inLibrary);
-    
-    if (!isAlreadyInLibrary) {
-      setVideos(prevVideos => 
-        prevVideos.map(v => 
-          v.id === video.id 
-            ? {...v, inLibrary: true} 
-            : v
-        )
-      );
-    }
-  }
+    setWatched((prev) => [
+      { ...video, watched: true },
+      ...prev.filter((v) => v.id !== video.id),
+    ].slice(0, MAX_WATCHED));
+  }, []);
 
-  function removeVideoFromLibrary(videoId: string) {
-    setVideos(prevVideos => 
-      prevVideos.map(v => 
-        v.id === videoId 
-          ? {...v, inLibrary: false} 
-          : v
-      )
-    );
-  }
+  const closeVideo = useCallback(() => setSelectedVideo(null), []);
 
-
-  const value = {
-    videos,
-    error,
-    setVideos,
-    selectedVideo,
-    setSelectedVideo,
-    loading,
-    setLoading,
-    searchQuery,
-    setSearchQuery,
-    handleSearch,
-    handleVideoClick,
-    addVideoToLibrary,
-    removeVideoFromLibrary,
-    filteredSearchVideos,
-    clearSearch,
-  };
-  return (
-    //provide context api data through attribute value
-    <div>
-      <AppContext.Provider value={value}>{children}</AppContext.Provider>
-    </div>
+  const libraryIds = useMemo(
+    () => new Set(library.map((v) => v.id)),
+    [library]
   );
+  const savedIds = useMemo(() => new Set(saved.map((v) => v.id)), [saved]);
+  const watchedIds = useMemo(
+    () => new Set(watched.map((v) => v.id)),
+    [watched]
+  );
+
+  const isInLibrary = useCallback(
+    (videoId: string) => libraryIds.has(videoId),
+    [libraryIds]
+  );
+  const isSaved = useCallback(
+    (videoId: string) => savedIds.has(videoId),
+    [savedIds]
+  );
+
+  /** Returns true when the video ended up in the list, false when removed. */
+  const toggleLibrary = useCallback((video: Video) => {
+    let added = false;
+    setLibrary((prev) => {
+      const exists = prev.some((v) => v.id === video.id);
+      added = !exists;
+      return exists
+        ? prev.filter((v) => v.id !== video.id)
+        : [{ ...video, inLibrary: true }, ...prev];
+    });
+    return added;
+  }, []);
+
+  const toggleSaved = useCallback((video: Video) => {
+    let added = false;
+    setSaved((prev) => {
+      const exists = prev.some((v) => v.id === video.id);
+      added = !exists;
+      return exists ? prev.filter((v) => v.id !== video.id) : [video, ...prev];
+    });
+    return added;
+  }, []);
+
+  const clearWatched = useCallback(() => setWatched([]), []);
+
+  const demoVideos = useMemo(
+    () =>
+      DEMO_VIDEOS.map((video) => ({
+        ...video,
+        watched: watchedIds.has(video.id),
+        inLibrary: libraryIds.has(video.id),
+      })),
+    [watchedIds, libraryIds]
+  );
+
+  const value = useMemo<AppContextType>(
+    () => ({
+      demoVideos,
+      selectedVideo,
+      openVideo,
+      closeVideo,
+      library,
+      saved,
+      watched,
+      isInLibrary,
+      isSaved,
+      toggleLibrary,
+      toggleSaved,
+      clearWatched,
+    }),
+    [
+      demoVideos,
+      selectedVideo,
+      openVideo,
+      closeVideo,
+      library,
+      saved,
+      watched,
+      isInLibrary,
+      isSaved,
+      toggleLibrary,
+      toggleSaved,
+      clearWatched,
+    ]
+  );
+
+  return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };
 
 export default Context;
 
-// Custom hook for easier context usage
 export const useAppContext = () => {
   const context = useContext(AppContext);
   if (!context) {
-    throw new Error('useAppContext must be used within an AppContextProvider');
+    throw new Error("useAppContext must be used within an AppContextProvider");
   }
   return context;
 };
