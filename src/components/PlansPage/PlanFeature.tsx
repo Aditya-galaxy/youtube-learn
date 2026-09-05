@@ -2,13 +2,13 @@
 import React from "react";
 import { Check } from "lucide-react";
 
-interface PlanFeatureProps {
-  feature: string;
-}
-
-export const PlanFeature: React.FC<PlanFeatureProps> = ({ feature }) => (
-  <li className="flex items-center gap-2">
-    <Check className="w-4 h-4 text-purple-400" />
-    <span className="text-sm text-foreground">{feature}</span>
+export const PlanFeature: React.FC<{ feature: string }> = ({ feature }) => (
+  <li className="flex items-start gap-3 text-sm tracking-tightish">
+    <Check
+      className="mt-0.5 h-4 w-4 shrink-0 opacity-40"
+      strokeWidth={1.75}
+      aria-hidden
+    />
+    <span>{feature}</span>
   </li>
 );

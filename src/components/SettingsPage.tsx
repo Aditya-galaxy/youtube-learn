@@ -1,8 +1,6 @@
 "use client";
 import React, { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
-import { Settings as SettingsIcon, User, Bell, Shield } from "lucide-react";
 
 interface Settings {
   pushNotifications: boolean;
@@ -10,17 +8,37 @@ interface Settings {
   dataSharing: boolean;
 }
 
-interface Setting {
-  key: keyof Settings;
-  label: string;
-  icon: React.ComponentType;
-}
-
-interface SettingsGroup {
+const GROUPS: Array<{
   title: string;
-  icon: React.ComponentType;
-  settings: Setting[];
-}
+  items: Array<{ key: keyof Settings; label: string; hint: string }>;
+}> = [
+  {
+    title: "Account",
+    items: [
+      {
+        key: "pushNotifications",
+        label: "Push notifications",
+        hint: "New courses and weekly progress summaries.",
+      },
+    ],
+  },
+  {
+    title: "Privacy",
+    items: [
+      {
+        key: "activityTracking",
+        label: "Activity tracking",
+        hint: "Use watch history to tune recommendations.",
+      },
+      {
+        key: "dataSharing",
+        label: "Data sharing",
+        hint: "Share anonymised usage data to improve the product.",
+      },
+    ],
+  },
+];
+
 export const SettingsPage = () => {
   const [settings, setSettings] = useState<Settings>({
     pushNotifications: false,
@@ -28,87 +46,53 @@ export const SettingsPage = () => {
     dataSharing: false,
   });
 
-  const toggleSetting = (settingKey: keyof Settings) => {
-    setSettings((prev) => ({
-      ...prev,
-      [settingKey]: !prev[settingKey],
-    }));
-  };
-
-  const settingsGroups = [
-    {
-      title: "Account",
-      icon: User,
-      settings: [
-        {
-          key: "pushNotifications",
-          label: "Push Notifications",
-          icon: Bell,
-        },
-      ],
-    },
-    {
-      title: "Privacy",
-      icon: Shield,
-      settings: [
-        {
-          key: "activityTracking",
-          label: "Activity Tracking",
-          icon: Bell,
-        },
-        {
-          key: "dataSharing",
-          label: "Data Sharing",
-          icon: Shield,
-        },
-      ],
-    },
-  ];
-
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <div className="flex items-center gap-3 mb-6">
-        <SettingsIcon className="w-6 h-6 text-purple-400" />
-        <h1 className="text-2xl font-semibold text-foreground">Settings</h1>
+    <div className="mx-auto max-w-3xl px-5 py-12 sm:px-10 sm:py-16">
+      <div className="border-b border-border pb-8">
+        <p className="eyebrow">Preferences</p>
+        <h1 className="mt-2 font-display text-4xl tracking-display text-foreground sm:text-5xl">
+          Settings
+        </h1>
       </div>
 
-      <div className="grid gap-6">
-        {settingsGroups.map((group) => (
-          <Card key={group.title} className="bg-card/50 border-border">
-            <CardHeader className="pb-2">
-              <div className="flex items-center gap-2">
-                <group.icon className="w-5 h-5 text-purple-400" />
-                <CardTitle className="text-lg text-foreground">
-                  {group.title}
-                </CardTitle>
+      {GROUPS.map((group) => (
+        <section key={group.title} className="border-b border-border py-10">
+          <h2 className="font-display text-2xl tracking-display text-foreground">
+            {group.title}
+          </h2>
+          <div className="mt-6 space-y-6">
+            {group.items.map((item) => (
+              <div
+                key={item.key}
+                className="flex items-start justify-between gap-8"
+              >
+                <div className="min-w-0">
+                  <p className="text-sm tracking-tightish text-foreground">
+                    {item.label}
+                  </p>
+                  <p className="mt-1 text-sm tracking-tightish text-muted-foreground">
+                    {item.hint}
+                  </p>
+                </div>
+                <Switch
+                  checked={settings[item.key]}
+                  aria-label={item.label}
+                  onCheckedChange={() =>
+                    setSettings((prev) => ({
+                      ...prev,
+                      [item.key]: !prev[item.key],
+                    }))
+                  }
+                />
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {group.settings.map((setting) => (
-                  <div
-                    key={setting.key}
-                    className="flex items-center justify-between"
-                  >
-                    <div className="flex items-center gap-3">
-                      <setting.icon className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-sm text-foreground">
-                        {setting.label}
-                      </span>
-                    </div>
-                    <Switch
-                      checked={settings[setting.key as keyof Settings]}
-                      onCheckedChange={() =>
-                        toggleSetting(setting.key as keyof Settings)
-                      }
-                    />
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+            ))}
+          </div>
+        </section>
+      ))}
+
+      <p className="pt-8 text-xs tracking-tightish text-muted-foreground">
+        These preferences are not stored yet — they reset on reload.
+      </p>
     </div>
   );
 };

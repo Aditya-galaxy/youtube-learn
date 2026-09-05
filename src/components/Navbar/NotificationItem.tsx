@@ -8,29 +8,27 @@ interface NotificationItemProps {
   onClick: (id: string) => void;
 }
 
-const NotificationItem = ({ notification, onClick }: NotificationItemProps) => {
-  return (
-    <DropdownMenuItem
-      className="px-4 py-3 focus:bg-muted cursor-pointer"
-      onClick={() => onClick(notification.id)}
-    >
-      <div className="flex flex-col gap-1">
-        <div className="flex items-center justify-between">
-          <span
-            className={`text-sm ${notification.read ? "text-muted-foreground" : "text-foreground font-medium"}`}
-          >
-            {notification.title}
-          </span>
-          <span className="text-xs text-muted-foreground">
-            {notification.time}
-          </span>
-        </div>
-        <span className="text-xs text-muted-foreground">
-          {notification.message}
-        </span>
-      </div>
-    </DropdownMenuItem>
-  );
-};
+const NotificationItem = ({ notification, onClick }: NotificationItemProps) => (
+  <DropdownMenuItem
+    className="cursor-pointer flex-col items-start gap-1 rounded-sm px-3 py-3"
+    onClick={() => onClick(notification.id)}
+  >
+    <div className="flex w-full items-baseline justify-between gap-3">
+      <span
+        className={`text-sm tracking-tightish ${
+          notification.read ? "text-muted-foreground" : "text-foreground"
+        }`}
+      >
+        {notification.title}
+      </span>
+      <span className="shrink-0 text-xs tracking-tightish text-muted-foreground">
+        {notification.time}
+      </span>
+    </div>
+    <span className="text-xs tracking-tightish text-muted-foreground">
+      {notification.message}
+    </span>
+  </DropdownMenuItem>
+);
 
 export default NotificationItem;

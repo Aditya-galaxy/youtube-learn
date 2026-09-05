@@ -11,40 +11,28 @@ export const PlansPage: React.FC = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
 
-  const handlePlanSelection = (plan: Plan) => {
-    setSelectedPlan(plan);
-    setIsDialogOpen(true);
-  };
-
-  const handleConfirm = () => {
-    setIsDialogOpen(false);
-    if (selectedPlan?.name !== "Free") {
-      toast({
-        title: "Failure",
-        description: "Payment Gateway not setup yet.",
-        duration: 3000,
-      });
-    }
-  };
-
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <div className="text-center mb-12">
-        <h1 className="text-3xl font-bold text-foreground mb-4">
-          Choose Your Plan
+    <div className="mx-auto max-w-[1200px] px-5 py-16 sm:px-10 sm:py-24">
+      <div className="mx-auto max-w-2xl text-center">
+        <p className="eyebrow">Pricing</p>
+        <h1 className="mt-4 font-display text-5xl tracking-display text-foreground sm:text-6xl">
+          Learn <em>deliberately</em>.
         </h1>
-        <p className="text-muted-foreground max-w-2xl mx-auto">
-          Unlock advanced features and accelerate your learning journey with our
-          premium plans
+        <p className="mx-auto mt-5 max-w-md text-base leading-relaxed tracking-tightish text-muted-foreground">
+          Start free. Upgrade when you want learning paths, progress tracking
+          and an unlimited feed.
         </p>
       </div>
 
-      <div className="grid md:grid-cols-3 gap-8">
+      <div className="mt-16 grid gap-5 md:grid-cols-3">
         {plans.map((plan) => (
           <PlanCard
             key={plan.name}
             plan={plan}
-            onSelect={handlePlanSelection}
+            onSelect={(p) => {
+              setSelectedPlan(p);
+              setIsDialogOpen(true);
+            }}
           />
         ))}
       </div>
@@ -53,7 +41,16 @@ export const PlansPage: React.FC = () => {
         plan={selectedPlan}
         isOpen={isDialogOpen}
         onOpenChange={setIsDialogOpen}
-        onConfirm={handleConfirm}
+        onConfirm={() => {
+          setIsDialogOpen(false);
+          if (selectedPlan?.name !== "Free") {
+            toast({
+              title: "Not available yet",
+              description: "Payments are not set up on this deployment.",
+              duration: 3000,
+            });
+          }
+        }}
       />
     </div>
   );

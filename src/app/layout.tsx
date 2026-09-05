@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Inter, Source_Serif_4 } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { Toaster } from "@/components/ui/toaster";
@@ -8,8 +9,20 @@ import Sidebar from "@/components/Sidebar/Sidebar";
 import VideoModal from "@/components/Hero/VideoModal";
 import Context from "@/Helper/Context";
 
-// This was declared but never exported, so Next.js ignored it and every page
-// shipped with the framework's default title.
+// Self-hosted by next/font: no render-blocking request to Google, and no
+// layout shift, since the fallback metrics are matched at build time.
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-sans",
+  display: "swap",
+});
+
+const sourceSerif = Source_Serif_4({
+  subsets: ["latin"],
+  variable: "--font-display",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   title: {
     default: "YouTube Learn",
@@ -25,14 +38,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      {/* The wrapper used to hardcode `bg-background text-foreground`, which pinned the
-          whole app to the dark palette no matter what the theme provider said. */}
-      <body className="min-h-screen bg-background text-foreground">
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={`${inter.variable} ${sourceSerif.variable}`}
+    >
+      <body className="min-h-screen bg-background font-sans text-foreground antialiased">
         <Providers>
           <ThemeProvider
             attribute="class"
-            defaultTheme="dark"
+            defaultTheme="light"
             enableSystem
             disableTransitionOnChange
           >
@@ -41,9 +56,7 @@ export default function RootLayout({
                 <Navbar />
                 <div className="flex flex-1">
                   <Sidebar />
-                  {/* The sidebar is hidden below `md`, so the offset that clears
-                      it has to be too — it was an unconditional `ml-40`. */}
-                  <main className="flex-1 pt-20 md:ml-44">{children}</main>
+                  <main className="flex-1 pt-20 md:ml-64">{children}</main>
                 </div>
                 <VideoModal />
               </div>

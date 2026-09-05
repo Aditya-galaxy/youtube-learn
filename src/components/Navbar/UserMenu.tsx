@@ -2,9 +2,9 @@
 
 import React from "react";
 import Image from "next/image";
-import { useSession, signOut, signIn } from "next-auth/react";
-import { UserCircle, LogOut } from "lucide-react";
+import { signIn, signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { UserRound } from "lucide-react";
 import { Button } from "../ui/button";
 import {
   DropdownMenu,
@@ -13,97 +13,68 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
-import SignInButton from "../auth/SignInButton";
 
 const UserMenu = () => {
   const { data: session } = useSession();
   const router = useRouter();
 
-  const handleLogout = async () => {
-    await signOut({ redirect: true, callbackUrl: "/" });
-  };
-
   if (!session) {
     return (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="secondary"
-            className="bg-purple-500 hover:bg-purple-600 text-white border-0"
-          >
-            Sign in
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent
-          align="end"
-          className="w-80 p-4 bg-popover border-border"
-        >
-          <div className="space-y-4">
-            <div className="text-center">
-              <h3 className="text-lg font-semibold text-foreground">
-                Welcome to YTLearn
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                Sign in to continue learning
-              </p>
-            </div>
-            <SignInButton />
-            <div className="text-center text-sm">
-              <span className="text-muted-foreground">
-                Don't have an account?{" "}
-              </span>
-              <button
-                className="text-purple-400 hover:text-purple-300"
-                onClick={() => signIn("google", { callbackUrl: "/" })}
-              >
-                Sign up
-              </button>
-            </div>
-          </div>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <Button size="sm" onClick={() => signIn("google", { callbackUrl: "/" })}>
+        Sign in
+      </Button>
     );
   }
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button
-          variant="secondary"
-          className="bg-muted hover:bg-accent text-foreground border-0"
+        <button
+          type="button"
+          aria-label="Account menu"
+          className="ml-1 flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-secondary transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           {session.user?.image ? (
             <Image
               src={session.user.image}
               alt=""
-              width={20}
-              height={20}
-              className="rounded-full"
+              width={36}
+              height={36}
+              className="h-9 w-9 object-cover"
             />
           ) : (
-            <UserCircle className="h-5 w-5" />
+            <UserRound className="h-4 w-4" strokeWidth={1.75} />
           )}
-          {session.user?.name || "Account"}
-        </Button>
+        </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent
-        align="end"
-        className="w-56 bg-popover border-border"
-      >
+      <DropdownMenuContent align="end" className="w-60 rounded-md">
+        <div className="px-3 py-2.5">
+          <p className="truncate text-sm tracking-tightish text-foreground">
+            {session.user?.name}
+          </p>
+          <p className="truncate text-xs tracking-tightish text-muted-foreground">
+            {session.user?.email}
+          </p>
+        </div>
+        <DropdownMenuSeparator />
         <DropdownMenuItem
-          className="focus:bg-muted"
+          className="rounded-sm text-sm tracking-tightish"
           onClick={() => router.push("/profile")}
         >
-          <UserCircle className="w-4 h-4 mr-2" />
-          <span>Profile</span>
+          Profile
         </DropdownMenuItem>
-        <DropdownMenuSeparator className="bg-accent" />
         <DropdownMenuItem
-          className="focus:bg-muted text-purple-400 focus:text-purple-500"
-          onClick={handleLogout}
+          className="rounded-sm text-sm tracking-tightish"
+          onClick={() => router.push("/dashboard")}
         >
-          <LogOut className="w-4 h-4 mr-2" />
-          <span>Log out</span>
+          Dashboard
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          className="rounded-sm text-sm tracking-tightish"
+          onClick={() => signOut({ callbackUrl: "/" })}
+        >
+          Sign out
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

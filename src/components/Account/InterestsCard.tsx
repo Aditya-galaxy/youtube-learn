@@ -1,28 +1,23 @@
 "use client";
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { InterestsCardProps } from "./types";
 
 export const InterestsCard: React.FC<InterestsCardProps> = ({ interests }) => {
   if (!Array.isArray(interests) || interests.length === 0) return null;
 
   return (
-    <Card className="bg-card/50 border-border">
-      <CardHeader>
-        <CardTitle className="text-foreground">Interests</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="flex flex-wrap gap-2">
-          {interests.map((interest) => (
-            <span
-              key={interest}
-              className="px-3 py-1 rounded-full bg-purple-500/10 text-purple-400 text-sm"
-            >
-              {interest}
-            </span>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+    <section className="rounded-lg bg-card p-8">
+      <p className="eyebrow">Interests</p>
+      <div className="mt-5 flex flex-wrap gap-2">
+        {interests.map((interest) => (
+          <span
+            key={interest}
+            className="rounded-full bg-secondary px-3.5 py-1.5 text-sm tracking-tightish text-foreground"
+          >
+            {interest}
+          </span>
+        ))}
+      </div>
+    </section>
   );
 };
