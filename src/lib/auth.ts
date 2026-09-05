@@ -74,6 +74,26 @@ export const authOptions: NextAuthOptions = {
       }
     },
   },
+  // NextAuth swallows the underlying cause and reports only a short code to the
+  // client. Without this, a failed sign-in leaves nothing in the server logs to
+  // explain *why* — whether Google rejected the token exchange, or the adapter
+  // could not reach the database.
+  logger: {
+    error(code, metadata) {
+      const cause =
+        metadata instanceof Error
+          ? metadata
+          : ((metadata as { error?: Error })?.error ?? metadata);
+      console.error(`[auth][error][${code}]`, cause);
+    },
+    warn(code) {
+      console.warn(`[auth][warn][${code}]`);
+    },
+    debug() {
+      // Intentionally silent: NextAuth's debug stream logs tokens.
+    },
+  },
+
   pages: {
     signIn: "/auth/signin",
     error: "/auth/signin",
