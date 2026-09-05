@@ -1,5 +1,11 @@
 # YouTube Learn
 
+[![CI](https://github.com/Aditya-galaxy/youtube-learn/actions/workflows/ci.yml/badge.svg)](https://github.com/Aditya-galaxy/youtube-learn/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Next.js 15](https://img.shields.io/badge/Next.js-15-black?logo=next.js)](https://nextjs.org)
+
+**[Live demo →](https://youtube-learn.vercel.app)**
+
 A video-discovery app for educational content on YouTube. Sign in with Google, browse an
 Education-category feed from the YouTube Data API, search it, and keep a library, a saved
 list and a watch history.
@@ -125,4 +131,4 @@ session, never from the request body.
 
 ## License
 
-Free and fair use.
+[MIT](LICENSE) © Aditya Kumar
