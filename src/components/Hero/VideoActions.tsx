@@ -1,13 +1,7 @@
 "use client";
 
 import React from "react";
-import {
-  Bookmark,
-  BookmarkCheck,
-  Library,
-  LibraryBig,
-  MoreVertical,
-} from "lucide-react";
+import { Bookmark, Check, MoreHorizontal, Plus } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,52 +23,52 @@ const VideoActions: React.FC<VideoActionsProps> = ({ video }) => {
   const inLibrary = isInLibrary(video.id);
   const saved = isSaved(video.id);
 
-  // Both actions are toggles now: previously "Add to Library" was one-way, so a
-  // video added by mistake could not be removed from the UI at all.
-  const handleLibrary = () => {
-    const added = toggleLibrary(video);
-    toast({
-      title: added ? "Added to library" : "Removed from library",
-      description: video.title,
-      duration: 3000,
-    });
-  };
-
-  const handleSave = () => {
-    const added = toggleSaved(video);
-    toast({
-      title: added ? "Saved" : "Removed from saved",
-      description: video.title,
-      duration: 3000,
-    });
-  };
-
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          className="mt-0.5 rounded-full p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="-mr-1 mt-1 shrink-0 rounded-full p-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           aria-label={`More actions for ${video.title}`}
         >
-          <MoreVertical className="h-4 w-4" />
+          <MoreHorizontal className="h-4 w-4" strokeWidth={1.75} />
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-52">
-        <DropdownMenuItem className="gap-2" onClick={handleLibrary}>
+      <DropdownMenuContent align="end" className="w-56 rounded-md">
+        <DropdownMenuItem
+          className="gap-2.5 rounded-sm text-sm tracking-tightish"
+          onClick={() => {
+            const added = toggleLibrary(video);
+            toast({
+              title: added ? "Added to library" : "Removed from library",
+              description: video.title,
+              duration: 3000,
+            });
+          }}
+        >
           {inLibrary ? (
-            <LibraryBig className="h-4 w-4" />
+            <Check className="h-4 w-4" strokeWidth={1.75} />
           ) : (
-            <Library className="h-4 w-4" />
+            <Plus className="h-4 w-4" strokeWidth={1.75} />
           )}
           {inLibrary ? "Remove from Library" : "Add to Library"}
         </DropdownMenuItem>
-        <DropdownMenuItem className="gap-2" onClick={handleSave}>
-          {saved ? (
-            <BookmarkCheck className="h-4 w-4" />
-          ) : (
-            <Bookmark className="h-4 w-4" />
-          )}
+        <DropdownMenuItem
+          className="gap-2.5 rounded-sm text-sm tracking-tightish"
+          onClick={() => {
+            const added = toggleSaved(video);
+            toast({
+              title: added ? "Saved" : "Removed from saved",
+              description: video.title,
+              duration: 3000,
+            });
+          }}
+        >
+          <Bookmark
+            className="h-4 w-4"
+            strokeWidth={1.75}
+            fill={saved ? "currentColor" : "none"}
+          />
           {saved ? "Remove from Saved" : "Save for later"}
         </DropdownMenuItem>
       </DropdownMenuContent>

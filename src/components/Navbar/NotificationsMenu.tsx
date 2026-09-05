@@ -14,74 +14,64 @@ const NotificationsMenu = () => {
   const [notifications, setNotifications] = useState<Notification[]>([
     {
       id: "1",
-      title: "New Course Available",
-      message: "Check out our latest React course",
+      title: "New course available",
+      message: "Check out the latest React course",
       time: "5m ago",
       read: false,
     },
     {
       id: "2",
-      title: "Weekly Summary",
+      title: "Weekly summary",
       message: "View your learning progress",
       time: "1h ago",
       read: false,
     },
   ]);
 
-  const handleNotificationClick = (id: string) => {
-    setNotifications(
-      notifications.map((notification) =>
-        notification.id === id ? { ...notification, read: true } : notification
-      )
-    );
-  };
-
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="text-muted-foreground hover:text-foreground hover:bg-muted relative"
-        >
-          <Bell className="w-5 h-5" />
-          {unreadCount > 0 && (
-            <span className="absolute top-1 right-1 w-2 h-2 bg-purple-500 rounded-full" />
-          )}
+        <Button variant="ghost" size="icon" aria-label="Notifications">
+          <span className="relative">
+            <Bell strokeWidth={1.75} />
+            {unreadCount > 0 && (
+              <span className="absolute -right-0.5 -top-0.5 h-1.5 w-1.5 rounded-full bg-foreground" />
+            )}
+          </span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent
-        align="end"
-        className="w-80 bg-popover border-border"
-      >
-        <div className="flex items-center justify-between px-4 py-2 border-b border-border">
-          <span className="text-sm font-medium text-foreground">
-            Notifications
-          </span>
+      <DropdownMenuContent align="end" className="w-80 rounded-md p-0">
+        <div className="flex items-center justify-between border-b border-border px-4 py-3">
+          <p className="eyebrow">Notifications</p>
           {unreadCount > 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-xs text-muted-foreground hover:text-foreground"
+            <button
+              type="button"
+              className="text-xs tracking-tightish text-muted-foreground hover:text-foreground"
               onClick={() =>
-                setNotifications(
-                  notifications.map((n) => ({ ...n, read: true }))
+                setNotifications((prev) =>
+                  prev.map((n) => ({ ...n, read: true }))
                 )
               }
             >
-              Mark all as read
-            </Button>
+              Mark all read
+            </button>
           )}
         </div>
-        {notifications.map((notification) => (
-          <NotificationItem
-            key={notification.id}
-            notification={notification}
-            onClick={handleNotificationClick}
-          />
-        ))}
+        <div className="p-1">
+          {notifications.map((notification) => (
+            <NotificationItem
+              key={notification.id}
+              notification={notification}
+              onClick={(id) =>
+                setNotifications((prev) =>
+                  prev.map((n) => (n.id === id ? { ...n, read: true } : n))
+                )
+              }
+            />
+          ))}
+        </div>
       </DropdownMenuContent>
     </DropdownMenu>
   );

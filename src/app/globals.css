@@ -2,71 +2,54 @@
 @tailwind components;
 @tailwind utilities;
 
-html {
-  font-size: 107.25%;
-}
-
-body {
-  /* The family name needs quoting and the fallback chain has to stay in the
-     same genre: this previously listed the family twice and hero.css declared
-     the same serif family with a sans-serif fallback. */
-  font-family: "Times New Roman", Times, Georgia, serif;
-}
-
 @layer base {
+  /*
+   * Warm neutral ("stone") system: ink on paper, no colour accent. Separation
+   * comes from background tone rather than borders and shadows.
+   */
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
+    --background: 60 6% 98%; /* stone-50  #FAFAF9 */
+    --foreground: 20 14% 4%; /* stone-950 #0C0A09 */
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
+    --card-foreground: 20 14% 4%;
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
-    --primary: 262 83% 58%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 0 0% 96.1%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
-    --accent: 0 0% 94%;
-    --accent-foreground: 0 0% 9%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 262 83% 58%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
-    --radius: 0.5rem;
+    --popover-foreground: 20 14% 4%;
+    --primary: 20 14% 4%;
+    --primary-foreground: 60 9% 96%; /* stone-100 */
+    --secondary: 30 5% 94%; /* #F0EFEE */
+    --secondary-foreground: 20 14% 4%;
+    --muted: 30 5% 94%;
+    --muted-foreground: 25 5% 45%; /* stone-500 #78716C */
+    --accent: 30 5% 94%;
+    --accent-foreground: 20 14% 4%;
+    --destructive: 0 72% 45%;
+    --destructive-foreground: 60 9% 96%;
+    --border: 20 6% 90%;
+    --input: 20 6% 90%;
+    --ring: 20 14% 4%;
+    --radius: 1.25rem;
   }
+
   .dark {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 7%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 7%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 262 83% 62%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 18%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 40%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 16%;
-    --input: 0 0% 16%;
-    --ring: 262 83% 62%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
-    --radius: 0.5rem;
+    --background: 20 14% 4%;
+    --foreground: 60 9% 96%;
+    --card: 20 10% 8%;
+    --card-foreground: 60 9% 96%;
+    --popover: 20 10% 8%;
+    --popover-foreground: 60 9% 96%;
+    --primary: 60 9% 96%;
+    --primary-foreground: 20 14% 4%;
+    --secondary: 20 8% 14%;
+    --secondary-foreground: 60 9% 96%;
+    --muted: 20 8% 14%;
+    --muted-foreground: 24 6% 60%;
+    --accent: 20 8% 16%;
+    --accent-foreground: 60 9% 96%;
+    --destructive: 0 62% 52%;
+    --destructive-foreground: 60 9% 96%;
+    --border: 20 8% 16%;
+    --input: 20 8% 16%;
+    --ring: 60 9% 96%;
   }
 }
 
@@ -74,7 +57,32 @@ body {
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
+    /* Inter reads tighter than its defaults at UI sizes. */
+    letter-spacing: -0.011em;
+  }
+
+  /* Display face: large, light weight, tight tracking. */
+  h1,
+  h2 {
+    font-family: var(--font-display), Georgia, "Times New Roman", serif;
+    font-weight: 400;
+    letter-spacing: -0.04em;
+    line-height: 1.05;
+  }
+
+  h3,
+  h4 {
+    letter-spacing: -0.03em;
+  }
+}
+
+@layer components {
+  /* Small uppercase label that sits above a display heading. */
+  .eyebrow {
+    @apply text-xs uppercase text-muted-foreground;
+    letter-spacing: 0.08em;
   }
 }

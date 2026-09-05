@@ -1,25 +1,24 @@
 "use client";
 import React from "react";
+import { Button } from "@/components/ui/button";
 
 type ProFeaturesProps = {
   onUpgradeClick: () => void;
 };
 
-const ProFeatures: React.FC<ProFeaturesProps> = ({ onUpgradeClick }) => {
-  return (
-    <div className="mt-8 p-4 rounded-xl bg-gradient-to-br from-purple-500/20 to-purple-700/20 border border-purple-500/20">
-      <h2 className="font-medium text-foreground mb-2">Pro Features</h2>
-      <p className="text-xs text-muted-foreground mb-3">
-        Unlock advanced learning tools and exclusive content
-      </p>
-      <button
-        onClick={onUpgradeClick}
-        className="w-full px-3 py-2 rounded-lg bg-purple-500 hover:bg-purple-600 text-white text-sm font-medium transition-colors"
-      >
-        Upgrade Now
-      </button>
-    </div>
-  );
-};
+const ProFeatures: React.FC<ProFeaturesProps> = ({ onUpgradeClick }) => (
+  <div className="mt-10 rounded-lg bg-secondary p-5">
+    <p className="eyebrow">Pro</p>
+    <h2 className="mt-2 font-display text-xl tracking-display text-foreground">
+      Go deeper.
+    </h2>
+    <p className="mt-2 text-sm leading-relaxed tracking-tightish text-muted-foreground">
+      Unlimited feeds, learning paths and progress tracking.
+    </p>
+    <Button size="sm" className="mt-4 w-full" onClick={onUpgradeClick}>
+      Upgrade
+    </Button>
+  </div>
+);
 
 export default ProFeatures;

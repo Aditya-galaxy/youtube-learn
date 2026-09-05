@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth/next";
-import { AlertCircle } from "lucide-react";
 import SignInButton from "@/components/auth/SignInButton";
 import { authOptions } from "@/lib/auth";
 
@@ -45,38 +44,36 @@ export default async function SignIn({
     : null;
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-popover px-4">
-      <div className="w-full max-w-sm space-y-4 text-center">
-        <div className="space-y-2">
-          <h1 className="text-3xl font-bold tracking-tighter text-foreground">
-            Welcome Back
-          </h1>
-          <p className="text-muted-foreground">
-            Sign in to access educational content
-          </p>
-        </div>
+    <div className="flex min-h-[80vh] flex-col items-center justify-center px-5">
+      <div className="w-full max-w-sm text-center">
+        <p className="eyebrow">Welcome back</p>
+        <h1 className="mt-4 font-display text-5xl tracking-display text-foreground">
+          Sign in.
+        </h1>
+        <p className="mx-auto mt-4 max-w-xs text-sm leading-relaxed tracking-tightish text-muted-foreground">
+          Continue with Google to keep your library, history and saved videos.
+        </p>
 
         {message && (
           <div
             role="alert"
-            className="flex items-start gap-3 rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-left"
+            className="mt-8 rounded-md bg-secondary p-5 text-left"
           >
-            <AlertCircle
-              aria-hidden
-              className="mt-0.5 h-4 w-4 shrink-0 text-destructive"
-            />
-            <div className="space-y-1">
-              <p className="text-sm text-foreground">{message}</p>
-              {/* The raw code is what maps to the NextAuth docs, so keep it
-                  visible rather than swallowing it. */}
-              <p className="text-xs text-muted-foreground">
-                Error code: {error}
-              </p>
-            </div>
+            <p className="eyebrow text-destructive">Sign-in failed</p>
+            <p className="mt-2 text-sm leading-relaxed tracking-tightish text-foreground">
+              {message}
+            </p>
+            {/* The raw code is what maps to the NextAuth docs, so keep it
+                visible rather than swallowing it. */}
+            <p className="mt-2 text-xs tracking-tightish text-muted-foreground">
+              Error code: {error}
+            </p>
           </div>
         )}
 
-        <SignInButton />
+        <div className="mt-8 flex justify-center">
+          <SignInButton />
+        </div>
       </div>
     </div>
   );

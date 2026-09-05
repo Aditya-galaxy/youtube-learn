@@ -169,14 +169,12 @@ const Hero: React.FC<HeroProps> = ({ title, query, order = "relevance" }) => {
         footer={
           <div
             ref={sentinelRef}
-            className="mt-8 flex h-20 items-center justify-center"
+            className="mt-16 flex h-16 items-center justify-center"
           >
             {isLoadingMore && (
-              <div className="flex items-center gap-2">
-                <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                <span className="text-sm text-muted-foreground">
-                  Loading more videos...
-                </span>
+              <div className="flex items-center gap-2.5 text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" strokeWidth={1.75} />
+                <span className="text-sm tracking-tightish">Loading more</span>
               </div>
             )}
           </div>
@@ -184,7 +182,7 @@ const Hero: React.FC<HeroProps> = ({ title, query, order = "relevance" }) => {
       />
 
       {!isAuthenticated && status !== "loading" && (
-        <p className="pb-8 text-center text-sm text-muted-foreground">
+        <p className="pb-16 text-center text-sm tracking-tightish text-muted-foreground">
           Sign in to see personalised recommendations.
         </p>
       )}

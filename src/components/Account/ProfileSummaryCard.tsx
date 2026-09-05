@@ -1,8 +1,7 @@
 "use client";
 import React from "react";
-import { Mail, Phone, MapPin, Calendar, Edit2, RefreshCw } from "lucide-react";
+import { Calendar, Mail, MapPin, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ProfileSummaryCardProps } from "./types";
 
 export const ProfileSummaryCard: React.FC<ProfileSummaryCardProps> = ({
@@ -22,71 +21,53 @@ export const ProfileSummaryCard: React.FC<ProfileSummaryCardProps> = ({
       icon: Calendar,
       text: `Joined ${
         status === "authenticated"
-          ? new Date(Date.now()).toLocaleDateString()
+          ? new Date().toLocaleDateString()
           : profile.joinDate
       }`,
     },
   ];
 
   return (
-    <Card className="md:col-span-1 bg-card/50 border-border">
-      <CardHeader className="text-center">
-        <div className="flex justify-center mb-4">
-          <div className="relative group">
-            {/* The fallback URL used to call Math.random() during render, so
-                the server and client produced different markup (a hydration
-                mismatch) and the avatar changed on every re-render. The seed
-                now lives in state, owned by the parent. */}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={profile.image}
-              alt=""
-              width={96}
-              height={96}
-              className="h-24 w-24 rounded-full object-cover"
+    <div className="rounded-lg bg-card p-8">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={profile.image}
+        alt=""
+        width={80}
+        height={80}
+        className="h-20 w-20 rounded-full object-cover"
+      />
+
+      <h2 className="mt-6 font-display text-3xl tracking-display text-foreground">
+        {profile.name}
+      </h2>
+      <p className="mt-2 text-sm leading-relaxed tracking-tightish text-muted-foreground">
+        {profile.bio}
+      </p>
+
+      <dl className="mt-8 space-y-3 border-t border-border pt-8">
+        {contactInfo.map(({ icon: Icon, text }, i) => (
+          <div key={i} className="flex items-center gap-3">
+            <Icon
+              className="h-4 w-4 shrink-0 text-muted-foreground"
+              strokeWidth={1.75}
+              aria-hidden
             />
-            <div className="absolute -bottom-2 -right-2 flex gap-2">
-              {!session && (
-                <Button
-                  size="icon"
-                  variant="secondary"
-                  className="w-8 h-8 rounded-full bg-purple-500 hover:bg-purple-600 text-white"
-                  onClick={onAvatarRefresh}
-                >
-                  <RefreshCw className="w-4 h-4" />
-                </Button>
-              )}
-              {session && (
-                <Button
-                  size="icon"
-                  variant="secondary"
-                  className="w-8 h-8 rounded-full bg-purple-500 hover:bg-purple-600 text-white"
-                  onClick={onEditClick}
-                >
-                  <Edit2 className="w-4 h-4" />
-                </Button>
-              )}
-            </div>
+            <dd className="truncate text-sm tracking-tightish text-muted-foreground">
+              {text}
+            </dd>
           </div>
-        </div>
-        <CardTitle className="text-xl font-bold text-foreground">
-          {profile.name}
-        </CardTitle>
-        <p className="text-muted-foreground text-sm mt-1">{profile.bio}</p>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          {contactInfo.map(({ icon: Icon, text }, index) => (
-            <div
-              key={index}
-              className="flex items-center text-muted-foreground"
-            >
-              <Icon className="w-4 h-4 mr-2" />
-              <span className="text-sm">{text}</span>
-            </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+        ))}
+      </dl>
+
+      <Button
+        variant="outline"
+        size="sm"
+        className="mt-8 w-full"
+        onClick={session ? onEditClick : onAvatarRefresh}
+      >
+        {session ? "Edit profile" : "New avatar"}
+      </Button>
+    </div>
   );
 };

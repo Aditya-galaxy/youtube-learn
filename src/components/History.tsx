@@ -15,7 +15,7 @@ const History = () => {
       emptyMessage="Nothing here yet. Videos you open show up in your history."
       headerAction={
         watched.length > 0 ? (
-          <Button variant="ghost" size="sm" onClick={clearWatched}>
+          <Button variant="outline" size="sm" onClick={clearWatched}>
             Clear history
           </Button>
         ) : null

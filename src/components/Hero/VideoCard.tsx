@@ -15,48 +15,39 @@ const VideoCard: React.FC<VideoCardProps> = ({ video }) => {
   const { openVideo } = useAppContext();
 
   return (
-    <article className="group relative overflow-hidden rounded-xl bg-card transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
-      {/* The whole card used to be a plain div with onClick, so it could not be
-          reached or activated with a keyboard. */}
+    <article className="group">
       <button
         type="button"
         onClick={() => openVideo(video)}
-        className="w-full cursor-pointer text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="w-full rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4 focus-visible:ring-offset-background"
         aria-label={`Play ${video.title}`}
       >
         <VideoThumbnail video={video} />
       </button>
 
-      <div className="p-4">
-        <div className="flex items-start justify-between">
-          <h3 className="mr-2 line-clamp-2 flex-1 text-base font-semibold">
+      <div className="flex items-start justify-between gap-3 pt-5">
+        <div className="min-w-0 flex-1">
+          <h2 className="font-display text-xl leading-snug tracking-display text-foreground">
             <button
               type="button"
               onClick={() => openVideo(video)}
-              className="text-left hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="text-left decoration-1 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               {video.title}
             </button>
-          </h3>
-          <div className="flex-shrink-0">
-            <VideoActions video={video} />
-          </div>
+          </h2>
+
+          <p className="mt-2 text-sm tracking-tightish text-muted-foreground">
+            {video.channelName}
+          </p>
+          <p className="mt-1 text-xs tracking-tightish text-muted-foreground">
+            {formatViewCount(video.views)} views ·{" "}
+            {formatRelativeTime(video.publishedAt)}
+            {video.watched && " · Watched"}
+          </p>
         </div>
 
-        <div className="mt-2 flex flex-col gap-1 text-sm text-muted-foreground">
-          <span className="font-medium">{video.channelName}</span>
-          <div className="flex items-center gap-2">
-            <span>{formatViewCount(video.views)} views</span>
-            <span aria-hidden>•</span>
-            <span>{formatRelativeTime(video.publishedAt)}</span>
-            {video.watched && (
-              <>
-                <span aria-hidden>•</span>
-                <span>Watched</span>
-              </>
-            )}
-          </div>
-        </div>
+        <VideoActions video={video} />
       </div>
     </article>
   );

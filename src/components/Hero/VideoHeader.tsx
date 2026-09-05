@@ -7,12 +7,14 @@ interface VideoHeaderProps {
 }
 
 const VideoHeader: React.FC<VideoHeaderProps> = ({ title, videoCount }) => (
-  <h2 className="flex items-center gap-2 text-2xl font-semibold text-foreground">
-    {title}
-    <span className="rounded-full bg-muted px-3 py-1 text-sm font-normal text-muted-foreground">
+  <div>
+    <p className="eyebrow">
       {videoCount} {videoCount === 1 ? "video" : "videos"}
-    </span>
-  </h2>
+    </p>
+    <h1 className="mt-2 font-display text-4xl tracking-display text-foreground sm:text-5xl">
+      {title}
+    </h1>
+  </div>
 );
 
 export default VideoHeader;

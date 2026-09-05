@@ -3,10 +3,11 @@ import React from "react";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
 } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { Plan } from "./types";
 
 interface UpgradeDialogProps {
@@ -23,29 +24,22 @@ export const UpgradeDialog: React.FC<UpgradeDialogProps> = ({
   onConfirm,
 }) => (
   <Dialog open={isOpen} onOpenChange={onOpenChange}>
-    <DialogContent className="bg-popover text-foreground">
+    <DialogContent className="bg-card sm:max-w-md">
       <DialogHeader>
-        <DialogTitle>{plan?.name} Plan</DialogTitle>
-        <DialogDescription>
+        <DialogTitle className="text-left font-display text-2xl tracking-display">
+          {plan?.name}
+        </DialogTitle>
+        <DialogDescription className="text-left text-sm leading-relaxed tracking-tightish">
           {plan?.name === "Free"
-            ? "You're already on the Free plan."
+            ? "You are already on the Free plan."
             : plan?.name === "Team"
-              ? "Contact our sales team for more information on the Team plan."
-              : `Upgrade to the ${plan?.name} plan for ${plan?.price}/${plan?.period}`}
+              ? "Contact sales to set up a Team plan."
+              : `Upgrade to ${plan?.name} for ${plan?.price} ${plan?.period}.`}
         </DialogDescription>
       </DialogHeader>
-      <div className="mt-4">
-        <button
-          onClick={onConfirm}
-          className="w-full py-2 rounded-lg font-medium bg-purple-500 hover:bg-purple-600 text-white transition-colors"
-        >
-          {plan?.name === "Free"
-            ? "Close"
-            : plan?.name === "Team"
-              ? "Upgrade Now"
-              : "Confirm Upgrade"}
-        </button>
-      </div>
+      <Button className="mt-2 w-full" onClick={onConfirm}>
+        {plan?.name === "Free" ? "Close" : "Continue"}
+      </Button>
     </DialogContent>
   </Dialog>
 );

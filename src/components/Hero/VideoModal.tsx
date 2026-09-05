@@ -5,15 +5,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { useAppContext } from "@/Helper/Context";
 import { formatRelativeTime, formatViewCount } from "@/lib/utils";
 
-/**
- * Rendered once, from the root layout.
- *
- * It used to be rendered by the layout *and* by the feed, so opening a video
- * mounted two players bound to the same state and both started playing — the
- * "double sound" this file previously worked around by reaching into the DOM
- * and calling `iframe.remove()` on nodes React owned. Unmounting the dialog
- * content stops playback on its own.
- */
 const VideoModal = () => {
   const { selectedVideo, closeVideo } = useAppContext();
 
@@ -24,19 +15,11 @@ const VideoModal = () => {
         if (!open) closeVideo();
       }}
     >
-      <DialogContent className="bg-background p-0 sm:max-w-[800px]">
+      <DialogContent className="overflow-hidden border-border bg-card p-0 sm:max-w-3xl">
         {selectedVideo && (
           <>
-            <DialogHeader className="p-4 pb-0 text-foreground">
-              <DialogTitle className="pr-8 text-lg font-semibold">
-                {selectedVideo.title}
-              </DialogTitle>
-            </DialogHeader>
-
-            <div className="relative mt-4 pt-[56.25%]">
+            <div className="relative pt-[56.25%]">
               <iframe
-                // `origin` was read from window during render, which breaks
-                // server rendering; the embed does not need it without the JS API.
                 src={`https://www.youtube.com/embed/${selectedVideo.id}?autoplay=1`}
                 title={selectedVideo.title}
                 className="absolute left-0 top-0 h-full w-full"
@@ -45,12 +28,15 @@ const VideoModal = () => {
               />
             </div>
 
-            <div className="p-4">
-              <h3 className="font-medium text-foreground">
-                {selectedVideo.channelName}
-              </h3>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {formatViewCount(selectedVideo.views)} views •{" "}
+            <div className="px-7 pb-8 pt-6">
+              <DialogHeader>
+                <DialogTitle className="text-left font-display text-2xl leading-snug tracking-display text-foreground">
+                  {selectedVideo.title}
+                </DialogTitle>
+              </DialogHeader>
+              <p className="mt-3 text-sm tracking-tightish text-muted-foreground">
+                {selectedVideo.channelName} ·{" "}
+                {formatViewCount(selectedVideo.views)} views ·{" "}
                 {formatRelativeTime(selectedVideo.publishedAt)}
               </p>
             </div>

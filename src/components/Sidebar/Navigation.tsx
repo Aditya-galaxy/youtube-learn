@@ -14,7 +14,7 @@ const Navigation = React.memo(({ onNavigate }: NavigationProps) => {
   const pathname = usePathname();
 
   return (
-    <nav className="space-y-2">
+    <nav className="space-y-0.5">
       {NAV_ITEMS.map((item) => {
         const isActive = pathname === item.path;
 
@@ -25,14 +25,14 @@ const Navigation = React.memo(({ onNavigate }: NavigationProps) => {
             onClick={onNavigate}
             aria-current={isActive ? "page" : undefined}
             className={cn(
-              "flex w-full items-center gap-3 rounded-lg px-3 py-2 transition-colors",
+              "flex w-full items-center gap-3 rounded-full px-4 py-2.5 text-sm tracking-tightish transition-colors",
               isActive
-                ? "bg-purple-500 text-white shadow-lg shadow-purple-500/20"
-                : "text-muted-foreground hover:bg-purple-500/20 hover:text-foreground"
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:bg-secondary hover:text-foreground"
             )}
           >
-            <item.icon className="h-4 w-4" />
-            <span className="text-sm font-medium">{item.label}</span>
+            <item.icon className="h-4 w-4" strokeWidth={1.75} />
+            <span>{item.label}</span>
           </Link>
         );
       })}

@@ -51,9 +51,16 @@ const AccountPage: React.FC = () => {
   );
 
   return (
-    <div className="px-6 py-8">
-      <div className="mx-auto max-w-4xl">
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+    <div className="mx-auto max-w-[1100px] px-5 py-12 sm:px-10 sm:py-16">
+      <div>
+        <div className="border-b border-border pb-8">
+          <p className="eyebrow">Account</p>
+          <h1 className="mt-2 font-display text-4xl tracking-display text-foreground sm:text-5xl">
+            Profile
+          </h1>
+        </div>
+
+        <div className="grid grid-cols-1 gap-5 pt-10 md:grid-cols-3">
           <ProfileSummaryCard
             profile={profile}
             status={status}
