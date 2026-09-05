@@ -1,5 +1,11 @@
 # YouTube Learn
 
+[![CI](https://github.com/Aditya-galaxy/youtube-learn/actions/workflows/ci.yml/badge.svg)](https://github.com/Aditya-galaxy/youtube-learn/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Next.js 15](https://img.shields.io/badge/Next.js-15-black?logo=next.js)](https://nextjs.org)
+
+**[Live demo →](https://youtube-learn.vercel.app)**
+
 A video-discovery app for educational content on YouTube. Sign in with Google, browse an
 Education-category feed from the YouTube Data API, search it, and keep a library, a saved
 list and a watch history.
@@ -57,26 +63,26 @@ The app runs at http://localhost:3000.
 
 ### Scripts
 
-| Command | Description |
-| --- | --- |
-| `npm run dev` | Start the development server |
-| `npm run build` | Generate the Prisma client and build for production |
-| `npm start` | Serve the production build |
-| `npm run lint` | Run ESLint |
-| `npm run typecheck` | Run `tsc --noEmit` |
+| Command             | Description                                         |
+| ------------------- | --------------------------------------------------- |
+| `npm run dev`       | Start the development server                        |
+| `npm run build`     | Generate the Prisma client and build for production |
+| `npm start`         | Serve the production build                          |
+| `npm run lint`      | Run ESLint                                          |
+| `npm run typecheck` | Run `tsc --noEmit`                                  |
 
 ## Environment variables
 
-| Variable | Required | Purpose |
-| --- | --- | --- |
-| `DATABASE_URL` | yes | Pooled PostgreSQL connection used at runtime |
-| `DIRECT_URL` | yes | Unpooled connection used by Prisma migrations |
-| `NEXTAUTH_URL` | yes | Canonical URL of the deployment |
-| `NEXTAUTH_SECRET` | yes | Session encryption key (`openssl rand -base64 32`) |
-| `GOOGLE_CLIENT_ID` | yes | Google OAuth client ID |
-| `GOOGLE_CLIENT_SECRET` | yes | Google OAuth client secret |
-| `YOUTUBE_API_KEY` | yes | Server-side YouTube Data API v3 key |
-| `NEXT_PUBLIC_BUYMEACOFFEE_USERNAME` | no | Shows the sidebar support button when set |
+| Variable                            | Required | Purpose                                            |
+| ----------------------------------- | -------- | -------------------------------------------------- |
+| `DATABASE_URL`                      | yes      | Pooled PostgreSQL connection used at runtime       |
+| `DIRECT_URL`                        | yes      | Unpooled connection used by Prisma migrations      |
+| `NEXTAUTH_URL`                      | yes      | Canonical URL of the deployment                    |
+| `NEXTAUTH_SECRET`                   | yes      | Session encryption key (`openssl rand -base64 32`) |
+| `GOOGLE_CLIENT_ID`                  | yes      | Google OAuth client ID                             |
+| `GOOGLE_CLIENT_SECRET`              | yes      | Google OAuth client secret                         |
+| `YOUTUBE_API_KEY`                   | yes      | Server-side YouTube Data API v3 key                |
+| `NEXT_PUBLIC_BUYMEACOFFEE_USERNAME` | no       | Shows the sidebar support button when set          |
 
 ## Project structure
 
@@ -97,15 +103,15 @@ prisma/schema.prisma   User, Account, Session, UserTokens, ViewedVideos
 
 Requires a session. Returns a page of videos plus the caller's remaining hourly budget.
 
-| Query param | Default | Notes |
-| --- | --- | --- |
-| `q` | — | Search term; omit for the default feed |
-| `pageToken` | — | YouTube page token for the next page |
-| `order` | `relevance` | `relevance`, `viewCount`, `date` or `rating` |
-| `category` | `27` (Education) | Numeric YouTube category id |
-| `language` | `en` | ISO 639-1 |
-| `region` | `US` | ISO 3166-1 alpha-2 |
-| `refresh` | — | `true` skips recording results as already-seen |
+| Query param | Default          | Notes                                          |
+| ----------- | ---------------- | ---------------------------------------------- |
+| `q`         | —                | Search term; omit for the default feed         |
+| `pageToken` | —                | YouTube page token for the next page           |
+| `order`     | `relevance`      | `relevance`, `viewCount`, `date` or `rating`   |
+| `category`  | `27` (Education) | Numeric YouTube category id                    |
+| `language`  | `en`             | ISO 639-1                                      |
+| `region`    | `US`             | ISO 3166-1 alpha-2                             |
+| `refresh`   | —                | `true` skips recording results as already-seen |
 
 Responses: `200`, `400` invalid params, `401` no session, `429` hourly budget exhausted,
 `502` YouTube unavailable or over quota.
@@ -125,4 +131,4 @@ session, never from the request body.
 
 ## License
 
-Free and fair use.
+[MIT](LICENSE) © Aditya Kumar

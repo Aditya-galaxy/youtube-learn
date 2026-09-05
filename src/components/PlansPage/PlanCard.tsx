@@ -1,8 +1,13 @@
-"use client"
-import React from 'react';
-import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card';
-import { Plan } from './types';
-import { PlanFeature } from './PlanFeature';
+"use client";
+import React from "react";
+import {
+  Card,
+  CardHeader,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
+import { Plan } from "./types";
+import { PlanFeature } from "./PlanFeature";
 
 interface PlanCardProps {
   plan: Plan;
@@ -10,9 +15,9 @@ interface PlanCardProps {
 }
 
 export const PlanCard: React.FC<PlanCardProps> = ({ plan, onSelect }) => (
-  <Card 
+  <Card
     className={`relative bg-card/50 border-border transition-all duration-300 hover:bg-purple-900/20 hover:ring-1 ring-primary/40 ${
-      plan.isPopular ? 'ring-2 ring-purple-500' : ''
+      plan.isPopular ? "ring-2 ring-purple-500" : ""
     }`}
   >
     {plan.isPopular && (
@@ -22,9 +27,11 @@ export const PlanCard: React.FC<PlanCardProps> = ({ plan, onSelect }) => (
         </span>
       </div>
     )}
-    
+
     <CardHeader className="text-center">
-      <h3 className="text-xl font-semibold text-foreground mb-2">{plan.name}</h3>
+      <h3 className="text-xl font-semibold text-foreground mb-2">
+        {plan.name}
+      </h3>
       <div className="mb-2">
         <span className="text-3xl font-bold text-foreground">{plan.price}</span>
         <span className="text-muted-foreground text-sm">/{plan.period}</span>
@@ -39,13 +46,13 @@ export const PlanCard: React.FC<PlanCardProps> = ({ plan, onSelect }) => (
       </ul>
     </CardContent>
 
-    <CardFooter className=''>
+    <CardFooter className="">
       <button
         onClick={() => onSelect(plan)}
         className={`w-full py-2 rounded-lg font-medium transition-colors ${
           plan.isPopular
-            ? 'bg-purple-500 hover:bg-purple-600 text-white'
-            : 'bg-accent hover:bg-accent text-foreground'
+            ? "bg-purple-500 hover:bg-purple-600 text-white"
+            : "bg-accent hover:bg-accent text-foreground"
         }`}
       >
         {plan.buttonText}

@@ -1,6 +1,6 @@
-"use client"
-import React from 'react';
-import { Check } from 'lucide-react';
+"use client";
+import React from "react";
+import { Check } from "lucide-react";
 
 interface PlanFeatureProps {
   feature: string;

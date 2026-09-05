@@ -1,21 +1,16 @@
-"use client"
-import React from 'react';
-import { Mail, Phone, MapPin, Calendar, Edit2, RefreshCw } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { ProfileSummaryCardProps } from './types';
+"use client";
+import React from "react";
+import { Mail, Phone, MapPin, Calendar, Edit2, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ProfileSummaryCardProps } from "./types";
 
-export const ProfileSummaryCard: React.FC<ProfileSummaryCardProps> = ({ 
-  profile, 
-  status, 
-  session, 
-  onEditClick, 
-  onAvatarRefresh 
+export const ProfileSummaryCard: React.FC<ProfileSummaryCardProps> = ({
+  profile,
+  status,
+  session,
+  onEditClick,
+  onAvatarRefresh,
 }) => {
   if (!profile) return null;
 
@@ -23,12 +18,14 @@ export const ProfileSummaryCard: React.FC<ProfileSummaryCardProps> = ({
     { icon: Mail, text: profile.email },
     { icon: Phone, text: profile.phone },
     { icon: MapPin, text: profile.location },
-    { 
-      icon: Calendar, 
-      text: `Joined ${status === 'authenticated' 
-        ? new Date(Date.now()).toLocaleDateString()
-        : profile.joinDate}`
-    }
+    {
+      icon: Calendar,
+      text: `Joined ${
+        status === "authenticated"
+          ? new Date(Date.now()).toLocaleDateString()
+          : profile.joinDate
+      }`,
+    },
   ];
 
   return (
@@ -80,7 +77,10 @@ export const ProfileSummaryCard: React.FC<ProfileSummaryCardProps> = ({
       <CardContent>
         <div className="space-y-4">
           {contactInfo.map(({ icon: Icon, text }, index) => (
-            <div key={index} className="flex items-center text-muted-foreground">
+            <div
+              key={index}
+              className="flex items-center text-muted-foreground"
+            >
               <Icon className="w-4 h-4 mr-2" />
               <span className="text-sm">{text}</span>
             </div>

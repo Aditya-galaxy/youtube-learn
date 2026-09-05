@@ -16,7 +16,7 @@ export interface UserProfile {
 
 export interface ProfileSummaryCardProps {
   profile: UserProfile;
-  status: 'authenticated' | 'unauthenticated' | 'loading';
+  status: "authenticated" | "unauthenticated" | "loading";
   session: any;
   onEditClick: () => void;
   onAvatarRefresh: () => void;

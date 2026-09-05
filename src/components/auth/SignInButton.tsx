@@ -1,10 +1,10 @@
-'use client'
-import { signIn } from "next-auth/react"
+"use client";
+import { signIn } from "next-auth/react";
 
 export default function SignInButton() {
   return (
     <button
-      onClick={() => signIn('google', { callbackUrl: '/' })}
+      onClick={() => signIn("google", { callbackUrl: "/" })}
       className="ml-8 flex items-center gap-3 rounded-md bg-white hover:border-purple-500 border-2 px-6 py-3 text-gray-900 shadow-sm hover:bg-gray-50"
     >
       <svg viewBox="0 0 24 24" className="h-5 w-5">
@@ -27,5 +27,5 @@ export default function SignInButton() {
       </svg>
       Sign in with Google
     </button>
-  )
+  );
 }

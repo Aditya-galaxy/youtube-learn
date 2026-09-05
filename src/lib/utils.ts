@@ -18,7 +18,9 @@ export function formatDuration(duration: string): string {
   // Already display-formatted (e.g. "17:04") — pass through unchanged.
   if (/^\d{1,2}(:\d{2}){1,2}$/.test(duration)) return duration;
 
-  const match = duration.match(/^P(?:\d+D)?T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$/);
+  const match = duration.match(
+    /^P(?:\d+D)?T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$/
+  );
   if (!match) return "0:00";
 
   const hours = Number(match[1] ?? 0);

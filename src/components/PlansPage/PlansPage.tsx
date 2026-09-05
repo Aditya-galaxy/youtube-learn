@@ -1,10 +1,10 @@
-"use client"
-import React, { useState } from 'react';
+"use client";
+import React, { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { Plan } from './types';
-import { plans } from './data';
-import { PlanCard } from './PlanCard'
-import { UpgradeDialog } from './UpgradeDialog';
+import { Plan } from "./types";
+import { plans } from "./data";
+import { PlanCard } from "./PlanCard";
+import { UpgradeDialog } from "./UpgradeDialog";
 
 export const PlansPage: React.FC = () => {
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
@@ -18,11 +18,11 @@ export const PlansPage: React.FC = () => {
 
   const handleConfirm = () => {
     setIsDialogOpen(false);
-    if (selectedPlan?.name !== 'Free') {
+    if (selectedPlan?.name !== "Free") {
       toast({
-        title: 'Failure',
-        description: 'Payment Gateway not setup yet.',
-        duration: 3000
+        title: "Failure",
+        description: "Payment Gateway not setup yet.",
+        duration: 3000,
       });
     }
   };
@@ -30,9 +30,12 @@ export const PlansPage: React.FC = () => {
   return (
     <div className="p-6 max-w-6xl mx-auto">
       <div className="text-center mb-12">
-        <h1 className="text-3xl font-bold text-foreground mb-4">Choose Your Plan</h1>
+        <h1 className="text-3xl font-bold text-foreground mb-4">
+          Choose Your Plan
+        </h1>
         <p className="text-muted-foreground max-w-2xl mx-auto">
-          Unlock advanced features and accelerate your learning journey with our premium plans
+          Unlock advanced features and accelerate your learning journey with our
+          premium plans
         </p>
       </div>
 

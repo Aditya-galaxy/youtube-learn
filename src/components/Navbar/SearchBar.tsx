@@ -39,7 +39,11 @@ const SearchBar = () => {
 
   return (
     <div className="hidden flex-1 max-w-xl md:flex">
-      <form onSubmit={handleSubmit} role="search" className="flex w-full items-center gap-2">
+      <form
+        onSubmit={handleSubmit}
+        role="search"
+        className="flex w-full items-center gap-2"
+      >
         <div className="relative flex-1">
           <Search
             aria-hidden

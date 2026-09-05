@@ -1,7 +1,7 @@
-"use client"
-import React, { useEffect, useState } from 'react';
-import { X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+"use client";
+import React, { useEffect, useState } from "react";
+import { X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -10,17 +10,17 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { EditProfileDialogProps } from './types';
-import { MAX_INTERESTS } from './constants';
+import { EditProfileDialogProps } from "./types";
+import { MAX_INTERESTS } from "./constants";
 
-export const EditProfileDialog: React.FC<EditProfileDialogProps> = ({ 
-  isOpen, 
-  onClose, 
-  profile, 
-  onSave 
+export const EditProfileDialog: React.FC<EditProfileDialogProps> = ({
+  isOpen,
+  onClose,
+  profile,
+  onSave,
 }) => {
   const [editForm, setEditForm] = useState(profile);
-  const [newInterest, setNewInterest] = useState('');
+  const [newInterest, setNewInterest] = useState("");
 
   // `useState(profile)` only reads its argument on the first render, so the
   // form kept showing the placeholder profile after the session loaded and
@@ -28,31 +28,31 @@ export const EditProfileDialog: React.FC<EditProfileDialogProps> = ({
   useEffect(() => {
     if (isOpen) {
       setEditForm(profile);
-      setNewInterest('');
+      setNewInterest("");
     }
   }, [isOpen, profile]);
 
   const addInterest = () => {
     if (!newInterest) return;
-    
+
     const trimmedInterest = newInterest.trim();
     if (
-      trimmedInterest && 
-      !editForm.interests.includes(trimmedInterest) && 
+      trimmedInterest &&
+      !editForm.interests.includes(trimmedInterest) &&
       editForm.interests.length < MAX_INTERESTS
     ) {
-      setEditForm(prev => ({
+      setEditForm((prev) => ({
         ...prev,
-        interests: [...prev.interests, trimmedInterest]
+        interests: [...prev.interests, trimmedInterest],
       }));
-      setNewInterest('');
+      setNewInterest("");
     }
   };
 
   const removeInterest = (interest: string) => {
-    setEditForm(prev => ({
+    setEditForm((prev) => ({
       ...prev,
-      interests: prev.interests.filter(i => i !== interest),
+      interests: prev.interests.filter((i) => i !== interest),
     }));
   };
 
@@ -61,7 +61,7 @@ export const EditProfileDialog: React.FC<EditProfileDialogProps> = ({
       ...editForm,
       name: editForm.name.trim(),
       bio: editForm.bio.trim(),
-      interests: editForm.interests.map(i => i.trim()).filter(Boolean)
+      interests: editForm.interests.map((i) => i.trim()).filter(Boolean),
     };
 
     onSave(sanitizedProfile);
@@ -70,11 +70,11 @@ export const EditProfileDialog: React.FC<EditProfileDialogProps> = ({
 
   // Helper function to ensure string values
   const getStringValue = (value: any): string => {
-    if (typeof value === 'string') {
+    if (typeof value === "string") {
       return value;
     }
     // If it's not a string, convert to string or return empty string
-    return String(value) || '';
+    return String(value) || "";
   };
 
   return (
@@ -85,25 +85,29 @@ export const EditProfileDialog: React.FC<EditProfileDialogProps> = ({
         </DialogHeader>
         <div className="space-y-4">
           {[
-            { label: 'Name', field: 'name' },
-            { label: 'Phone', field: 'phone' },
-            { label: 'Location', field: 'location' },
+            { label: "Name", field: "name" },
+            { label: "Phone", field: "phone" },
+            { label: "Location", field: "location" },
           ].map(({ label, field }) => (
             <div key={field}>
               <label className="text-sm text-muted-foreground">{label}</label>
               <Input
                 value={getStringValue(editForm[field as keyof typeof editForm])}
-                onChange={(e) => setEditForm(prev => ({ ...prev, [field]: e.target.value }))}
+                onChange={(e) =>
+                  setEditForm((prev) => ({ ...prev, [field]: e.target.value }))
+                }
                 className="bg-muted border-border text-foreground"
               />
             </div>
           ))}
-          
+
           <div>
             <label className="text-sm text-muted-foreground">Bio</label>
             <Textarea
               value={getStringValue(editForm.bio)}
-              onChange={(e) => setEditForm(prev => ({ ...prev, bio: e.target.value }))}
+              onChange={(e) =>
+                setEditForm((prev) => ({ ...prev, bio: e.target.value }))
+              }
               className="bg-muted border-border text-foreground"
             />
           </div>
@@ -115,7 +119,7 @@ export const EditProfileDialog: React.FC<EditProfileDialogProps> = ({
                 value={newInterest}
                 onChange={(e) => setNewInterest(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
+                  if (e.key === "Enter") {
                     e.preventDefault();
                     addInterest();
                   }
@@ -123,7 +127,10 @@ export const EditProfileDialog: React.FC<EditProfileDialogProps> = ({
                 className="bg-muted border-border text-foreground"
                 placeholder="Add new interest"
               />
-              <Button onClick={addInterest} className="bg-purple-500 hover:bg-purple-600 text-white">
+              <Button
+                onClick={addInterest}
+                className="bg-purple-500 hover:bg-purple-600 text-white"
+              >
                 Add
               </Button>
             </div>
@@ -144,7 +151,7 @@ export const EditProfileDialog: React.FC<EditProfileDialogProps> = ({
               ))}
             </div>
           </div>
-          
+
           <div className="flex justify-end gap-2">
             <Button
               variant="outline"
@@ -153,7 +160,10 @@ export const EditProfileDialog: React.FC<EditProfileDialogProps> = ({
             >
               Cancel
             </Button>
-            <Button onClick={handleSave} className="bg-purple-600 hover:bg-purple-700 text-white">
+            <Button
+              onClick={handleSave}
+              className="bg-purple-600 hover:bg-purple-700 text-white"
+            >
               Save Changes
             </Button>
           </div>

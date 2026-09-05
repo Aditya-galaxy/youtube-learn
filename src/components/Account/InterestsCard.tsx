@@ -1,12 +1,7 @@
-"use client"
-import React from 'react';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { InterestsCardProps } from './types';
+"use client";
+import React from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { InterestsCardProps } from "./types";
 
 export const InterestsCard: React.FC<InterestsCardProps> = ({ interests }) => {
   if (!Array.isArray(interests) || interests.length === 0) return null;

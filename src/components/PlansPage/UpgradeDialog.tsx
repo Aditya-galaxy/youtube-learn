@@ -1,7 +1,13 @@
-"use client"
-import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Plan } from './types';
+"use client";
+import React from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Plan } from "./types";
 
 interface UpgradeDialogProps {
   plan: Plan | null;
@@ -10,23 +16,22 @@ interface UpgradeDialogProps {
   onConfirm: () => void;
 }
 
-export const UpgradeDialog: React.FC<UpgradeDialogProps> = ({ 
-  plan, 
-  isOpen, 
-  onOpenChange, 
-  onConfirm 
+export const UpgradeDialog: React.FC<UpgradeDialogProps> = ({
+  plan,
+  isOpen,
+  onOpenChange,
+  onConfirm,
 }) => (
   <Dialog open={isOpen} onOpenChange={onOpenChange}>
     <DialogContent className="bg-popover text-foreground">
       <DialogHeader>
         <DialogTitle>{plan?.name} Plan</DialogTitle>
         <DialogDescription>
-          {plan?.name === 'Free' 
+          {plan?.name === "Free"
             ? "You're already on the Free plan."
-            : plan?.name === 'Team'
+            : plan?.name === "Team"
               ? "Contact our sales team for more information on the Team plan."
-              : `Upgrade to the ${plan?.name} plan for ${plan?.price}/${plan?.period}`
-          }
+              : `Upgrade to the ${plan?.name} plan for ${plan?.price}/${plan?.period}`}
         </DialogDescription>
       </DialogHeader>
       <div className="mt-4">
@@ -34,7 +39,11 @@ export const UpgradeDialog: React.FC<UpgradeDialogProps> = ({
           onClick={onConfirm}
           className="w-full py-2 rounded-lg font-medium bg-purple-500 hover:bg-purple-600 text-white transition-colors"
         >
-          {plan?.name === 'Free' ? 'Close' : plan?.name === 'Team' ? 'Upgrade Now' : 'Confirm Upgrade'}
+          {plan?.name === "Free"
+            ? "Close"
+            : plan?.name === "Team"
+              ? "Upgrade Now"
+              : "Confirm Upgrade"}
         </button>
       </div>
     </DialogContent>

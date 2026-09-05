@@ -21,7 +21,8 @@ export const DEMO_VIDEOS: Video[] = [
     publishedAt: "2019-03-12T00:00:00.000Z",
     watched: false,
     inLibrary: false,
-    description: "An overview of AI research areas and which majors lead into them.",
+    description:
+      "An overview of AI research areas and which majors lead into them.",
   },
   {
     id: "WUvTyaaNkzM",
@@ -60,7 +61,8 @@ export const DEMO_VIDEOS: Video[] = [
     publishedAt: "2019-11-15T00:00:00.000Z",
     watched: false,
     inLibrary: false,
-    description: "The linear algebra, calculus and statistics behind machine learning.",
+    description:
+      "The linear algebra, calculus and statistics behind machine learning.",
   },
   {
     id: "fkAAbXPEAtU",
@@ -73,7 +75,8 @@ export const DEMO_VIDEOS: Video[] = [
     publishedAt: "2021-02-10T00:00:00.000Z",
     watched: false,
     inLibrary: false,
-    description: "What entanglement is, without the usual pop-science hand-waving.",
+    description:
+      "What entanglement is, without the usual pop-science hand-waving.",
   },
   {
     id: "Qqe4thU-os8",
@@ -99,7 +102,8 @@ export const DEMO_VIDEOS: Video[] = [
     publishedAt: "2025-10-20T00:00:00.000Z",
     watched: false,
     inLibrary: false,
-    description: "Practical personal-finance steps for people early in their careers.",
+    description:
+      "Practical personal-finance steps for people early in their careers.",
   },
   {
     id: "e-P5IFTqB98",
@@ -112,7 +116,8 @@ export const DEMO_VIDEOS: Video[] = [
     publishedAt: "2015-12-03T00:00:00.000Z",
     watched: false,
     inLibrary: false,
-    description: "The full life cycle of a black hole, from formation to evaporation.",
+    description:
+      "The full life cycle of a black hole, from formation to evaporation.",
   },
   {
     id: "yZvFH7B6gKI",
@@ -125,7 +130,8 @@ export const DEMO_VIDEOS: Video[] = [
     publishedAt: "2022-06-08T00:00:00.000Z",
     watched: false,
     inLibrary: false,
-    description: "An introduction to the data analytics field and its workflow.",
+    description:
+      "An introduction to the data analytics field and its workflow.",
   },
   {
     id: "fE_QTn4daPU",
@@ -138,7 +144,8 @@ export const DEMO_VIDEOS: Video[] = [
     publishedAt: "2015-11-30T00:00:00.000Z",
     watched: false,
     inLibrary: false,
-    description: "A two-minute summary of the physical basis of climate change.",
+    description:
+      "A two-minute summary of the physical basis of climate change.",
   },
   {
     id: "ReFqFPJHLhA",

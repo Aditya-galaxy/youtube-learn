@@ -4,16 +4,16 @@ export interface Playlist {
 }
 
 export interface Video {
-    id: string;
-    title: string;
-    thumbnail: string;
-    channelName: string;
-    channelId: string;
-    publishedAt: string;
-    duration: string;
-    views: string;
-    description: string;
-    watched: boolean;
-    inLibrary?: boolean;
-    playlists?: Playlist[];
+  id: string;
+  title: string;
+  thumbnail: string;
+  channelName: string;
+  channelId: string;
+  publishedAt: string;
+  duration: string;
+  views: string;
+  description: string;
+  watched: boolean;
+  inLibrary?: boolean;
+  playlists?: Playlist[];
 }

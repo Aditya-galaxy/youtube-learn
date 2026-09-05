@@ -1,4 +1,4 @@
-import LoadingSpinner from '@/components/Hero/LoadingSpinner';
+import LoadingSpinner from "@/components/Hero/LoadingSpinner";
 
 export default function Loading() {
   return (

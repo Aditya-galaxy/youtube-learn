@@ -1,5 +1,5 @@
-"use client"
-import React from 'react';
+"use client";
+import React from "react";
 
 const LoadingSpinner = () => (
   <div className="flex justify-center items-center h-64">

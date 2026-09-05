@@ -1,14 +1,11 @@
-"use client"
-import React from 'react';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { LearningProgressCardProps } from './types';
+"use client";
+import React from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { LearningProgressCardProps } from "./types";
 
-export const LearningProgressCard: React.FC<LearningProgressCardProps> = ({ progress }) => {
+export const LearningProgressCard: React.FC<LearningProgressCardProps> = ({
+  progress,
+}) => {
   if (!progress || Object.keys(progress).length === 0) return null;
 
   return (
