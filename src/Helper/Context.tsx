@@ -96,10 +96,12 @@ const Context = ({ children }: { children: ReactNode }) => {
 
   const openVideo = useCallback((video: Video) => {
     setSelectedVideo(video);
-    setWatched((prev) => [
-      { ...video, watched: true },
-      ...prev.filter((v) => v.id !== video.id),
-    ].slice(0, MAX_WATCHED));
+    setWatched((prev) =>
+      [
+        { ...video, watched: true },
+        ...prev.filter((v) => v.id !== video.id),
+      ].slice(0, MAX_WATCHED)
+    );
   }, []);
 
   const closeVideo = useCallback(() => setSelectedVideo(null), []);

@@ -1,14 +1,14 @@
-import Image from "next/image"
-import { getServerSession } from "next-auth/next"
-import { authOptions } from "@/lib/auth"
-import { redirect } from "next/navigation"
-import SignOutButton from "@/components/auth/SignOutButton"
+import Image from "next/image";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
+import { redirect } from "next/navigation";
+import SignOutButton from "@/components/auth/SignOutButton";
 
 export default async function DashboardPage() {
-  const session = await getServerSession(authOptions)
-  
+  const session = await getServerSession(authOptions);
+
   if (!session) {
-    redirect('/auth/signin')
+    redirect("/auth/signin");
   }
 
   return (
@@ -30,5 +30,5 @@ export default async function DashboardPage() {
         )}
       </div>
     </div>
-  )
+  );
 }

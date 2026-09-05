@@ -1,12 +1,7 @@
 "use client";
 
 import React from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "../ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { useAppContext } from "@/Helper/Context";
 import { formatRelativeTime, formatViewCount } from "@/lib/utils";
 

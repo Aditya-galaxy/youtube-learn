@@ -52,7 +52,10 @@ const Hero: React.FC<HeroProps> = ({ title, query, order = "relevance" }) => {
   // Guards against a slow response for an old query overwriting a newer one.
   const requestIdRef = useRef(0);
 
-  const [sentinelRef, inView] = useInView({ threshold: 0, rootMargin: "200px" });
+  const [sentinelRef, inView] = useInView({
+    threshold: 0,
+    rootMargin: "200px",
+  });
 
   const trimmedQuery = query?.trim() ?? "";
   const isAuthenticated = status === "authenticated" && Boolean(session);
@@ -110,7 +113,9 @@ const Hero: React.FC<HeroProps> = ({ title, query, order = "relevance" }) => {
         toast({
           title: "Could not load videos",
           description:
-            error instanceof Error ? error.message : "An unexpected error occurred",
+            error instanceof Error
+              ? error.message
+              : "An unexpected error occurred",
           variant: "destructive",
         });
         if (isFirstPage) {

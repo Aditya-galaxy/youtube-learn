@@ -1,7 +1,7 @@
-"use client"
-import React from 'react';
-import { DropdownMenuItem } from '../ui/dropdown-menu';
-import { Notification } from './types';
+"use client";
+import React from "react";
+import { DropdownMenuItem } from "../ui/dropdown-menu";
+import { Notification } from "./types";
 
 interface NotificationItemProps {
   notification: Notification;
@@ -16,12 +16,18 @@ const NotificationItem = ({ notification, onClick }: NotificationItemProps) => {
     >
       <div className="flex flex-col gap-1">
         <div className="flex items-center justify-between">
-          <span className={`text-sm ${notification.read ? 'text-muted-foreground' : 'text-foreground font-medium'}`}>
+          <span
+            className={`text-sm ${notification.read ? "text-muted-foreground" : "text-foreground font-medium"}`}
+          >
             {notification.title}
           </span>
-          <span className="text-xs text-muted-foreground">{notification.time}</span>
+          <span className="text-xs text-muted-foreground">
+            {notification.time}
+          </span>
         </div>
-        <span className="text-xs text-muted-foreground">{notification.message}</span>
+        <span className="text-xs text-muted-foreground">
+          {notification.message}
+        </span>
       </div>
     </DropdownMenuItem>
   );

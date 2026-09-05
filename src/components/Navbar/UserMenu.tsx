@@ -1,11 +1,11 @@
-"use client"
+"use client";
 
 import React from "react";
 import Image from "next/image";
 import { useSession, signOut, signIn } from "next-auth/react";
-import { UserCircle, LogOut } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { Button } from '../ui/button';
+import { UserCircle, LogOut } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Button } from "../ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,42 +13,48 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
-import SignInButton from '../auth/SignInButton';
+import SignInButton from "../auth/SignInButton";
 
 const UserMenu = () => {
   const { data: session } = useSession();
   const router = useRouter();
 
   const handleLogout = async () => {
-    await signOut({ redirect: true, callbackUrl: '/' });
+    await signOut({ redirect: true, callbackUrl: "/" });
   };
 
   if (!session) {
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button 
+          <Button
             variant="secondary"
             className="bg-purple-500 hover:bg-purple-600 text-white border-0"
           >
             Sign in
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent 
-          align="end" 
+        <DropdownMenuContent
+          align="end"
           className="w-80 p-4 bg-popover border-border"
         >
           <div className="space-y-4">
             <div className="text-center">
-              <h3 className="text-lg font-semibold text-foreground">Welcome to YTLearn</h3>
-              <p className="text-sm text-muted-foreground">Sign in to continue learning</p>
+              <h3 className="text-lg font-semibold text-foreground">
+                Welcome to YTLearn
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                Sign in to continue learning
+              </p>
             </div>
             <SignInButton />
             <div className="text-center text-sm">
-              <span className="text-muted-foreground">Don't have an account? </span>
-              <button 
+              <span className="text-muted-foreground">
+                Don't have an account?{" "}
+              </span>
+              <button
                 className="text-purple-400 hover:text-purple-300"
-                onClick={() => signIn('google', { callbackUrl: '/' })}
+                onClick={() => signIn("google", { callbackUrl: "/" })}
               >
                 Sign up
               </button>
@@ -63,7 +69,7 @@ const UserMenu = () => {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
-          variant="secondary" 
+          variant="secondary"
           className="bg-muted hover:bg-accent text-foreground border-0"
         >
           {session.user?.image ? (
@@ -77,13 +83,16 @@ const UserMenu = () => {
           ) : (
             <UserCircle className="h-5 w-5" />
           )}
-          {session.user?.name || 'Account'}
+          {session.user?.name || "Account"}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56 bg-popover border-border">
+      <DropdownMenuContent
+        align="end"
+        className="w-56 bg-popover border-border"
+      >
         <DropdownMenuItem
           className="focus:bg-muted"
-          onClick={() => router.push('/profile')}
+          onClick={() => router.push("/profile")}
         >
           <UserCircle className="w-4 h-4 mr-2" />
           <span>Profile</span>
