@@ -7,8 +7,32 @@ import React from "react";
 // on any deployment where the variable was never set.
 const DEFAULT_USERNAME = "aditya.galaxy";
 
+/**
+ * Cleans a handle that came from an environment variable.
+ *
+ * A `.env` file strips shell-style quotes, but a hosting dashboard stores the
+ * value exactly as typed. Pasting `"name"` out of .env.example is an easy
+ * mistake, and it silently produced `buymeacoffee.com/"name"` in production.
+ * Also tolerates a pasted profile URL or a leading @.
+ */
+function normaliseHandle(value: string | undefined): string | undefined {
+  if (!value) return undefined;
+
+  const cleaned = value
+    .trim()
+    .replace(/^["']+|["']+$/g, "")
+    .trim()
+    .replace(/^https?:\/\/(www\.)?buymeacoffee\.com\//i, "")
+    .replace(/^@/, "")
+    .replace(/\/+$/, "")
+    .trim();
+
+  return cleaned || undefined;
+}
+
 const username =
-  process.env.NEXT_PUBLIC_BUYMEACOFFEE_USERNAME || DEFAULT_USERNAME;
+  normaliseHandle(process.env.NEXT_PUBLIC_BUYMEACOFFEE_USERNAME) ??
+  DEFAULT_USERNAME;
 
 const BuyMeACoffee = () => (
   <a
