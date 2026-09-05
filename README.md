@@ -116,6 +116,13 @@ Requires a session. Returns a page of videos plus the caller's remaining hourly 
 Responses: `200`, `400` invalid params, `401` no session, `429` hourly budget exhausted,
 `502` YouTube unavailable or over quota.
 
+### `GET /api/health`
+
+Public. Reports whether the app can reach Postgres — `200 {"status":"ok","database":"up"}`
+or `503 {"status":"degraded","database":"down"}`. Sign-in is the only user-facing flow
+that writes to the database, so when it is unreachable every page still renders and only
+authentication fails; this tells the two apart without triggering a sign-in.
+
 ### `POST /api/user-logs`
 
 Requires a session. Accepts `{ event, timestamp? }`. The user identity is taken from the
