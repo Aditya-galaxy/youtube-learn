@@ -27,7 +27,7 @@ const nextConfig = {
         : false,
   },
 
-  serverExternalPackages: ["@prisma/client"],
+  serverExternalPackages: ["@prisma/client", "@anthropic-ai/sdk"],
 };
 
 module.exports = nextConfig;
