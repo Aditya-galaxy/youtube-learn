@@ -20,14 +20,20 @@ export const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
   const progressPct = enrollment?.progressPct ?? 0;
 
   const difficultyColors = {
-    BEGINNER: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
-    INTERMEDIATE: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
-    ADVANCED: "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20",
+    BEGINNER:
+      "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
+    INTERMEDIATE:
+      "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
+    ADVANCED:
+      "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20",
   };
 
   return (
     <div className="group relative flex flex-col overflow-hidden rounded-xl border border-border bg-card transition-all duration-200 hover:-translate-y-1 hover:border-primary/40 hover:shadow-lg">
-      <Link href={`/courses/${course.slug || course.id}`} className="relative block aspect-[16/9] w-full overflow-hidden bg-muted">
+      <Link
+        href={`/courses/${course.slug || course.id}`}
+        className="relative block aspect-[16/9] w-full overflow-hidden bg-muted"
+      >
         <Image
           src={course.thumbnail}
           alt={course.title}
@@ -36,7 +42,7 @@ export const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
           className="object-cover transition-transform duration-500 group-hover:scale-105"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60 transition-opacity group-hover:opacity-80" />
-        
+
         <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-xs font-medium text-white">
           <span className="flex items-center gap-1 drop-shadow">
             <BookOpen className="h-3.5 w-3.5" />
@@ -73,7 +79,10 @@ export const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
 
         {course.instructor && (
           <p className="mt-3 text-xs text-muted-foreground">
-            By <span className="font-medium text-foreground">{course.instructor}</span>
+            By{" "}
+            <span className="font-medium text-foreground">
+              {course.instructor}
+            </span>
           </p>
         )}
 
@@ -82,7 +91,9 @@ export const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
             <div className="space-y-2">
               <div className="flex items-center justify-between text-xs">
                 <span className="text-muted-foreground">Progress</span>
-                <span className="font-medium text-foreground">{progressPct}%</span>
+                <span className="font-medium text-foreground">
+                  {progressPct}%
+                </span>
               </div>
               <div className="h-1.5 w-full overflow-hidden rounded-full bg-secondary">
                 <div

@@ -1,55 +1,28 @@
-import { google } from "googleapis";
+// SERVER ONLY. Importing this from a client component pulls googleapis — and
+// with it `fs` and `child_process` — into the browser bundle and breaks the
+// build. Client code wants ./playlistUrl instead.
+//
+// Not guarded with the `server-only` package: this module is consumed by a
+// Pages Router API route, which that package treats as a client module and
+// throws on at runtime. Revisit when the route moves to the App Router.
+import { google, type youtube_v3 } from "googleapis";
 import type { Course, Lesson, Module } from "../../../types/course";
+import { parseIsoDuration } from "./duration";
+
+export { extractPlaylistId, extractVideoId } from "./playlistUrl";
+
+/** playlistItems.list caps at 50 per page; YouTube playlists routinely exceed it. */
+const PAGE_SIZE = 50;
+/** Safety rail so one enormous playlist cannot spend the whole daily quota. */
+const MAX_PAGES = 10;
+/** videos.list accepts at most 50 ids per call. */
+const DETAILS_BATCH = 50;
 
 /**
- * Extracts YouTube Playlist ID from a URL or raw ID string.
- */
-export function extractPlaylistId(input: string): string | null {
-  const trimmed = input.trim();
-  if (/^[A-Za-z0-9_-]{18,}$/.test(trimmed)) {
-    return trimmed;
-  }
-  try {
-    const url = new URL(trimmed);
-    const listParam = url.searchParams.get("list");
-    if (listParam) return listParam;
-  } catch {
-    // Not a valid URL
-  }
-  return null;
-}
-
-/**
- * Extracts YouTube Video ID from a URL or raw ID string.
- */
-export function extractVideoId(input: string): string | null {
-  const trimmed = input.trim();
-  if (/^[A-Za-z0-9_-]{11}$/.test(trimmed)) {
-    return trimmed;
-  }
-  try {
-    const url = new URL(trimmed);
-    if (url.hostname.includes("youtu.be")) {
-      return url.pathname.slice(1).split("?")[0];
-    }
-    const vParam = url.searchParams.get("v");
-    if (vParam) return vParam;
-  } catch {
-    // Not a valid URL
-  }
-  return null;
-}
-
-function parseIsoDuration(duration: string): number {
-  const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
-  if (!match) return 0;
-  const [, h, m, s] = match;
-  return Number(h ?? 0) * 3600 + Number(m ?? 0) * 60 + Number(s ?? 0);
-}
-
-/**
- * Fetches a YouTube playlist using playlistItems.list (only 1 quota unit).
- * Organizes the videos into sequentially ordered modules and lessons.
+ * Fetches a YouTube playlist and organises it into ordered modules and lessons.
+ *
+ * Costs 1 unit for playlists.list, 1 per page of playlistItems.list, and 1 per
+ * 50 videos for videos.list.
  */
 export async function importYouTubePlaylist({
   playlistId,
@@ -85,14 +58,27 @@ export async function importYouTubePlaylist({
       playlistItem.thumbnails?.medium?.url ||
       "";
 
-    // 2. Fetch playlist items (up to 50 videos in 1 quota unit call)
-    const itemsRes = await youtube.playlistItems.list({
-      part: ["snippet", "contentDetails"],
-      playlistId,
-      maxResults: 50,
-    });
+    // 2. Fetch every page of playlist items. A single un-paginated call
+    // silently truncated any playlist longer than 50 videos.
+    const rawItems: youtube_v3.Schema$PlaylistItem[] = [];
+    let pageToken: string | undefined = undefined;
 
-    const rawItems = itemsRes.data.items || [];
+    for (let page = 0; page < MAX_PAGES; page += 1) {
+      // Annotated explicitly: without it TS sees pageToken -> request ->
+      // response -> pageToken as a circular inference (TS7022).
+      const itemsPage: {
+        data: youtube_v3.Schema$PlaylistItemListResponse;
+      } = await youtube.playlistItems.list({
+        part: ["snippet", "contentDetails"],
+        playlistId,
+        maxResults: PAGE_SIZE,
+        pageToken,
+      });
+      rawItems.push(...(itemsPage.data.items || []));
+      pageToken = itemsPage.data.nextPageToken ?? undefined;
+      if (!pageToken) break;
+    }
+
     if (rawItems.length === 0) {
       return { error: "Playlist has no videos." };
     }
@@ -102,16 +88,18 @@ export async function importYouTubePlaylist({
       .map((it) => it.contentDetails?.videoId)
       .filter((id): id is string => Boolean(id));
 
-    // Fetch video durations
-    const videoDetailsRes = await youtube.videos.list({
-      part: ["contentDetails"],
-      id: videoIds,
-    });
-
+    // videos.list takes at most 50 ids, so batch it alongside the pagination.
     const durationMap = new Map<string, number>();
-    for (const v of videoDetailsRes.data.items || []) {
-      if (v.id && v.contentDetails?.duration) {
-        durationMap.set(v.id, parseIsoDuration(v.contentDetails.duration));
+    for (let i = 0; i < videoIds.length; i += DETAILS_BATCH) {
+      const batch = videoIds.slice(i, i + DETAILS_BATCH);
+      const videoDetailsRes = await youtube.videos.list({
+        part: ["contentDetails"],
+        id: batch,
+      });
+      for (const v of videoDetailsRes.data.items || []) {
+        if (v.id && v.contentDetails?.duration) {
+          durationMap.set(v.id, parseIsoDuration(v.contentDetails.duration));
+        }
       }
     }
 
@@ -120,22 +108,28 @@ export async function importYouTubePlaylist({
     const moduleId = `${courseId}-mod-1`;
     let totalSec = 0;
 
+    // orderIndex counts *kept* lessons. Indexing by the source array left gaps
+    // (1,2,4,5) whenever a private or deleted video was skipped, which breaks
+    // the @@unique([moduleId, orderIndex]) contiguity the persist step expects.
     const lessons: Lesson[] = [];
-    rawItems.forEach((item, index) => {
+    for (const item of rawItems) {
       const vid = item.contentDetails?.videoId;
-      if (!vid) return;
+      if (!vid) continue;
 
-      const title = item.snippet?.title || `Lesson ${index + 1}`;
-      if (title === "Private video" || title === "Deleted video") return;
+      const title = item.snippet?.title;
+      if (!title || title === "Private video" || title === "Deleted video") {
+        continue;
+      }
 
       const durationSec = durationMap.get(vid) || 600;
       totalSec += durationSec;
 
+      const orderIndex = lessons.length + 1;
       lessons.push({
-        id: `${moduleId}-l-${index + 1}`,
+        id: `${moduleId}-l-${orderIndex}`,
         moduleId,
         title,
-        orderIndex: index + 1,
+        orderIndex,
         videoId: vid,
         channelName,
         durationSec,
@@ -143,7 +137,11 @@ export async function importYouTubePlaylist({
         summary: item.snippet?.description || "",
         isCompleted: false,
       });
-    });
+    }
+
+    if (lessons.length === 0) {
+      return { error: "Playlist contains no playable videos." };
+    }
 
     const courseModule: Module = {
       id: moduleId,
@@ -178,7 +176,9 @@ export async function importYouTubePlaylist({
     console.error("Error importing playlist:", err);
     return {
       error:
-        err instanceof Error ? err.message : "Failed to import YouTube playlist",
+        err instanceof Error
+          ? err.message
+          : "Failed to import YouTube playlist",
     };
   }
 }

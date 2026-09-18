@@ -1,12 +1,21 @@
 "use client";
 
 import React, { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "../ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "../ui/dialog";
 import { Sparkles, Video, ListVideo, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useCourseContext } from "@/Helper/CourseContext";
-import { extractPlaylistId, extractVideoId } from "@/lib/youtube/playlistImporter";
-import { parseChaptersFromDescription, chaptersToLessons } from "@/lib/youtube/chapterParser";
+import { extractPlaylistId, extractVideoId } from "@/lib/youtube/playlistUrl";
+import {
+  parseChaptersFromDescription,
+  chaptersToLessons,
+} from "@/lib/youtube/chapterParser";
 import { generatePersonalizedCourse } from "@/lib/courseService";
 import type { Course, SkillLevel } from "../../../types/course";
 
@@ -24,7 +33,9 @@ export const CourseImporterDialog: React.FC<CourseImporterDialogProps> = ({
   const { toast } = useToast();
   const { importCourse, enrollInCourse } = useCourseContext();
 
-  const [activeTab, setActiveTab] = useState<"playlist" | "chapters" | "ai">("ai");
+  const [activeTab, setActiveTab] = useState<"playlist" | "chapters" | "ai">(
+    "ai"
+  );
   const [loading, setLoading] = useState(false);
 
   // Tab 1: Playlist
@@ -78,60 +89,16 @@ export const CourseImporterDialog: React.FC<CourseImporterDialogProps> = ({
       onCourseCreated?.(importedCourse);
       onClose();
     } catch (err: unknown) {
-      // Fallback client-side simulated course when backend YouTube API key is omitted
-      const fallbackCourse: Course = {
-        id: `course-pl-${Date.now()}`,
-        slug: `playlist-${playlistId.slice(0, 8)}`,
-        title: `YouTube Series: ${playlistId.slice(0, 10)}`,
-        description: "Custom structured course extracted directly from YouTube series.",
-        thumbnail: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=80",
-        category: playlistCategory,
-        difficulty: "BEGINNER",
-        estimatedHours: 2.0,
-        instructor: "YouTube Creator",
-        isPublic: false,
-        modules: [
-          {
-            id: `mod-pl-${Date.now()}`,
-            courseId: `course-pl-${Date.now()}`,
-            title: "Module 1: Sequenced Lessons",
-            orderIndex: 1,
-            lessons: [
-              {
-                id: `less-pl-1`,
-                moduleId: `mod-pl-${Date.now()}`,
-                title: "Lesson 1: Introduction & Overview",
-                orderIndex: 1,
-                videoId: "rfscVS0vtbw",
-                channelName: "YouTube Educator",
-                durationSec: 720,
-                startSeconds: 0,
-                summary: "First lesson in the imported playlist.",
-              },
-              {
-                id: `less-pl-2`,
-                moduleId: `mod-pl-${Date.now()}`,
-                title: "Lesson 2: Core Fundamentals",
-                orderIndex: 2,
-                videoId: "kqtD5dpn9C8",
-                channelName: "YouTube Educator",
-                durationSec: 900,
-                startSeconds: 0,
-                summary: "Second lesson in the series.",
-              },
-            ],
-          },
-        ],
-      };
-
-      importCourse(fallbackCourse);
-      enrollInCourse(fallbackCourse.id);
+      // This used to fabricate a two-lesson course from hardcoded video IDs and
+      // toast success, so a failed import was indistinguishable from a real one.
       toast({
-        title: "Playlist Course Ready",
-        description: `Created structured course from playlist sequence.`,
+        variant: "destructive",
+        title: "Could not import playlist",
+        description:
+          err instanceof Error
+            ? err.message
+            : "Check that the playlist is public and try again.",
       });
-      onCourseCreated?.(fallbackCourse);
-      onClose();
     } finally {
       setLoading(false);
     }
@@ -152,7 +119,8 @@ export const CourseImporterDialog: React.FC<CourseImporterDialogProps> = ({
     if (!chaptersText.trim()) {
       toast({
         title: "Chapters Required",
-        description: "Paste timestamped chapters from the video description (e.g. 00:00 Intro).",
+        description:
+          "Paste timestamped chapters from the video description (e.g. 00:00 Intro).",
         variant: "destructive",
       });
       return;
@@ -162,19 +130,28 @@ export const CourseImporterDialog: React.FC<CourseImporterDialogProps> = ({
     try {
       const parsed = parseChaptersFromDescription(chaptersText);
       if (parsed.length === 0) {
-        throw new Error("Could not find any timestamps (e.g. 00:00 Title) in the text.");
+        throw new Error(
+          "Could not find any timestamps (e.g. 00:00 Title) in the text."
+        );
       }
 
       const courseId = `course-chap-${Date.now()}`;
       const moduleId = `${courseId}-mod-1`;
-      const lessons = chaptersToLessons(parsed, vid, moduleId, "YouTube Educator");
+      const lessons = chaptersToLessons(
+        parsed,
+        vid,
+        moduleId,
+        "YouTube Educator"
+      );
 
       const totalSec = lessons.reduce((acc, l) => acc + l.durationSec, 0);
 
       const newCourse: Course = {
         id: courseId,
         slug: `chapters-${vid}-${Date.now().toString().slice(-4)}`,
-        title: videoTitle.trim() || `Course: ${parsed[0]?.title || "Full Video Curriculum"}`,
+        title:
+          videoTitle.trim() ||
+          `Course: ${parsed[0]?.title || "Full Video Curriculum"}`,
         description: `Structured multi-lesson course split from long-form YouTube tutorial into ${lessons.length} sequential chapters.`,
         thumbnail: `https://i.ytimg.com/vi/${vid}/mqdefault.jpg`,
         category: "Computer Science",
@@ -207,7 +184,8 @@ export const CourseImporterDialog: React.FC<CourseImporterDialogProps> = ({
     } catch (err: unknown) {
       toast({
         title: "Chapter Parsing Error",
-        description: err instanceof Error ? err.message : "Failed to parse chapters",
+        description:
+          err instanceof Error ? err.message : "Failed to parse chapters",
         variant: "destructive",
       });
     } finally {
@@ -220,7 +198,8 @@ export const CourseImporterDialog: React.FC<CourseImporterDialogProps> = ({
     if (!aiTopic.trim()) {
       toast({
         title: "Topic Required",
-        description: "Please specify what you want to learn (e.g., 'Rust Systems Programming').",
+        description:
+          "Please specify what you want to learn (e.g., 'Rust Systems Programming').",
         variant: "destructive",
       });
       return;
@@ -256,7 +235,8 @@ export const CourseImporterDialog: React.FC<CourseImporterDialogProps> = ({
               Create a Structured Learning Path
             </DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground">
-              Transform YouTube videos into an organized, sequenced course like Coursera or Udemy.
+              Transform YouTube videos into an organized, sequenced course like
+              Coursera or Udemy.
             </DialogDescription>
           </DialogHeader>
         </div>
@@ -323,7 +303,9 @@ export const CourseImporterDialog: React.FC<CourseImporterDialogProps> = ({
                   Your Current Experience Level
                 </label>
                 <div className="mt-1.5 grid grid-cols-3 gap-2">
-                  {(["BEGINNER", "INTERMEDIATE", "ADVANCED"] as SkillLevel[]).map((level) => (
+                  {(
+                    ["BEGINNER", "INTERMEDIATE", "ADVANCED"] as SkillLevel[]
+                  ).map((level) => (
                     <button
                       key={level}
                       type="button"
@@ -371,7 +353,8 @@ export const CourseImporterDialog: React.FC<CourseImporterDialogProps> = ({
                   required
                 />
                 <p className="mt-1 text-[11px] text-muted-foreground">
-                  Cost: only 1 API quota unit to ingest up to 50 videos in exact sequence.
+                  Cost: only 1 API quota unit to ingest up to 50 videos in exact
+                  sequence.
                 </p>
               </div>
 
@@ -387,7 +370,9 @@ export const CourseImporterDialog: React.FC<CourseImporterDialogProps> = ({
                   <option value="Computer Science">Computer Science</option>
                   <option value="Web Development">Web Development</option>
                   <option value="Mathematics">Mathematics</option>
-                  <option value="Artificial Intelligence">Artificial Intelligence</option>
+                  <option value="Artificial Intelligence">
+                    Artificial Intelligence
+                  </option>
                   <option value="Science">Science</option>
                 </select>
               </div>

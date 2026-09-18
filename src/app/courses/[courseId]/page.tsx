@@ -24,7 +24,8 @@ interface PageProps {
 
 export default function CourseDetailPage({ params }: PageProps) {
   const { courseId } = use(params);
-  const { getCourseById, getCourseEnrollment, enrollInCourse } = useCourseContext();
+  const { getCourseById, getCourseEnrollment, enrollInCourse } =
+    useCourseContext();
 
   const course = getCourseById(courseId);
 
@@ -114,7 +115,10 @@ export default function CourseDetailPage({ params }: PageProps) {
             <div className="mt-4 flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
               {course.instructor && (
                 <div>
-                  Instructor: <span className="font-medium text-foreground">{course.instructor}</span>
+                  Instructor:{" "}
+                  <span className="font-medium text-foreground">
+                    {course.instructor}
+                  </span>
                 </div>
               )}
               <div className="flex items-center gap-1">
@@ -122,8 +126,7 @@ export default function CourseDetailPage({ params }: PageProps) {
                 {totalLessons} lessons
               </div>
               <div className="flex items-center gap-1">
-                <Clock className="h-3.5 w-3.5" />
-                ~{course.estimatedHours} hours
+                <Clock className="h-3.5 w-3.5" />~{course.estimatedHours} hours
               </div>
             </div>
           </div>
@@ -133,8 +136,12 @@ export default function CourseDetailPage({ params }: PageProps) {
             {isEnrolled ? (
               <div className="space-y-3">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-muted-foreground">Your Course Progress</span>
-                  <span className="font-semibold text-foreground">{progressPct}% Complete</span>
+                  <span className="text-muted-foreground">
+                    Your Course Progress
+                  </span>
+                  <span className="font-semibold text-foreground">
+                    {progressPct}% Complete
+                  </span>
                 </div>
                 <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
                   <div
@@ -148,7 +155,9 @@ export default function CourseDetailPage({ params }: PageProps) {
                     className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-primary py-2.5 text-xs font-semibold text-primary-foreground transition-opacity hover:opacity-90"
                   >
                     <PlayCircle className="h-4 w-4" />
-                    {progressPct === 100 ? "Review Classroom" : "Continue Learning"}
+                    {progressPct === 100
+                      ? "Review Classroom"
+                      : "Continue Learning"}
                   </Link>
                 </div>
               </div>
@@ -219,7 +228,9 @@ export default function CourseDetailPage({ params }: PageProps) {
                           )}
                         </div>
                         <div className="min-w-0">
-                          <p className={`text-xs font-medium ${isDone ? "text-muted-foreground line-through" : "text-foreground"}`}>
+                          <p
+                            className={`text-xs font-medium ${isDone ? "text-muted-foreground line-through" : "text-foreground"}`}
+                          >
                             {lesson.title}
                           </p>
                           {lesson.channelName && (

@@ -63,7 +63,8 @@ export default function CoursesPage() {
             Educational Courses
           </h1>
           <p className="mt-3 max-w-2xl text-sm text-muted-foreground">
-            Learn with purpose. Master subjects step-by-step through carefully sequenced video curricula, modules, and auto-tracked progress.
+            Learn with purpose. Master subjects step-by-step through carefully
+            sequenced video curricula, modules, and auto-tracked progress.
           </p>
         </div>
 
@@ -137,7 +138,8 @@ export default function CoursesPage() {
               No matching courses found
             </h3>
             <p className="mt-1 max-w-sm text-xs text-muted-foreground">
-              Try adjusting your filters, or create a personalized learning path right now.
+              Try adjusting your filters, or create a personalized learning path
+              right now.
             </p>
             <button
               onClick={() => setIsImporterOpen(true)}

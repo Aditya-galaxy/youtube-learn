@@ -1,4 +1,9 @@
-import type { Course, CourseEnrollment, Lesson, SkillLevel } from "../../types/course";
+import type {
+  Course,
+  CourseEnrollment,
+  Lesson,
+  SkillLevel,
+} from "../../types/course";
 import { CURATED_COURSES } from "./coursesData";
 import { prisma } from "./prisma";
 
@@ -75,9 +80,7 @@ export async function getCourseByIdOrSlug(
   idOrSlug: string
 ): Promise<Course | null> {
   const all = await getAllCourses();
-  return (
-    all.find((c) => c.id === idOrSlug || c.slug === idOrSlug) || null
-  );
+  return all.find((c) => c.id === idOrSlug || c.slug === idOrSlug) || null;
 }
 
 /**
@@ -104,7 +107,10 @@ export function getNextLessonInSequence(
   const nextLesson = allLessons[currentIndex + 1];
   const currentLesson = allLessons[currentIndex];
   const isLastInModule = currentLesson.moduleId !== nextLesson.moduleId;
-  const isLastInCourse = currentIndex + 1 === allLessons.length - 1;
+  // False by definition here: the early return above already covers "the
+  // current lesson is the last one". This previously reported true when the
+  // *next* lesson was last, so the final lesson never got the end-of-course UI.
+  const isLastInCourse = false;
 
   return {
     nextLesson,
@@ -153,8 +159,7 @@ export function generatePersonalizedCourse({
     slug,
     title: `${cleanTopic}: Personalized Learning Path`,
     description: `A custom-tailored, sequential curriculum for mastering ${cleanTopic} designed for ${skillLevel.toLowerCase()} learners.`,
-    thumbnail:
-      "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=80",
+    thumbnail: "https://i.ytimg.com/vi/WUvTyaaNkzM/mqdefault.jpg",
     category: "Personalized Track",
     difficulty: skillLevel,
     estimatedHours: 2.5,

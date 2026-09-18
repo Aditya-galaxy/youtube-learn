@@ -1,10 +1,11 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth/next";
 import { google, youtube_v3 } from "googleapis";
-import { randomUUID } from "crypto";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { authOptions } from "@/lib/auth";
+import { chargeTokens } from "@/lib/rateLimit";
+import { parseIsoDuration } from "@/lib/youtube/duration";
 import type { Video } from "../../../types/video";
 
 interface VideoResponse {
@@ -18,10 +19,7 @@ interface ErrorResponse {
   tokensRemaining?: number;
 }
 
-// Quota accounting. A search.list + videos.list pair costs ~101 real YouTube
-// units; TOKENS_PER_REQUEST is our own per-user budget unit, not YouTube's.
-const HOURLY_TOKEN_LIMIT = 10_000;
-const TOKENS_PER_REQUEST = 50;
+// Quota accounting lives in src/lib/rateLimit.ts and is shared with imports.
 const MAX_RESULTS = 12;
 const HOURS_24 = 24 * 60 * 60 * 1000;
 const MIN_DURATION_SECONDS = 120;
@@ -55,53 +53,6 @@ const QuerySchema = z.object({
     .default("relevance"),
 });
 
-/**
- * Charges the caller's hourly budget atomically.
- *
- * The window is an *epoch* hour (hours since 1970) rather than a wall-clock
- * hour-of-day. The previous version stored `getHours()`, so a user returning
- * exactly 24h later saw `lastResetHour === hour` and kept their stale balance
- * instead of getting a fresh window. Epoch hours keep the column an Int, so no
- * migration is needed, and old 0-23 values simply read as "long expired".
- *
- * The read-then-write inside an interactive transaction it replaces was racy
- * under READ COMMITTED: parallel requests both read the old total and both
- * wrote the same incremented value. `ON CONFLICT DO UPDATE` takes a row lock,
- * so concurrent charges serialise.
- */
-async function chargeTokens(
-  userId: string
-): Promise<{ tokensRemaining: number } | { error: string; status: 429 | 500 }> {
-  const window = Math.floor(Date.now() / 3_600_000);
-
-  try {
-    const rows = await prisma.$queryRaw<Array<{ tokensUsed: number }>>`
-      INSERT INTO user_tokens ("id", "userId", "tokensUsed", "lastResetHour")
-      VALUES (${randomUUID()}, ${userId}, ${TOKENS_PER_REQUEST}, ${window})
-      ON CONFLICT ("userId") DO UPDATE SET
-        "tokensUsed" = CASE
-          WHEN user_tokens."lastResetHour" = ${window}
-            THEN user_tokens."tokensUsed" + ${TOKENS_PER_REQUEST}
-          ELSE ${TOKENS_PER_REQUEST}
-        END,
-        "lastResetHour" = ${window}
-      RETURNING "tokensUsed"
-    `;
-
-    const tokensUsed = rows[0]?.tokensUsed ?? TOKENS_PER_REQUEST;
-    if (tokensUsed > HOURLY_TOKEN_LIMIT) {
-      return {
-        error: "Hourly request limit reached. Please try again later.",
-        status: 429,
-      };
-    }
-    return { tokensRemaining: HOURLY_TOKEN_LIMIT - tokensUsed };
-  } catch (error) {
-    console.error("Token usage error:", error);
-    return { error: "Failed to process token usage", status: 500 };
-  }
-}
-
 async function getRecentlySeenVideoIds(userId: string): Promise<string[]> {
   try {
     const seen = await prisma.viewedVideos.findMany({
@@ -129,13 +80,6 @@ async function recordSeenVideos(userId: string, videos: Video[]) {
   } catch (error) {
     console.error("Error updating viewed videos:", error);
   }
-}
-
-function parseIsoDuration(duration: string): number {
-  const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
-  if (!match) return 0;
-  const [, h, m, s] = match;
-  return Number(h ?? 0) * 3600 + Number(m ?? 0) * 60 + Number(s ?? 0);
 }
 
 /**

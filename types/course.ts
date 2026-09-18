@@ -1,10 +1,7 @@
 export type SkillLevel = "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
 
 export type CourseStatus =
-  | "NOT_STARTED"
-  | "IN_PROGRESS"
-  | "COMPLETED"
-  | "ARCHIVED";
+  "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED" | "ARCHIVED";
 
 export interface Lesson {
   id: string;

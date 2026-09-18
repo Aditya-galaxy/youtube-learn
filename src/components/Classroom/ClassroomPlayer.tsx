@@ -20,7 +20,10 @@ import {
 import type { Course, Lesson } from "../../../types/course";
 import { useCourseContext } from "@/Helper/CourseContext";
 import { formatSecondsToTime } from "@/lib/youtube/chapterParser";
-import { getNextLessonInSequence, getCourseTotalLessons } from "@/lib/courseService";
+import {
+  getNextLessonInSequence,
+  getCourseTotalLessons,
+} from "@/lib/courseService";
 import { useToast } from "@/hooks/use-toast";
 
 interface ClassroomPlayerProps {
@@ -34,14 +37,18 @@ export const ClassroomPlayer: React.FC<ClassroomPlayerProps> = ({
 }) => {
   const router = useRouter();
   const { toast } = useToast();
-  const {
-    getCourseEnrollment,
-    enrollInCourse,
-    markLessonComplete,
-  } = useCourseContext();
+  const { getCourseEnrollment, enrollInCourse, markLessonComplete } =
+    useCourseContext();
 
-  const enrollment = getCourseEnrollment(course.id) || enrollInCourse(course.id);
-  const completedIds = new Set(enrollment.completedLessonIds || []);
+  // Enrolling is a state update, and calling it inline made it run during
+  // render. Read what exists, and enrol as an effect after mount.
+  const enrollment = getCourseEnrollment(course.id);
+
+  useEffect(() => {
+    if (!enrollment) enrollInCourse(course.id);
+  }, [enrollment, course.id, enrollInCourse]);
+
+  const completedIds = new Set(enrollment?.completedLessonIds || []);
 
   // Find all lessons flat
   const allLessons: Lesson[] = [];
@@ -52,12 +59,16 @@ export const ClassroomPlayer: React.FC<ClassroomPlayerProps> = ({
   // Determine current active lesson
   const activeLesson =
     allLessons.find((l) => l.id === initialLessonId) ||
-    allLessons.find((l) => l.id === enrollment.lastLessonId) ||
+    allLessons.find((l) => l.id === enrollment?.lastLessonId) ||
     allLessons[0];
 
-  const [currentLesson, setCurrentLesson] = useState<Lesson>(activeLesson || allLessons[0]);
+  const [currentLesson, setCurrentLesson] = useState<Lesson>(
+    activeLesson || allLessons[0]
+  );
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [expandedModules, setExpandedModules] = useState<Record<string, boolean>>(() => {
+  const [expandedModules, setExpandedModules] = useState<
+    Record<string, boolean>
+  >(() => {
     const map: Record<string, boolean> = {};
     course.modules.forEach((m) => {
       map[m.id] = true;
@@ -77,12 +88,16 @@ export const ClassroomPlayer: React.FC<ClassroomPlayerProps> = ({
   const nextInfo = getNextLessonInSequence(course, currentLesson.id);
   const totalLessons = getCourseTotalLessons(course);
   const completedCount = completedIds.size;
-  const progressPct = Math.round((completedCount / totalLessons) * 100);
+  // Guard the divide: an empty course rendered "NaN% complete".
+  const progressPct =
+    totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 0;
 
   // Load saved note for this lesson
   useEffect(() => {
     try {
-      const savedNote = localStorage.getItem(`ytlearn.note.${currentLesson.id}`);
+      const savedNote = localStorage.getItem(
+        `ytlearn.note.${currentLesson.id}`
+      );
       setNoteContent(savedNote || "");
     } catch {
       setNoteContent("");
@@ -186,7 +201,10 @@ export const ClassroomPlayer: React.FC<ClassroomPlayerProps> = ({
               <span className="text-xs font-semibold text-foreground">
                 {progressPct}%
               </span>
-              <span className="text-[11px] text-muted-foreground"> complete</span>
+              <span className="text-[11px] text-muted-foreground">
+                {" "}
+                complete
+              </span>
             </div>
             <div className="h-2 w-20 overflow-hidden rounded-full bg-secondary">
               <div
@@ -218,7 +236,8 @@ export const ClassroomPlayer: React.FC<ClassroomPlayerProps> = ({
             <div className="flex items-center justify-between bg-primary/10 px-6 py-2.5 text-xs text-primary border-b border-primary/20">
               <span className="flex items-center gap-2 font-medium">
                 <Sparkles className="h-4 w-4 animate-pulse" />
-                Next lesson starting in {countdown} seconds: &quot;{nextInfo.nextLesson.title}&quot;
+                Next lesson starting in {countdown} seconds: &quot;
+                {nextInfo.nextLesson.title}&quot;
               </span>
               <div className="flex items-center gap-2">
                 <button
@@ -242,7 +261,9 @@ export const ClassroomPlayer: React.FC<ClassroomPlayerProps> = ({
             <iframe
               key={`${currentLesson.id}-${currentLesson.videoId}`}
               src={`https://www.youtube.com/embed/${currentLesson.videoId}?autoplay=1&enablejsapi=1&start=${currentLesson.startSeconds || 0}${
-                currentLesson.endSeconds ? `&end=${currentLesson.endSeconds}` : ""
+                currentLesson.endSeconds
+                  ? `&end=${currentLesson.endSeconds}`
+                  : ""
               }`}
               title={currentLesson.title}
               className="absolute left-0 top-0 h-full w-full"
@@ -269,7 +290,10 @@ export const ClassroomPlayer: React.FC<ClassroomPlayerProps> = ({
                 {currentLesson.startSeconds > 0 && (
                   <>
                     <span>·</span>
-                    <span>Starts at {formatSecondsToTime(currentLesson.startSeconds)}</span>
+                    <span>
+                      Starts at{" "}
+                      {formatSecondsToTime(currentLesson.startSeconds)}
+                    </span>
                   </>
                 )}
               </div>
@@ -339,14 +363,17 @@ export const ClassroomPlayer: React.FC<ClassroomPlayerProps> = ({
                     Pedagogical Takeaway
                   </h4>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    This lesson prepares you for subsequent concepts in this track. Completing this video will update your personalized skill matrix.
+                    This lesson prepares you for subsequent concepts in this
+                    track. Completing this video will update your personalized
+                    skill matrix.
                   </p>
                 </div>
               </div>
             ) : (
               <div className="max-w-3xl space-y-2">
                 <p className="text-xs text-muted-foreground">
-                  Jot down important timestamps, insights, or code snippets for this lesson. Notes persist automatically.
+                  Jot down important timestamps, insights, or code snippets for
+                  this lesson. Notes persist automatically.
                 </p>
                 <textarea
                   rows={6}
@@ -384,7 +411,9 @@ export const ClassroomPlayer: React.FC<ClassroomPlayerProps> = ({
             <div className="flex-1 overflow-y-auto divide-y divide-border">
               {course.modules.map((mod) => {
                 const isExpanded = expandedModules[mod.id] ?? true;
-                const modCompleted = mod.lessons.every((l) => completedIds.has(l.id));
+                const modCompleted = mod.lessons.every((l) =>
+                  completedIds.has(l.id)
+                );
 
                 return (
                   <div key={mod.id} className="bg-card">
@@ -439,8 +468,8 @@ export const ClassroomPlayer: React.FC<ClassroomPlayerProps> = ({
                                     isActive
                                       ? "font-semibold text-primary"
                                       : isDone
-                                      ? "text-muted-foreground"
-                                      : "text-foreground"
+                                        ? "text-muted-foreground"
+                                        : "text-foreground"
                                   }`}
                                 >
                                   {lesson.title}

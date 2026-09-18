@@ -38,7 +38,8 @@ export const DashboardClient: React.FC<DashboardClientProps> = ({ user }) => {
   // Find most recently accessed course
   const activeEnrollment = Object.values(enrollments).sort(
     (a, b) =>
-      new Date(b.lastAccessedAt).getTime() - new Date(a.lastAccessedAt).getTime()
+      new Date(b.lastAccessedAt).getTime() -
+      new Date(a.lastAccessedAt).getTime()
   )[0];
 
   const activeCourse = activeEnrollment
@@ -217,7 +218,8 @@ export const DashboardClient: React.FC<DashboardClientProps> = ({ user }) => {
               You haven&apos;t enrolled in any courses yet
             </h3>
             <p className="mt-1 text-xs text-muted-foreground">
-              Browse our catalog or import your favorite YouTube playlist into a structured course.
+              Browse our catalog or import your favorite YouTube playlist into a
+              structured course.
             </p>
             <Link
               href="/courses"
@@ -240,7 +242,8 @@ export const DashboardClient: React.FC<DashboardClientProps> = ({ user }) => {
             </h2>
           </div>
           <p className="mt-1 text-xs text-muted-foreground">
-            Curated YouTube sequences matching your {userProfile.skillLevel.toLowerCase()} profile
+            Curated YouTube sequences matching your{" "}
+            {userProfile.skillLevel.toLowerCase()} profile
           </p>
         </div>
 

@@ -7,7 +7,7 @@ export const CURATED_COURSES: Course[] = [
     title: "Complete Python Masterclass: Zero to Engineer",
     description:
       "A structured, sequential curriculum covering Python from syntax fundamentals and data structures to object-oriented architecture and real-world scripting.",
-    thumbnail: "https://images.unsplash.com/photo-1526379095098-d400fd0bf935?w=800&auto=format&fit=crop&q=80",
+    thumbnail: "https://i.ytimg.com/vi/rfscVS0vtbw/mqdefault.jpg",
     category: "Programming",
     difficulty: "BEGINNER",
     estimatedHours: 4.5,
@@ -19,7 +19,8 @@ export const CURATED_COURSES: Course[] = [
         courseId: "course-python-masterclass",
         title: "Module 1: Foundations & Core Syntax",
         orderIndex: 1,
-        description: "Variables, numeric types, strings, conditionals, and logical expressions.",
+        description:
+          "Variables, numeric types, strings, conditionals, and logical expressions.",
         lessons: [
           {
             id: "pyless-1",
@@ -30,7 +31,8 @@ export const CURATED_COURSES: Course[] = [
             channelName: "freeCodeCamp.org",
             durationSec: 720,
             startSeconds: 0,
-            summary: "Learn how the Python interpreter executes code, setting up VS Code, and writing clean print statements.",
+            summary:
+              "Learn how the Python interpreter executes code, setting up VS Code, and writing clean print statements.",
           },
           {
             id: "pyless-2",
@@ -41,7 +43,8 @@ export const CURATED_COURSES: Course[] = [
             channelName: "Corey Schafer",
             durationSec: 1040,
             startSeconds: 0,
-            summary: "Mastering f-strings, string methods, slicing, and memory referencing in Python.",
+            summary:
+              "Mastering f-strings, string methods, slicing, and memory referencing in Python.",
           },
           {
             id: "pyless-3",
@@ -52,7 +55,8 @@ export const CURATED_COURSES: Course[] = [
             channelName: "Corey Schafer",
             durationSec: 960,
             startSeconds: 0,
-            summary: "Using if, elif, else statements and short-circuit boolean evaluations.",
+            summary:
+              "Using if, elif, else statements and short-circuit boolean evaluations.",
           },
         ],
       },
@@ -61,7 +65,8 @@ export const CURATED_COURSES: Course[] = [
         courseId: "course-python-masterclass",
         title: "Module 2: Data Structures & Iteration",
         orderIndex: 2,
-        description: "Lists, tuples, sets, dictionaries, comprehensions, and efficient loops.",
+        description:
+          "Lists, tuples, sets, dictionaries, comprehensions, and efficient loops.",
         lessons: [
           {
             id: "pyless-4",
@@ -72,7 +77,8 @@ export const CURATED_COURSES: Course[] = [
             channelName: "Corey Schafer",
             durationSec: 1320,
             startSeconds: 0,
-            summary: "Array-like behavior in Python, sorting, mutating lists, and immutable tuples.",
+            summary:
+              "Array-like behavior in Python, sorting, mutating lists, and immutable tuples.",
           },
           {
             id: "pyless-5",
@@ -83,18 +89,21 @@ export const CURATED_COURSES: Course[] = [
             channelName: "Corey Schafer",
             durationSec: 1180,
             startSeconds: 0,
-            summary: "O(1) key-value lookups, dictionary methods, set intersections, and differences.",
+            summary:
+              "O(1) key-value lookups, dictionary methods, set intersections, and differences.",
           },
           {
             id: "pyless-6",
             moduleId: "pymod-2",
-            title: "6. Loops & Iterations: For Loops, While Loops & Comprehensions",
+            title:
+              "6. Loops & Iterations: For Loops, While Loops & Comprehensions",
             orderIndex: 3,
             videoId: "6iF8Xb7Z3wQ",
             channelName: "Corey Schafer",
             durationSec: 1100,
             startSeconds: 0,
-            summary: "Looping patterns, enumerate, zip, and idiomatic Python list comprehensions.",
+            summary:
+              "Looping patterns, enumerate, zip, and idiomatic Python list comprehensions.",
           },
         ],
       },
@@ -103,7 +112,8 @@ export const CURATED_COURSES: Course[] = [
         courseId: "course-python-masterclass",
         title: "Module 3: Functions & Object-Oriented Architecture",
         orderIndex: 3,
-        description: "Modular functions, closures, class structures, inheritance, and dunder methods.",
+        description:
+          "Modular functions, closures, class structures, inheritance, and dunder methods.",
         lessons: [
           {
             id: "pyless-7",
@@ -114,7 +124,8 @@ export const CURATED_COURSES: Course[] = [
             channelName: "Corey Schafer",
             durationSec: 1200,
             startSeconds: 0,
-            summary: "Pure functions, positional arguments, keyword arguments, and scope rules.",
+            summary:
+              "Pure functions, positional arguments, keyword arguments, and scope rules.",
           },
           {
             id: "pyless-8",
@@ -125,7 +136,8 @@ export const CURATED_COURSES: Course[] = [
             channelName: "Corey Schafer",
             durationSec: 1400,
             startSeconds: 0,
-            summary: "Understanding self, __init__ constructor, instance vs class variables.",
+            summary:
+              "Understanding self, __init__ constructor, instance vs class variables.",
           },
           {
             id: "pyless-9",
@@ -136,7 +148,8 @@ export const CURATED_COURSES: Course[] = [
             channelName: "Corey Schafer",
             durationSec: 1350,
             startSeconds: 0,
-            summary: "Subclasses, method overriding, super() patterns, and modular OOP design.",
+            summary:
+              "Subclasses, method overriding, super() patterns, and modular OOP design.",
           },
         ],
       },
@@ -145,29 +158,20 @@ export const CURATED_COURSES: Course[] = [
         courseId: "course-python-masterclass",
         title: "Module 4: Error Handling & File Systems",
         orderIndex: 4,
-        description: "Robust exception management, context managers, and file reading/writing.",
+        description:
+          "Robust exception management, context managers, and file reading/writing.",
         lessons: [
-          {
-            id: "pyless-10",
-            moduleId: "pymod-4",
-            title: "10. File Handling & Context Managers (with open...)",
-            orderIndex: 1,
-            videoId: "U86SswJ_8K8",
-            channelName: "Corey Schafer",
-            durationSec: 1280,
-            startSeconds: 0,
-            summary: "Safe I/O operations, context manager protocols, reading large text and binary files.",
-          },
           {
             id: "pyless-11",
             moduleId: "pymod-4",
             title: "11. Exception Handling: Try, Except, Else & Finally",
-            orderIndex: 2,
+            orderIndex: 1,
             videoId: "NIWwJbo-9_8",
             channelName: "Corey Schafer",
             durationSec: 960,
             startSeconds: 0,
-            summary: "Handling runtime crashes gracefully and creating custom exception classes.",
+            summary:
+              "Handling runtime crashes gracefully and creating custom exception classes.",
           },
         ],
       },
@@ -179,7 +183,7 @@ export const CURATED_COURSES: Course[] = [
     title: "Essence of Calculus & Visual Mathematics",
     description:
       "A visually intuitive, conceptual voyage through differential and integral calculus, Taylor series, and mathematical intuition by 3Blue1Brown.",
-    thumbnail: "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=800&auto=format&fit=crop&q=80",
+    thumbnail: "https://i.ytimg.com/vi/WUvTyaaNkzM/mqdefault.jpg",
     category: "Mathematics",
     difficulty: "INTERMEDIATE",
     estimatedHours: 3.2,
@@ -191,7 +195,8 @@ export const CURATED_COURSES: Course[] = [
         courseId: "course-calculus-3blue1brown",
         title: "Module 1: The Intuition of Derivatives",
         orderIndex: 1,
-        description: "Visualizing instantaneous rate of change and geometric slopes.",
+        description:
+          "Visualizing instantaneous rate of change and geometric slopes.",
         lessons: [
           {
             id: "calcless-1",
@@ -202,7 +207,8 @@ export const CURATED_COURSES: Course[] = [
             channelName: "3Blue1Brown",
             durationSec: 1024,
             startSeconds: 0,
-            summary: "How finding the area of a circle naturally bridges algebra and calculus.",
+            summary:
+              "How finding the area of a circle naturally bridges algebra and calculus.",
           },
           {
             id: "calcless-2",
@@ -213,7 +219,8 @@ export const CURATED_COURSES: Course[] = [
             channelName: "3Blue1Brown",
             durationSec: 1042,
             startSeconds: 0,
-            summary: "Instantaneous velocity and the geometric meaning of dx and dt.",
+            summary:
+              "Instantaneous velocity and the geometric meaning of dx and dt.",
           },
           {
             id: "calcless-3",
@@ -224,7 +231,8 @@ export const CURATED_COURSES: Course[] = [
             channelName: "3Blue1Brown",
             durationSec: 1118,
             startSeconds: 0,
-            summary: "Powers, squares, and geometric nudges that produce polynomial derivatives.",
+            summary:
+              "Powers, squares, and geometric nudges that produce polynomial derivatives.",
           },
         ],
       },
@@ -233,7 +241,8 @@ export const CURATED_COURSES: Course[] = [
         courseId: "course-calculus-3blue1brown",
         title: "Module 2: Product, Chain Rules & Integration",
         orderIndex: 2,
-        description: "Composite functions and the Fundamental Theorem of Calculus.",
+        description:
+          "Composite functions and the Fundamental Theorem of Calculus.",
         lessons: [
           {
             id: "calcless-4",
@@ -244,7 +253,8 @@ export const CURATED_COURSES: Course[] = [
             channelName: "3Blue1Brown",
             durationSec: 980,
             startSeconds: 0,
-            summary: "Why product rules look like expanding rectangles, and how chain rules compose rates.",
+            summary:
+              "Why product rules look like expanding rectangles, and how chain rules compose rates.",
           },
           {
             id: "calcless-5",
@@ -255,7 +265,8 @@ export const CURATED_COURSES: Course[] = [
             channelName: "3Blue1Brown",
             durationSec: 1170,
             startSeconds: 0,
-            summary: "Accumulation, continuous addition, Riemann sums, and visual areas under curves.",
+            summary:
+              "Accumulation, continuous addition, Riemann sums, and visual areas under curves.",
           },
           {
             id: "calcless-6",
@@ -266,7 +277,8 @@ export const CURATED_COURSES: Course[] = [
             channelName: "3Blue1Brown",
             durationSec: 1055,
             startSeconds: 0,
-            summary: "Why differentiation and integration are inverse operations.",
+            summary:
+              "Why differentiation and integration are inverse operations.",
           },
         ],
       },
@@ -280,13 +292,15 @@ export const CURATED_COURSES: Course[] = [
           {
             id: "calcless-7",
             moduleId: "calcmod-3",
-            title: "7. Taylor Series: Approximating Any Function with Polynomials",
+            title:
+              "7. Taylor Series: Approximating Any Function with Polynomials",
             orderIndex: 1,
             videoId: "3d6DsjIBzJ4",
             channelName: "3Blue1Brown",
             durationSec: 1335,
             startSeconds: 0,
-            summary: "How matching higher-order derivatives allows polynomial approximations of functions.",
+            summary:
+              "How matching higher-order derivatives allows polynomial approximations of functions.",
           },
           {
             id: "calcless-8",
@@ -297,7 +311,8 @@ export const CURATED_COURSES: Course[] = [
             channelName: "3Blue1Brown",
             durationSec: 1085,
             startSeconds: 0,
-            summary: "A rigorous yet intuitive definition of limits in calculus.",
+            summary:
+              "A rigorous yet intuitive definition of limits in calculus.",
           },
         ],
       },
@@ -309,7 +324,7 @@ export const CURATED_COURSES: Course[] = [
     title: "Next.js 15 & React 19 Full-Stack Architecture",
     description:
       "Build production-grade web applications with Server Components, Server Actions, Prisma, NextAuth, and scalable deployment pipelines.",
-    thumbnail: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&auto=format&fit=crop&q=80",
+    thumbnail: "https://i.ytimg.com/vi/rGPpQdbDbwo/mqdefault.jpg",
     category: "Web Development",
     difficulty: "INTERMEDIATE",
     estimatedHours: 3.8,
@@ -321,29 +336,20 @@ export const CURATED_COURSES: Course[] = [
         courseId: "course-nextjs-fullstack",
         title: "Module 1: React 19 & Server Component Foundations",
         orderIndex: 1,
-        description: "Mental model shifts from client SPAs to hybrid Server Component architectures.",
+        description:
+          "Mental model shifts from client SPAs to hybrid Server Component architectures.",
         lessons: [
-          {
-            id: "nextless-1",
-            moduleId: "nextmod-1",
-            title: "1. React 19 New Features & Compiler Mental Model",
-            orderIndex: 1,
-            videoId: "8pDqJVdNa4g",
-            channelName: "Jack Herrington",
-            durationSec: 920,
-            startSeconds: 0,
-            summary: "Understanding the React Compiler, useActionState, useOptimistic, and automatic memoization.",
-          },
           {
             id: "nextless-2",
             moduleId: "nextmod-1",
             title: "2. Server Components vs Client Components in Next.js 15",
-            orderIndex: 2,
+            orderIndex: 1,
             videoId: "rGPpQdbDbwo",
             channelName: "Lee Robinson",
             durationSec: 850,
             startSeconds: 0,
-            summary: "Network boundary rules, serialization, and keeping sensitive code on the server.",
+            summary:
+              "Network boundary rules, serialization, and keeping sensitive code on the server.",
           },
         ],
       },
@@ -352,18 +358,21 @@ export const CURATED_COURSES: Course[] = [
         courseId: "course-nextjs-fullstack",
         title: "Module 2: App Router Routing & Data Flow",
         orderIndex: 2,
-        description: "Layouts, nested routes, route handlers, and server actions.",
+        description:
+          "Layouts, nested routes, route handlers, and server actions.",
         lessons: [
           {
             id: "nextless-3",
             moduleId: "nextmod-2",
-            title: "3. App Router Deep Dive: Layouts, Templates & Parallel Routes",
+            title:
+              "3. App Router Deep Dive: Layouts, Templates & Parallel Routes",
             orderIndex: 1,
             videoId: "wm5gMKuwSYk",
             channelName: "Jack Herrington",
             durationSec: 1100,
             startSeconds: 0,
-            summary: "Advanced layout hierarchies, error boundaries, loading skeletons, and intercepting routes.",
+            summary:
+              "Advanced layout hierarchies, error boundaries, loading skeletons, and intercepting routes.",
           },
           {
             id: "nextless-4",
@@ -374,18 +383,8 @@ export const CURATED_COURSES: Course[] = [
             channelName: "Jack Herrington",
             durationSec: 1020,
             startSeconds: 0,
-            summary: "Mutating data without API boilerplate, Zod schema validation, and revalidatePath.",
-          },
-          {
-            id: "nextless-5",
-            moduleId: "nextmod-2",
-            title: "5. Next.js 15 Caching, Uncached Fetch & Revalidation",
-            orderIndex: 3,
-            videoId: "VBlSe8TVg4U",
-            channelName: "Jack Herrington",
-            durationSec: 1150,
-            startSeconds: 0,
-            summary: "Why Next.js 15 defaults fetch to uncached and how to optimize static rendering.",
+            summary:
+              "Mutating data without API boilerplate, Zod schema validation, and revalidatePath.",
           },
         ],
       },
@@ -394,29 +393,20 @@ export const CURATED_COURSES: Course[] = [
         courseId: "course-nextjs-fullstack",
         title: "Module 3: Database & Authentication",
         orderIndex: 3,
-        description: "PostgreSQL integration with Prisma and NextAuth sessions.",
+        description:
+          "PostgreSQL integration with Prisma and NextAuth sessions.",
         lessons: [
-          {
-            id: "nextless-6",
-            moduleId: "nextmod-3",
-            title: "6. Connecting Prisma ORM with PostgreSQL in Next.js",
-            orderIndex: 1,
-            videoId: "FMnlyi69424",
-            channelName: "Web Dev Simplified",
-            durationSec: 1250,
-            startSeconds: 0,
-            summary: "Modeling relations, migrations, seeding, and singleton Prisma clients.",
-          },
           {
             id: "nextless-7",
             moduleId: "nextmod-3",
             title: "7. NextAuth.js Authentication & Role-Based Access Control",
-            orderIndex: 2,
+            orderIndex: 1,
             videoId: "1MTyCvS05V4",
             channelName: "CodeWithAntonio",
             durationSec: 1400,
             startSeconds: 0,
-            summary: "Google OAuth, JWT session strategy, middleware protection, and user associations.",
+            summary:
+              "Google OAuth, JWT session strategy, middleware protection, and user associations.",
           },
         ],
       },
@@ -428,7 +418,7 @@ export const CURATED_COURSES: Course[] = [
     title: "Artificial Intelligence & Neural Networks from Scratch",
     description:
       "A rigorous, visual introduction to machine learning principles, gradient descent, loss landscapes, and neural network architectures.",
-    thumbnail: "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?w=800&auto=format&fit=crop&q=80",
+    thumbnail: "https://i.ytimg.com/vi/Rt6beTKDtqY/mqdefault.jpg",
     category: "Artificial Intelligence",
     difficulty: "INTERMEDIATE",
     estimatedHours: 3.5,
@@ -440,7 +430,8 @@ export const CURATED_COURSES: Course[] = [
         courseId: "course-ai-ml-fundamentals",
         title: "Module 1: Machine Learning Foundations",
         orderIndex: 1,
-        description: "The core paradigm shift from heuristic programming to learning from data.",
+        description:
+          "The core paradigm shift from heuristic programming to learning from data.",
         lessons: [
           {
             id: "ailess-1",
@@ -451,18 +442,21 @@ export const CURATED_COURSES: Course[] = [
             channelName: "Zach Star",
             durationSec: 993,
             startSeconds: 0,
-            summary: "Overview of linear algebra, calculus, and probability matrices used in ML models.",
+            summary:
+              "Overview of linear algebra, calculus, and probability matrices used in ML models.",
           },
           {
             id: "ailess-2",
             moduleId: "aimod-1",
-            title: "2. Supervised vs Unsupervised Learning & Feature Engineering",
+            title:
+              "2. Supervised vs Unsupervised Learning & Feature Engineering",
             orderIndex: 2,
             videoId: "Gv9_4yMHFhI",
             channelName: "StatQuest with Josh Starmer",
             durationSec: 740,
             startSeconds: 0,
-            summary: "Classification, regression, clustering, overfitting, and test/train validation splits.",
+            summary:
+              "Classification, regression, clustering, overfitting, and test/train validation splits.",
           },
         ],
       },
@@ -471,7 +465,8 @@ export const CURATED_COURSES: Course[] = [
         courseId: "course-ai-ml-fundamentals",
         title: "Module 2: Neural Networks & Backpropagation",
         orderIndex: 2,
-        description: "Visualizing artificial neurons, activation functions, and gradient descent.",
+        description:
+          "Visualizing artificial neurons, activation functions, and gradient descent.",
         lessons: [
           {
             id: "ailess-3",
@@ -482,7 +477,8 @@ export const CURATED_COURSES: Course[] = [
             channelName: "3Blue1Brown",
             durationSec: 1150,
             startSeconds: 0,
-            summary: "Layers, weights, biases, and activation functions for digit recognition.",
+            summary:
+              "Layers, weights, biases, and activation functions for digit recognition.",
           },
           {
             id: "ailess-4",
@@ -493,7 +489,8 @@ export const CURATED_COURSES: Course[] = [
             channelName: "3Blue1Brown",
             durationSec: 1260,
             startSeconds: 0,
-            summary: "Loss functions, high-dimensional gradient vectors, and optimization landscapes.",
+            summary:
+              "Loss functions, high-dimensional gradient vectors, and optimization landscapes.",
           },
           {
             id: "ailess-5",
@@ -504,7 +501,8 @@ export const CURATED_COURSES: Course[] = [
             channelName: "3Blue1Brown",
             durationSec: 835,
             startSeconds: 0,
-            summary: "The chain rule applied backward through computational graphs to compute weight gradients.",
+            summary:
+              "The chain rule applied backward through computational graphs to compute weight gradients.",
           },
         ],
       },
