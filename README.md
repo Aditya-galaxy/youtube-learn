@@ -82,6 +82,7 @@ The app runs at http://localhost:3000.
 | `GOOGLE_CLIENT_ID`     | yes      | Google OAuth client ID                             |
 | `GOOGLE_CLIENT_SECRET` | yes      | Google OAuth client secret                         |
 | `YOUTUBE_API_KEY`      | yes      | Server-side YouTube Data API v3 key                |
+| `ANTHROPIC_API_KEY`    | yes      | Used to generate course curricula and lesson notes |
 
 ## Project structure
 
