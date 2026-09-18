@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
 import { ProfileSummaryCard } from "./ProfileSummaryCard";
 import { InterestsCard } from "./InterestsCard";
@@ -8,6 +8,7 @@ import { LearningProgressCard } from "./LearningProgressCard";
 import { EditProfileDialog } from "./EditProfileDialog";
 import type { UserProfile } from "./types";
 import { DUMMY_PROFILE } from "./constants";
+import { useCourseContext } from "@/Helper/CourseContext";
 
 const AccountPage: React.FC = () => {
   const { data: session, status } = useSession();
@@ -50,6 +51,22 @@ const AccountPage: React.FC = () => {
     [status]
   );
 
+  const { courses, enrollments } = useCourseContext();
+
+  const dynamicProgress: Record<string, number> = useMemo(() => {
+    const res: Record<string, number> = {};
+    Object.values(enrollments).forEach((enr) => {
+      const crs = courses.find((c) => c.id === enr.courseId);
+      if (crs) {
+        res[crs.title] = enr.progressPct;
+      }
+    });
+    if (Object.keys(res).length === 0) {
+      return profile.progress;
+    }
+    return res;
+  }, [courses, enrollments, profile.progress]);
+
   return (
     <div className="mx-auto max-w-[1100px] px-5 py-12 sm:px-10 sm:py-16">
       <div>
@@ -71,7 +88,7 @@ const AccountPage: React.FC = () => {
 
           <div className="space-y-6 md:col-span-2">
             <InterestsCard interests={profile.interests} />
-            <LearningProgressCard progress={profile.progress} />
+            <LearningProgressCard progress={dynamicProgress} />
           </div>
         </div>
       </div>

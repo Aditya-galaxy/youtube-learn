@@ -8,6 +8,7 @@ import Navbar from "@/components/Navbar/Navbar";
 import Sidebar from "@/components/Sidebar/Sidebar";
 import VideoModal from "@/components/Hero/VideoModal";
 import Context from "@/Helper/Context";
+import { CourseProvider } from "@/Helper/CourseContext";
 
 // Self-hosted by next/font: no render-blocking request to Google, and no
 // layout shift, since the fallback metrics are matched at build time.
@@ -52,15 +53,17 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             <Context>
-              <div className="flex min-h-screen flex-col">
-                <Navbar />
-                <div className="flex flex-1">
-                  <Sidebar />
-                  <main className="flex-1 pt-20 md:ml-64">{children}</main>
+              <CourseProvider>
+                <div className="flex min-h-screen flex-col">
+                  <Navbar />
+                  <div className="flex flex-1">
+                    <Sidebar />
+                    <main className="flex-1 pt-20 md:ml-64">{children}</main>
+                  </div>
+                  <VideoModal />
                 </div>
-                <VideoModal />
-              </div>
-              <Toaster />
+                <Toaster />
+              </CourseProvider>
             </Context>
           </ThemeProvider>
         </Providers>

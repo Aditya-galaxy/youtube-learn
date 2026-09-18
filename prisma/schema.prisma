@@ -17,10 +17,18 @@ model User {
   lastSignIn    DateTime?
   lastSignOut   DateTime?
   loginCount    Int            @default(0)
+  bio           String?
+  learningGoal  String?
+  skillLevel    SkillLevel     @default(BEGINNER)
+  weeklyHours   Int            @default(3)
   accounts      Account[]
   sessions      Session[]
   userTokens    UserTokens?
   viewedVideos  ViewedVideos[]
+  enrollments   CourseEnrollment[]
+  lessonProgress UserLessonProgress[]
+  notes         LessonNote[]
+  createdCourses Course[]      @relation("CreatedCourses")
 
   @@map("users")
 }
@@ -83,4 +91,120 @@ model VerificationToken {
 
   @@unique([identifier, token])
   @@map("verificationtokens")
+}
+
+enum SkillLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum CourseStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+  ARCHIVED
+}
+
+model Course {
+  id            String             @id @default(cuid())
+  slug          String             @unique
+  title         String
+  description   String
+  thumbnail     String
+  category      String
+  difficulty    SkillLevel         @default(BEGINNER)
+  estimatedHours Float             @default(1.0)
+  instructor    String?
+  isPublic      Boolean            @default(true)
+  isAiGenerated Boolean            @default(false)
+  creatorId     String?
+  creator       User?              @relation("CreatedCourses", fields: [creatorId], references: [id], onDelete: SetNull)
+  modules       Module[]
+  enrollments   CourseEnrollment[]
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  @@index([category])
+  @@map("courses")
+}
+
+model Module {
+  id          String   @id @default(cuid())
+  courseId    String
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  title       String
+  orderIndex  Int
+  description String?
+  lessons     Lesson[]
+
+  @@unique([courseId, orderIndex])
+  @@map("modules")
+}
+
+model Lesson {
+  id           String               @id @default(cuid())
+  moduleId     String
+  module       Module               @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  title        String
+  orderIndex   Int
+  videoId      String
+  channelName  String?
+  durationSec  Int                  @default(0)
+  startSeconds Int                  @default(0)
+  endSeconds   Int?
+  summary      String?
+  progress     UserLessonProgress[]
+  notes        LessonNote[]
+
+  @@unique([moduleId, orderIndex])
+  @@index([videoId])
+  @@map("lessons")
+}
+
+model CourseEnrollment {
+  id             String       @id @default(cuid())
+  userId         String
+  courseId       String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course         Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  status         CourseStatus @default(IN_PROGRESS)
+  progressPct    Int          @default(0)
+  lastAccessedAt DateTime     @default(now())
+  enrolledAt     DateTime     @default(now())
+
+  @@unique([userId, courseId])
+  @@index([userId])
+  @@map("course_enrollments")
+}
+
+model UserLessonProgress {
+  id              String    @id @default(cuid())
+  userId          String
+  lessonId        String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson          Lesson    @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  isCompleted     Boolean   @default(false)
+  lastPositionSec Int       @default(0)
+  completedAt     DateTime?
+  updatedAt       DateTime  @updatedAt
+
+  @@unique([userId, lessonId])
+  @@index([userId])
+  @@map("user_lesson_progress")
+}
+
+model LessonNote {
+  id                String   @id @default(cuid())
+  userId            String
+  lessonId          String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson            Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  content           String
+  videoTimestampSec Int?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([userId, lessonId])
+  @@map("lesson_notes")
 }
