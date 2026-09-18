@@ -4,7 +4,6 @@ import React from "react";
 import { useRouter } from "next/navigation";
 import Navigation from "./Navigation";
 import ProFeaturesBanner from "./ProFeatures";
-import BuyMeACoffee from "./BuyMeACoffee";
 
 const Sidebar = () => {
   const router = useRouter();
@@ -14,7 +13,6 @@ const Sidebar = () => {
       <div className="px-4 py-6">
         <Navigation />
         <ProFeaturesBanner onUpgradeClick={() => router.push("/plans")} />
-        <BuyMeACoffee />
       </div>
     </aside>
   );

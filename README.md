@@ -73,16 +73,15 @@ The app runs at http://localhost:3000.
 
 ## Environment variables
 
-| Variable                            | Required | Purpose                                                            |
-| ----------------------------------- | -------- | ------------------------------------------------------------------ |
-| `DATABASE_URL`                      | yes      | Pooled PostgreSQL connection used at runtime                       |
-| `DIRECT_URL`                        | yes      | Unpooled connection used by Prisma migrations                      |
-| `NEXTAUTH_URL`                      | yes      | Canonical URL of the deployment                                    |
-| `NEXTAUTH_SECRET`                   | yes      | Session encryption key (`openssl rand -base64 32`)                 |
-| `GOOGLE_CLIENT_ID`                  | yes      | Google OAuth client ID                                             |
-| `GOOGLE_CLIENT_SECRET`              | yes      | Google OAuth client secret                                         |
-| `YOUTUBE_API_KEY`                   | yes      | Server-side YouTube Data API v3 key                                |
-| `NEXT_PUBLIC_BUYMEACOFFEE_USERNAME` | no       | Overrides the Buy Me a Coffee handle on the sidebar support button |
+| Variable               | Required | Purpose                                            |
+| ---------------------- | -------- | -------------------------------------------------- |
+| `DATABASE_URL`         | yes      | Pooled PostgreSQL connection used at runtime       |
+| `DIRECT_URL`           | yes      | Unpooled connection used by Prisma migrations      |
+| `NEXTAUTH_URL`         | yes      | Canonical URL of the deployment                    |
+| `NEXTAUTH_SECRET`      | yes      | Session encryption key (`openssl rand -base64 32`) |
+| `GOOGLE_CLIENT_ID`     | yes      | Google OAuth client ID                             |
+| `GOOGLE_CLIENT_SECRET` | yes      | Google OAuth client secret                         |
+| `YOUTUBE_API_KEY`      | yes      | Server-side YouTube Data API v3 key                |
 
 ## Project structure
 
