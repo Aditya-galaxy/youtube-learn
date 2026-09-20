@@ -11,7 +11,8 @@
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "generate:syllabus": "tsx scripts/generate-syllabus.ts"
+    "generate:syllabus": "tsx scripts/generate-syllabus.ts",
+    "retrieve": "tsx scripts/retrieve-candidates.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.126.0",

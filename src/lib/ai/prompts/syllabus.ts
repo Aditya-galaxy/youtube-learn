@@ -18,6 +18,8 @@ Rules for searchQueries:
 - These are typed into YouTube's search box. Plain language only.
 - No search operators. site:, quotes, parentheses, OR and minus signs are all matched literally by YouTube's API and will starve the results.
 - Write what a good teaching video about this module would actually be titled. Include the subject name, because a query like "advanced techniques" returns nothing useful on its own.
+- Make the FIRST query one that would surface a long, comprehensive treatment — phrasing like "<subject> full course" or "<subject> complete tutorial". Measured against live results, those queries return chaptered multi-hour videos roughly half the time, while concept-shaped queries ("how X works") almost never do. A single chaptered course video can supply a whole module from one search, which is both cheaper and better taught than several unrelated clips.
+- Make the remaining queries narrower, aimed at the specific lessons, so there is a fallback when no long course exists for this subject.
 
 Never output a YouTube video ID, URL, or channel name. You are designing the curriculum; real videos are matched to it in a later step by code. Inventing one produces a broken lesson.
 

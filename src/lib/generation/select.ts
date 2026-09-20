@@ -170,6 +170,12 @@ export function checkSelection(
         { from: fromIndex, to: toIndex },
       ]);
     } else {
+      if (!candidate.usableAsFullVideo) {
+        violations.push(
+          `Candidate ${s.candidateIndex} is ${Math.round(candidate.durationSec / 60)} minutes long and has no chapters, so it cannot be one lesson. Choose a shorter candidate or leave "${s.lessonIntentKey}" unmatched.`
+        );
+        continue;
+      }
       const uses = (fullVideoUses.get(candidate.videoId) ?? 0) + 1;
       fullVideoUses.set(candidate.videoId, uses);
       if (uses > 1) {

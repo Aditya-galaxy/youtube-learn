@@ -16,6 +16,13 @@ import { parseChaptersFromDescription } from "@/lib/youtube/chapterParser";
 export const MIN_LESSON_DURATION_SEC = 300;
 /** Long enough that chapters are worth looking for. */
 export const SLICEABLE_DURATION_SEC = 1200;
+/**
+ * Longest a single lesson may be. Measured against live results: long videos
+ * with no chapter markers are common in some domains (every "organic chemistry
+ * full course" candidate was 2-7 hours with zero timestamps), and without this
+ * ceiling selection would happily make a 7h35m video one "lesson".
+ */
+export const MAX_LESSON_DURATION_SEC = 2700;
 /** Higher than the feed's floor: a course lesson should be well-established. */
 export const MIN_LESSON_VIEW_COUNT = 1000;
 export const CANDIDATES_PER_QUERY = 12;
@@ -26,6 +33,8 @@ export interface PoolCandidate extends VideoCandidate {
   /** Parsed from the full description; 0 when none or not long enough to matter. */
   chapterCount: number;
   sliceable: boolean;
+  /** False for anything too long to sit behind a single lesson. */
+  usableAsFullVideo: boolean;
 }
 
 export interface ModulePool {
@@ -88,6 +97,7 @@ export function toPoolCandidate(
     ...candidate,
     index,
     chapterCount: chapters.length,
+    usableAsFullVideo: candidate.durationSec <= MAX_LESSON_DURATION_SEC,
     // Slicing one long, well-chaptered video into a module is both the
     // cheapest outcome (one search instead of many) and the best teaching
     // outcome: one instructor, one notation, one running example throughout.
@@ -109,7 +119,9 @@ export function formatPoolForPrompt(pool: ModulePool): string {
           : `${Math.round(c.viewCount / 1000)}K`;
       const chapters = c.sliceable
         ? `, ${c.chapterCount} chapters (sliceable)`
-        : "";
+        : c.usableAsFullVideo
+          ? ""
+          : ", TOO LONG for one lesson and has no chapters — unusable";
       return [
         `[${c.index}] ${c.title}`,
         `    ${c.channelName} · ${mins} min · ${views} views${chapters}`,
