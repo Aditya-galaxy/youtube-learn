@@ -8,13 +8,9 @@
  *
  *   npm run retrieve -- "linear algebra lecture" "matrix multiplication"
  */
-import { config } from "dotenv";
 import { createYouTubeClient } from "../src/lib/youtube/searchVideos";
 import { retrieveCandidatesForModule } from "../src/lib/generation/retrieve";
 import { buildLesson, chaptersOf } from "../src/lib/generation/slice";
-
-config({ path: ".env.local", quiet: true });
-config({ path: ".env", quiet: true });
 
 function fmtDuration(sec: number): string {
   const h = Math.floor(sec / 3600);

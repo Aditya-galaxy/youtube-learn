@@ -3,16 +3,16 @@
  * just the model call and the ordering checks, so syllabus quality can be
  * inspected before any of the pipeline around it exists.
  *
+ * Env comes from .env.local via tsx --env-file-if-exists, loaded before any
+ * module executes — dotenv inside the script ran after ESM had already hoisted
+ * the imports, so the client's startup check fired before the key existed.
+ *
  *   npm run generate:syllabus -- "linear algebra" --level BEGINNER --hours 4
  *   npm run generate:syllabus -- "rust ownership" --json
  */
-import { config } from "dotenv";
 import { generateSyllabus } from "../src/lib/generation/syllabus";
 import { GenerationError } from "../src/lib/ai/client";
 import type { SkillLevel } from "../src/lib/ai/schemas";
-
-config({ path: ".env.local", quiet: true });
-config({ path: ".env", quiet: true });
 
 const LEVELS: SkillLevel[] = ["BEGINNER", "INTERMEDIATE", "ADVANCED"];
 
@@ -52,9 +52,9 @@ function parseArgs(argv: string[]) {
   };
 }
 
-// Anthropic list pricing for claude-opus-5, $ per 1M tokens.
-const INPUT_PER_MTOK = 5;
-const OUTPUT_PER_MTOK = 25;
+// Gemini 2.5/3 Pro list pricing, $ per 1M tokens. Update if the model changes.
+const INPUT_PER_MTOK = 1.25;
+const OUTPUT_PER_MTOK = 10;
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));

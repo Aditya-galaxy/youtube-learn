@@ -48,7 +48,7 @@ export async function selectVideosForModule(input: {
         inputTokens: 0,
         outputTokens: 0,
         cacheReadInputTokens: 0,
-        cacheCreationInputTokens: 0,
+        thoughtTokens: 0,
       },
     };
   }
