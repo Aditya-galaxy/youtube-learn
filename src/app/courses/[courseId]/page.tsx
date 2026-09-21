@@ -15,6 +15,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { useCourseContext } from "@/Helper/CourseContext";
+import { useResolvedCourse } from "@/hooks/useResolvedCourse";
 import { formatSecondsToTime } from "@/lib/youtube/chapterParser";
 import { getCourseTotalLessons } from "@/lib/courseService";
 
@@ -24,10 +25,16 @@ interface PageProps {
 
 export default function CourseDetailPage({ params }: PageProps) {
   const { courseId } = use(params);
-  const { getCourseById, getCourseEnrollment, enrollInCourse } =
-    useCourseContext();
+  const { getCourseEnrollment, enrollInCourse } = useCourseContext();
+  const { course, status } = useResolvedCourse(courseId);
 
-  const course = getCourseById(courseId);
+  if (status === "loading") {
+    return (
+      <div className="mx-auto max-w-4xl px-5 py-24 text-center text-sm text-muted-foreground">
+        Loading course…
+      </div>
+    );
+  }
 
   if (!course) {
     return (
@@ -257,6 +264,21 @@ export default function CourseDetailPage({ params }: PageProps) {
                     </div>
                   );
                 })}
+                {/* Planned lessons with no good video. Shown, not hidden: an
+                    honest gap costs less trust than a silently missing topic. */}
+                {mod.unfilledLessons?.map((title) => (
+                  <div
+                    key={`gap-${title}`}
+                    className="flex items-center justify-between gap-3 px-4 py-3 text-sm text-muted-foreground"
+                  >
+                    <span className="line-through decoration-muted-foreground/40">
+                      {title}
+                    </span>
+                    <span className="shrink-0 text-xs">
+                      No strong video found
+                    </span>
+                  </div>
+                ))}
               </div>
             </div>
           ))}

@@ -3,6 +3,7 @@
 import React from "react";
 import { useSearchParams } from "next/navigation";
 import Hero from "./Hero/Hero";
+import { BuildCourseBanner } from "./Courses/BuildCourseBanner";
 
 /**
  * Search is driven entirely by the `q` search param, so a results page can be
@@ -15,10 +16,13 @@ const SearchResults: React.FC = () => {
   const query = searchParams?.get("q")?.trim() ?? "";
 
   return (
-    <Hero
-      title={query ? `Search results for "${query}"` : "Recommended Videos"}
-      query={query}
-    />
+    <>
+      {query && <BuildCourseBanner topic={query} />}
+      <Hero
+        title={query ? `Search results for "${query}"` : "Recommended Videos"}
+        query={query}
+      />
+    </>
   );
 };
 

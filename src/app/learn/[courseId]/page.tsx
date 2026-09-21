@@ -4,7 +4,7 @@ import React, { use } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import { useCourseContext } from "@/Helper/CourseContext";
+import { useResolvedCourse } from "@/hooks/useResolvedCourse";
 import { ClassroomPlayer } from "@/components/Classroom/ClassroomPlayer";
 
 interface PageProps {
@@ -16,8 +16,15 @@ export default function LearnPage({ params }: PageProps) {
   const searchParams = useSearchParams();
   const lessonId = searchParams?.get("lesson") || undefined;
 
-  const { getCourseById } = useCourseContext();
-  const course = getCourseById(courseId);
+  const { course, status } = useResolvedCourse(courseId);
+
+  if (status === "loading") {
+    return (
+      <div className="mx-auto max-w-4xl px-5 py-24 text-center text-sm text-muted-foreground">
+        Loading course…
+      </div>
+    );
+  }
 
   if (!course) {
     return (

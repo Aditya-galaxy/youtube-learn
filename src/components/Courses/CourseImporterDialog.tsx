@@ -16,7 +16,9 @@ import {
   parseChaptersFromDescription,
   chaptersToLessons,
 } from "@/lib/youtube/chapterParser";
-import { generatePersonalizedCourse } from "@/lib/courseService";
+import { startCourseGeneration } from "@/lib/generation/start";
+import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 import type { Course, SkillLevel } from "../../../types/course";
 
 interface CourseImporterDialogProps {
@@ -31,6 +33,7 @@ export const CourseImporterDialog: React.FC<CourseImporterDialogProps> = ({
   onCourseCreated,
 }) => {
   const { toast } = useToast();
+  const router = useRouter();
   const { importCourse, enrollInCourse } = useCourseContext();
 
   const [activeTab, setActiveTab] = useState<"playlist" | "chapters" | "ai">(
@@ -193,7 +196,10 @@ export const CourseImporterDialog: React.FC<CourseImporterDialogProps> = ({
     }
   };
 
-  const handleAiGenerate = (e: React.FormEvent) => {
+  // Runs the real pipeline. This used to call generatePersonalizedCourse, a
+  // template that returned the same four hardcoded videos for any topic behind
+  // a fake 600ms delay and a "Personalized Course Generated!" toast.
+  const handleAiGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!aiTopic.trim()) {
       toast({
@@ -206,24 +212,31 @@ export const CourseImporterDialog: React.FC<CourseImporterDialogProps> = ({
     }
 
     setLoading(true);
-    setTimeout(() => {
-      const generated = generatePersonalizedCourse({
-        topic: aiTopic,
-        skillLevel: aiLevel,
-      });
+    const result = await startCourseGeneration({
+      topic: aiTopic.trim(),
+      difficulty: aiLevel,
+    });
+    setLoading(false);
 
-      importCourse(generated);
-      enrollInCourse(generated.id);
-
-      toast({
-        title: "Personalized Course Generated!",
-        description: `Created custom structured path for ${aiTopic}.`,
-      });
-
-      onCourseCreated?.(generated);
-      setLoading(false);
+    if (result.kind === "job") {
       onClose();
-    }, 600);
+      router.push(`/courses/generating/${result.jobId}`);
+    } else if (result.kind === "existing") {
+      onClose();
+      toast({
+        title: "A path for this already exists",
+        description: result.title,
+      });
+      router.push(`/courses/${result.slug}`);
+    } else if (result.kind === "signin") {
+      signIn("google", { callbackUrl: window.location.href });
+    } else {
+      toast({
+        title: "Could not start building the course",
+        description: result.message,
+        variant: "destructive",
+      });
+    }
   };
 
   return (

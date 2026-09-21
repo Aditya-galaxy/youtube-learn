@@ -9,26 +9,27 @@ datasource db {
 }
 
 model User {
-  id            String         @id @default(cuid())
-  name          String?
-  email         String?        @unique
-  emailVerified DateTime?
-  image         String?
-  lastSignIn    DateTime?
-  lastSignOut   DateTime?
-  loginCount    Int            @default(0)
-  bio           String?
-  learningGoal  String?
-  skillLevel    SkillLevel     @default(BEGINNER)
-  weeklyHours   Int            @default(3)
-  accounts      Account[]
-  sessions      Session[]
-  userTokens    UserTokens?
-  viewedVideos  ViewedVideos[]
-  enrollments   CourseEnrollment[]
+  id             String                @id @default(cuid())
+  name           String?
+  email          String?               @unique
+  emailVerified  DateTime?
+  image          String?
+  lastSignIn     DateTime?
+  lastSignOut    DateTime?
+  loginCount     Int                   @default(0)
+  bio            String?
+  learningGoal   String?
+  skillLevel     SkillLevel            @default(BEGINNER)
+  weeklyHours    Int                   @default(3)
+  accounts       Account[]
+  sessions       Session[]
+  userTokens     UserTokens?
+  viewedVideos   ViewedVideos[]
+  enrollments    CourseEnrollment[]
   lessonProgress UserLessonProgress[]
-  notes         LessonNote[]
-  createdCourses Course[]      @relation("CreatedCourses")
+  notes          LessonNote[]
+  createdCourses Course[]              @relation("CreatedCourses")
+  generationJobs CourseGenerationJob[]
 
   @@map("users")
 }
@@ -107,36 +108,51 @@ enum CourseStatus {
 }
 
 model Course {
-  id            String             @id @default(cuid())
-  slug          String             @unique
-  title         String
-  description   String
-  thumbnail     String
-  category      String
-  difficulty    SkillLevel         @default(BEGINNER)
-  estimatedHours Float             @default(1.0)
-  instructor    String?
-  isPublic      Boolean            @default(true)
-  isAiGenerated Boolean            @default(false)
-  creatorId     String?
-  creator       User?              @relation("CreatedCourses", fields: [creatorId], references: [id], onDelete: SetNull)
-  modules       Module[]
-  enrollments   CourseEnrollment[]
-  createdAt     DateTime           @default(now())
-  updatedAt     DateTime           @updatedAt
+  id              String             @id @default(cuid())
+  slug            String             @unique
+  title           String
+  description     String
+  thumbnail       String
+  category        String
+  difficulty      SkillLevel         @default(BEGINNER)
+  estimatedHours  Float              @default(1.0)
+  instructor      String?
+  isPublic        Boolean            @default(true)
+  isAiGenerated   Boolean            @default(false)
+  /// The topic a generated course was built from, as the user typed it.
+  topic           String?
+  /// Lowercased, whitespace-collapsed topic — the key for "does a path for
+  /// this already exist?", which saves a whole generation's cost and quota.
+  topicNormalized String?
+  creatorId       String?
+  creator         User?              @relation("CreatedCourses", fields: [creatorId], references: [id], onDelete: SetNull)
+  modules         Module[]
+  enrollments     CourseEnrollment[]
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
 
   @@index([category])
+  @@index([topicNormalized, difficulty])
   @@map("courses")
 }
 
 model Module {
-  id          String   @id @default(cuid())
-  courseId    String
-  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  title       String
-  orderIndex  Int
-  description String?
-  lessons     Lesson[]
+  id               String   @id @default(cuid())
+  courseId         String
+  course           Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  title            String
+  orderIndex       Int
+  description      String?
+  /// Stable syllabus key, e.g. "matrices-and-operations".
+  key              String?
+  objectives       String[] @default([])
+  /// Keys of modules that must come first — the dependency graph behind the
+  /// ordering, kept so the roadmap view can draw it later.
+  prerequisiteKeys String[] @default([])
+  /// Lessons the syllabus planned but no good video was found for. Shown to
+  /// the learner rather than silently dropped.
+  unfilledLessons  String[] @default([])
+  lessons          Lesson[]
 
   @@unique([courseId, orderIndex])
   @@map("modules")
@@ -207,4 +223,47 @@ model LessonNote {
 
   @@index([userId, lessonId])
   @@map("lesson_notes")
+}
+
+enum GenerationStatus {
+  QUEUED
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+/// One course build. Generation takes minutes — longer than a request should
+/// live — so it runs as a job that advances one step per invocation and is
+/// polled by the progress page. Step 0 designs the syllabus; step k builds
+/// module k; the last step persists the course.
+model CourseGenerationJob {
+  id              String           @id @default(cuid())
+  userId          String
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  topic           String
+  topicNormalized String
+  difficulty      SkillLevel       @default(BEGINNER)
+  weeklyHours     Int?
+  status          GenerationStatus @default(QUEUED)
+  step            Int              @default(0)
+  totalSteps      Int              @default(0)
+  progressPct     Int              @default(0)
+  /// Human-readable description of the step in flight, for the progress page.
+  stageLabel      String?
+  /// Syllabus and per-module results, accumulated step by step.
+  payload         Json?
+  warnings        String[]         @default([])
+  /// Token and YouTube-unit spend, so cost per course is measured, not guessed.
+  usage           Json?
+  courseId        String?
+  error           String?
+  attempts        Int              @default(0)
+  /// Set while a worker holds the job; a stale lock is reclaimable.
+  lockedAt        DateTime?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@index([userId, status])
+  @@index([status, updatedAt])
+  @@map("course_generation_jobs")
 }

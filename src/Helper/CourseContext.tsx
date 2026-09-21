@@ -37,6 +37,14 @@ interface CourseContextType {
   updateUserProfile: (profile: Partial<UserLearningProfile>) => void;
   getCourseEnrollment: (courseId: string) => CourseEnrollment | undefined;
   getCourseById: (courseIdOrSlug: string) => Course | undefined;
+  /**
+   * Fetches a course from the database when it is not already loaded — a
+   * direct link to a freshly generated course must work before the catalogue
+   * fetch finishes. Resolves to null when it genuinely does not exist.
+   */
+  loadCourse: (courseIdOrSlug: string) => Promise<Course | null>;
+  /** True once the database catalogue fetch has settled (success or not). */
+  catalogueLoaded: boolean;
 }
 
 const CourseContext = createContext<CourseContextType | undefined>(undefined);
@@ -56,6 +64,27 @@ const DEFAULT_PROFILE: UserLearningProfile = {
 
 export const CourseProvider = ({ children }: { children: ReactNode }) => {
   const [customCourses, setCustomCourses] = useState<Course[]>([]);
+  const [remoteCourses, setRemoteCourses] = useState<Course[]>([]);
+  const [catalogueLoaded, setCatalogueLoaded] = useState(false);
+
+  // Generated courses live in Postgres. The catalogue fetch degrades to an
+  // empty list on failure (the route returns [] when the DB is down), so the
+  // curated courses still render.
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/courses")
+      .then((r) => (r.ok ? r.json() : { courses: [] }))
+      .then((d: { courses?: Course[] }) => {
+        if (!cancelled) setRemoteCourses(d.courses ?? []);
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setCatalogueLoaded(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
   const [enrollments, setEnrollments] = useState<
     Record<string, CourseEnrollment>
   >({});
@@ -122,12 +151,36 @@ export const CourseProvider = ({ children }: { children: ReactNode }) => {
   }, [userProfile, hydrated]);
 
   const allCourses = useMemo(() => {
-    return [...CURATED_COURSES, ...customCourses];
-  }, [customCourses]);
+    const seen = new Set<string>();
+    return [...remoteCourses, ...CURATED_COURSES, ...customCourses].filter(
+      (c) => (seen.has(c.id) ? false : (seen.add(c.id), true))
+    );
+  }, [remoteCourses, customCourses]);
 
   const getCourseById = useCallback(
     (idOrSlug: string): Course | undefined => {
       return allCourses.find((c) => c.id === idOrSlug || c.slug === idOrSlug);
+    },
+    [allCourses]
+  );
+
+  const loadCourse = useCallback(
+    async (idOrSlug: string): Promise<Course | null> => {
+      const known = allCourses.find(
+        (c) => c.id === idOrSlug || c.slug === idOrSlug
+      );
+      if (known) return known;
+      try {
+        const res = await fetch(`/api/courses/${encodeURIComponent(idOrSlug)}`);
+        if (!res.ok) return null;
+        const { course } = (await res.json()) as { course: Course };
+        setRemoteCourses((prev) =>
+          prev.some((c) => c.id === course.id) ? prev : [course, ...prev]
+        );
+        return course;
+      } catch {
+        return null;
+      }
     },
     [allCourses]
   );
@@ -255,6 +308,8 @@ export const CourseProvider = ({ children }: { children: ReactNode }) => {
       updateUserProfile,
       getCourseEnrollment,
       getCourseById,
+      loadCourse,
+      catalogueLoaded,
     }),
     [
       allCourses,
@@ -267,6 +322,8 @@ export const CourseProvider = ({ children }: { children: ReactNode }) => {
       updateUserProfile,
       getCourseEnrollment,
       getCourseById,
+      loadCourse,
+      catalogueLoaded,
     ]
   );
 

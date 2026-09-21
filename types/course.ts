@@ -18,6 +18,8 @@ export interface Lesson {
 }
 
 export interface Module {
+  /** Lessons the syllabus planned but no good video was found for. */
+  unfilledLessons?: string[];
   id: string;
   courseId: string;
   title: string;

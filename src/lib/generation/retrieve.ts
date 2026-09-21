@@ -122,7 +122,11 @@ export function toPoolCandidate(
 }
 
 /** Renders the pool as the numbered list the model selects from by index. */
-export function formatPoolForPrompt(pool: ModulePool): string {
+export function formatPoolForPrompt(
+  pool: ModulePool,
+  usedElsewhere: string[] = []
+): string {
+  const used = new Set(usedElsewhere);
   if (pool.candidates.length === 0) return "(no candidates found)";
 
   return pool.candidates
@@ -137,8 +141,14 @@ export function formatPoolForPrompt(pool: ModulePool): string {
         : c.usableAsFullVideo
           ? ""
           : ", TOO LONG for one lesson and has no chapters — unusable";
+      // Named per candidate: telling the model only HOW MANY videos were used
+      // earlier gave it no way to avoid them, and one 3Blue1Brown video ended
+      // up teaching two lessons in two different modules.
+      const reused = used.has(c.videoId)
+        ? "  (ALREADY USED earlier in this course — avoid unless clearly the best teacher)"
+        : "";
       const lines = [
-        `[${c.index}] ${c.title}`,
+        `[${c.index}] ${c.title}${reused}`,
         `    ${c.channelName} · ${mins} min · ${views} views${chapters}`,
         `    ${c.description.slice(0, 220).replace(/\s+/g, " ").trim()}`,
       ];

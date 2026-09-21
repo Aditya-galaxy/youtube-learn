@@ -78,7 +78,7 @@ export async function selectVideosForModule(input: {
     system: SELECT_SYSTEM,
     userMessage: buildSelectUserMessage({
       module: mod,
-      poolText: formatPoolForPrompt(pool),
+      poolText: formatPoolForPrompt(pool, alreadyUsedVideoIds),
       alreadyUsedVideoIds,
     }),
     semanticCheck: (value) =>

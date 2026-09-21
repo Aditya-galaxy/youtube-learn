@@ -273,6 +273,10 @@ export async function parseWithRepair<T>(options: {
     );
   }
 
+  console.error(
+    `[ai] ${stage}: output still invalid after repair:`,
+    lastViolations
+  );
   throw new GenerationError(
     "Model output failed validation after a repair attempt.",
     stage,

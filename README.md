@@ -98,6 +98,39 @@ src/
 prisma/schema.prisma   User, Account, Session, UserTokens, ViewedVideos
 ```
 
+## Database
+
+Postgres via Prisma migrations in `prisma/migrations/`:
+
+- `0_init` — the auth tables every existing deployment already has.
+- `1_courses_and_generation` — courses, modules, lessons, enrollments and
+  generation jobs.
+
+**Fresh database:** `npm run db:migrate`.
+
+**A database created earlier with `prisma db push`** has the auth tables but no
+migration history, so `migrate deploy` stops with P3005. Mark the baseline as
+applied once, then deploy:
+
+```bash
+npx prisma migrate resolve --applied 0_init
+npm run db:migrate
+```
+
+`db:migrate` is deliberately not part of `build`: running it against an
+un-baselined database would fail the deploy.
+
+**Production runs on Cloud SQL for PostgreSQL** (`kronagent:us-east4:youtube-learn-pg`).
+Connect from a workstation through the Cloud SQL Auth Proxy, which authenticates
+with IAM rather than an IP allowlist:
+
+```bash
+cloud-sql-proxy --port 5434 --quota-project kronagent kronagent:us-east4:youtube-learn-pg
+```
+
+`--quota-project` matters when your Application Default Credentials default to a
+different project — the proxy's Admin API calls fail there otherwise.
+
 ## API
 
 ### `GET /api/videos`

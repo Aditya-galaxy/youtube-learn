@@ -7,6 +7,12 @@ export const HOURLY_TOKEN_LIMIT = 10_000;
 export const FEED_REQUEST_COST = 50;
 /** A playlist import spends 3 YouTube calls and can return 100s of videos. */
 export const PLAYLIST_IMPORT_COST = 150;
+/**
+ * A generated course costs ~500-1,300 real YouTube units and a few model calls.
+ * Charged against the same hourly budget as browsing, since both draw on one
+ * shared YouTube key: four generations per user per hour.
+ */
+export const GENERATION_COST = 2_500;
 
 export type ChargeResult =
   { tokensRemaining: number } | { error: string; status: 429 | 500 };
