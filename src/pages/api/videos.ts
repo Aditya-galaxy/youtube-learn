@@ -6,6 +6,10 @@ import { prisma } from "@/lib/prisma";
 import { authOptions } from "@/lib/auth";
 import { chargeTokens } from "@/lib/rateLimit";
 import { parseIsoDuration } from "@/lib/youtube/duration";
+// Shared with the course generator so the two quality filters cannot drift
+// apart. The feed keeps its own fetch: it needs pageToken, the seen-video set
+// and the Video response shape, none of which the generator wants.
+import { hasSuspiciousTitle } from "@/lib/youtube/searchVideos";
 import type { Video } from "../../../types/video";
 
 interface VideoResponse {
@@ -80,23 +84,6 @@ async function recordSeenVideos(userId: string, videos: Video[]) {
   } catch (error) {
     console.error("Error updating viewed videos:", error);
   }
-}
-
-/**
- * Rejects obviously non-educational uploads. Deliberately narrower than the
- * previous list, which also dropped legitimate results: "live", "stream",
- * "daily" and "clips" all appear in real lecture titles ("Live coding",
- * "Streaming algorithms", "Daily astronomy").
- */
-function hasSuspiciousTitle(title: string): boolean {
-  const suspiciousPatterns = [
-    /\b(prank|reaction|gameplay|tiktok|shorts)\b/i,
-    /\b(click\s*bait|clickbait|click\s*here|must\s*watch)\b/i,
-    /\b(fortnite|minecraft|roblox|game\s*play)\b/i,
-    /\b(vlog|unboxing|challenge\s*video)\b/i,
-    /[\u{1F600}-\u{1F64F}\u{1F3AE}-\u{1F3B2}]/u,
-  ];
-  return suspiciousPatterns.some((pattern) => pattern.test(title));
 }
 
 async function fetchYouTubeVideos({

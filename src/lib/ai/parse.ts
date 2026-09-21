@@ -1,18 +1,19 @@
-import type Anthropic from "@anthropic-ai/sdk";
-import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
-import type { z } from "zod/v4";
+import { ThinkingLevel, type Content } from "@google/genai";
+import { z } from "zod/v4";
 import {
   GenerationError,
-  getAnthropicClient,
+  getGeminiClient,
+  GENERATION_BACKEND,
   GENERATION_MODEL,
-  MAX_TOKENS,
+  MAX_OUTPUT_TOKENS,
 } from "./client";
 
 export interface UsageTotals {
   inputTokens: number;
   outputTokens: number;
+  /** Gemini caches implicitly; this is what it reported as served from cache. */
   cacheReadInputTokens: number;
-  cacheCreationInputTokens: number;
+  thoughtTokens: number;
 }
 
 export interface ParseResult<T> {
@@ -31,18 +32,132 @@ const EMPTY_USAGE: UsageTotals = {
   inputTokens: 0,
   outputTokens: 0,
   cacheReadInputTokens: 0,
-  cacheCreationInputTokens: 0,
+  thoughtTokens: 0,
 };
 
-function addUsage(total: UsageTotals, usage: Anthropic.Usage): UsageTotals {
+const DECODING_CONSTRAINTS = [
+  "pattern",
+  "minLength",
+  "maxLength",
+  "minItems",
+  "maxItems",
+  "minimum",
+  "maximum",
+  "exclusiveMinimum",
+  "exclusiveMaximum",
+  "format",
+] as const;
+
+/**
+ * The schema the MODEL sees: shape, types and required fields only.
+ *
+ * Gemini compiles responseJsonSchema into constrained decoding, and the full
+ * schema — slug regexes, length bounds, nested array limits — exceeds what it
+ * will serve ("too many states"). So bounds are stripped here and folded into
+ * each field's description as a hint, while the full zod schema still
+ * validates every response server-side and feeds violations into the repair
+ * turn. The model gets guidance; zod keeps the guarantees.
+ */
+function toModelSchema(schema: z.ZodType): Record<string, unknown> {
+  const full = z.toJSONSchema(schema, {
+    target: "draft-7",
+    io: "input",
+  }) as Record<string, unknown>;
+  return relax(full) as Record<string, unknown>;
+}
+
+function relax(node: unknown): unknown {
+  if (Array.isArray(node)) return node.map(relax);
+  if (!node || typeof node !== "object") return node;
+
+  const obj = node as Record<string, unknown>;
+  const hints: string[] = [];
+  const out: Record<string, unknown> = {};
+
+  for (const [key, value] of Object.entries(obj)) {
+    if (key === "$schema") continue;
+    if ((DECODING_CONSTRAINTS as readonly string[]).includes(key)) {
+      if (key === "pattern") hints.push("kebab-case");
+      else if (key === "minItems") hints.push(`at least ${value} items`);
+      else if (key === "maxItems") hints.push(`at most ${value} items`);
+      else if (key === "minLength") hints.push(`at least ${value} characters`);
+      else if (key === "maxLength") hints.push(`at most ${value} characters`);
+      else if (key === "minimum") hints.push(`minimum ${value}`);
+      else if (key === "maximum") hints.push(`maximum ${value}`);
+      continue;
+    }
+    out[key] = relax(value);
+  }
+
+  if (hints.length > 0) {
+    const base =
+      typeof out.description === "string" ? `${out.description} ` : "";
+    out.description = `${base}(${hints.join(", ")})`;
+  }
+  return out;
+}
+
+function readUsage(
+  total: UsageTotals,
+  usage: Record<string, number | undefined> | undefined
+): UsageTotals {
   return {
-    inputTokens: total.inputTokens + (usage.input_tokens ?? 0),
-    outputTokens: total.outputTokens + (usage.output_tokens ?? 0),
+    inputTokens: total.inputTokens + (usage?.promptTokenCount ?? 0),
+    outputTokens: total.outputTokens + (usage?.candidatesTokenCount ?? 0),
     cacheReadInputTokens:
-      total.cacheReadInputTokens + (usage.cache_read_input_tokens ?? 0),
-    cacheCreationInputTokens:
-      total.cacheCreationInputTokens + (usage.cache_creation_input_tokens ?? 0),
+      total.cacheReadInputTokens + (usage?.cachedContentTokenCount ?? 0),
+    thoughtTokens: total.thoughtTokens + (usage?.thoughtsTokenCount ?? 0),
   };
+}
+
+/**
+ * Gemini 3 models take a thinkingLevel; Gemini 2.x models reject it and take a
+ * token budget instead (-1 = let the model decide). Sending the wrong one is a
+ * hard 400, not a no-op.
+ */
+function thinkingConfigFor(model: string, level: ThinkingLevel) {
+  return /^gemini-2\./.test(model)
+    ? { thinkingBudget: -1 }
+    : { thinkingLevel: level };
+}
+
+/**
+ * The SDK throws with the raw upstream JSON as the message. Turn the cases a
+ * caller can act on into sentences, and never let the raw body reach a client.
+ */
+function toGenerationError(error: unknown, stage: string): GenerationError {
+  const raw = error instanceof Error ? error.message : String(error);
+  const code = Number(raw.match(/"code":\s*(\d+)/)?.[1] ?? 0);
+
+  if (code === 402) {
+    return new GenerationError(
+      `Gemini billing is exhausted for this project. Top up prepayment credits at https://ai.studio/projects, then retry.`,
+      stage
+    );
+  }
+  if (code === 404) {
+    return new GenerationError(
+      `Model "${GENERATION_MODEL}" is not available to this API key. Set GEMINI_MODEL to one the key can reach (GET /v1beta/models lists them).`,
+      stage
+    );
+  }
+  if (code === 429) {
+    return new GenerationError(
+      "Gemini rate limit reached. Retry shortly.",
+      stage
+    );
+  }
+  if (code === 401 || code === 403) {
+    return new GenerationError(
+      GENERATION_BACKEND === "vertex"
+        ? "Vertex AI rejected the credentials. Run `gcloud auth application-default login` locally, or give the production service account roles/aiplatform.user."
+        : "Gemini rejected the API key. Check it allows generativelanguage.googleapis.com.",
+      stage
+    );
+  }
+
+  console.error(`[ai] unexpected ${stage} failure:`, raw.slice(0, 400));
+  return new GenerationError("The model request failed.", stage);
 }
 
 /**
@@ -59,8 +174,8 @@ export async function parseWithRepair<T>(options: {
   system: string;
   userMessage: string;
   semanticCheck?: SemanticCheck<T>;
-  effort?: "low" | "medium" | "high" | "xhigh" | "max";
-  maxTokens?: number;
+  thinkingLevel?: ThinkingLevel;
+  maxOutputTokens?: number;
 }): Promise<ParseResult<T>> {
   const {
     stage,
@@ -68,75 +183,98 @@ export async function parseWithRepair<T>(options: {
     system,
     userMessage,
     semanticCheck,
-    effort = "high",
-    maxTokens = MAX_TOKENS,
+    thinkingLevel = ThinkingLevel.HIGH,
+    maxOutputTokens = MAX_OUTPUT_TOKENS,
   } = options;
 
-  const client = getAnthropicClient();
-  const messages: Anthropic.MessageParam[] = [
-    { role: "user", content: userMessage },
+  const ai = getGeminiClient();
+  const responseJsonSchema = toModelSchema(schema);
+  const contents: Content[] = [
+    { role: "user", parts: [{ text: userMessage }] },
   ];
 
   let usage = EMPTY_USAGE;
   let lastViolations: string[] = [];
 
   for (let attempt = 1; attempt <= 2; attempt += 1) {
-    const response = await client.messages.parse({
-      model: GENERATION_MODEL,
-      max_tokens: maxTokens,
-      thinking: { type: "adaptive" },
-      output_config: {
-        effort,
-        format: zodOutputFormat(schema as never),
-      },
-      // Static prefix first so it caches; everything per-request is in messages.
-      system: [
-        { type: "text", text: system, cache_control: { type: "ephemeral" } },
-      ],
-      messages,
-    });
-
-    usage = addUsage(usage, response.usage);
-
-    if (response.stop_reason === "refusal") {
-      throw new GenerationError("The model declined this request.", stage, [
-        response.stop_details?.explanation ?? "refusal",
-      ]);
+    let response;
+    try {
+      response = await ai.models.generateContent({
+        model: GENERATION_MODEL,
+        contents,
+        config: {
+          // Static across every request, so Gemini's implicit cache can hit it.
+          systemInstruction: system,
+          responseMimeType: "application/json",
+          responseJsonSchema,
+          thinkingConfig: thinkingConfigFor(GENERATION_MODEL, thinkingLevel),
+          maxOutputTokens,
+        },
+      });
+    } catch (error) {
+      throw toGenerationError(error, stage);
     }
 
-    const parsed = response.parsed_output as T | null;
+    usage = readUsage(
+      usage,
+      response.usageMetadata as Record<string, number | undefined> | undefined
+    );
 
-    if (parsed === null || parsed === undefined) {
-      lastViolations = [
-        response.stop_reason === "max_tokens"
-          ? "The response was cut off before it was complete. Produce a smaller syllabus."
-          : "The response did not match the required schema.",
-      ];
+    const text = response.text;
+    let candidate: unknown = null;
+    let parseFailure: string | null = null;
+
+    if (!text) {
+      parseFailure =
+        response.candidates?.[0]?.finishReason === "MAX_TOKENS"
+          ? "The response was cut off before it was complete. Produce a smaller result."
+          : "The model returned no content.";
     } else {
-      const violations = semanticCheck ? semanticCheck(parsed) : [];
-      if (violations.length === 0) {
-        return { data: parsed, usage, attempts: attempt };
+      try {
+        candidate = JSON.parse(text);
+      } catch {
+        parseFailure = "The response was not valid JSON.";
       }
-      lastViolations = violations;
+    }
+
+    if (parseFailure === null) {
+      const result = schema.safeParse(candidate);
+      if (!result.success) {
+        lastViolations = result.error.issues
+          .slice(0, 6)
+          .map((i) => `${i.path.join(".") || "(root)"}: ${i.message}`);
+      } else {
+        const violations = semanticCheck ? semanticCheck(result.data) : [];
+        if (violations.length === 0) {
+          return { data: result.data, usage, attempts: attempt };
+        }
+        lastViolations = violations;
+      }
+    } else {
+      lastViolations = [parseFailure];
     }
 
     if (attempt === 2) break;
 
     // Repair turn: echo what came back, then state exactly what was wrong.
-    messages.push(
-      { role: "assistant", content: response.content },
+    contents.push(
+      { role: "model", parts: [{ text: text ?? "" }] },
       {
         role: "user",
-        content: [
-          "That response was not usable. Fix these problems and return the whole object again:",
-          ...lastViolations.map((v) => `- ${v}`),
-        ].join("\n"),
+        parts: [
+          {
+            text: [
+              "That response was not usable. Fix these problems and return the whole object again:",
+              ...lastViolations.map((v) => `- ${v}`),
+            ].join("\n"),
+          },
+        ],
       }
     );
   }
 
   throw new GenerationError(
-    `Model output failed validation after a repair attempt.`,
+    "Model output failed validation after a repair attempt.",
     stage,
     lastViolations
   );
