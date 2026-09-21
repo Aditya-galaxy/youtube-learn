@@ -15,6 +15,7 @@ import type {
   SkillLevel,
   UserLearningProfile,
 } from "../../types/course";
+import { useSession } from "next-auth/react";
 import { CURATED_COURSES } from "@/lib/coursesData";
 import { calculateCourseProgress } from "@/lib/courseService";
 
@@ -45,6 +46,11 @@ interface CourseContextType {
   loadCourse: (courseIdOrSlug: string) => Promise<Course | null>;
   /** True once the database catalogue fetch has settled (success or not). */
   catalogueLoaded: boolean;
+  /** Where progress is stored: the account when signed in, else this browser. */
+  progressStore: "account" | "browser";
+  loadNote: (lessonId: string) => Promise<string>;
+  /** Debounced when signed in; empty content deletes the note. */
+  saveNote: (lessonId: string, content: string) => void;
 }
 
 const CourseContext = createContext<CourseContextType | undefined>(undefined);
@@ -62,7 +68,30 @@ const DEFAULT_PROFILE: UserLearningProfile = {
   interests: ["Python", "React", "Calculus", "Machine Learning"],
 };
 
+const NOTE_KEY = (lessonId: string) => `ytlearn.note.${lessonId}`;
+const MIGRATED_KEY = (userId: string) => `ytlearn.migrated.v1.${userId}`;
+
+async function sendJson<T>(
+  url: string,
+  method: string,
+  body: unknown
+): Promise<T | null> {
+  try {
+    const res = await fetch(url, {
+      method,
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    return res.ok ? ((await res.json()) as T) : null;
+  } catch {
+    return null;
+  }
+}
+
 export const CourseProvider = ({ children }: { children: ReactNode }) => {
+  const { data: session, status: authStatus } = useSession();
+  const userId = session?.user?.id;
+  const signedIn = authStatus === "authenticated" && Boolean(userId);
   const [customCourses, setCustomCourses] = useState<Course[]>([]);
   const [remoteCourses, setRemoteCourses] = useState<Course[]>([]);
   const [catalogueLoaded, setCatalogueLoaded] = useState(false);
@@ -114,9 +143,11 @@ export const CourseProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
-  // Save enrollments
+  // Save enrollments — guests only. For a signed-in user the account is the
+  // source of truth, and writing here would also clobber browser progress
+  // before it has been imported.
   useEffect(() => {
-    if (hydrated) {
+    if (hydrated && authStatus === "unauthenticated") {
       try {
         localStorage.setItem(
           STORAGE_KEYS.enrollments,
@@ -124,7 +155,67 @@ export const CourseProvider = ({ children }: { children: ReactNode }) => {
         );
       } catch {}
     }
-  }, [enrollments, hydrated]);
+  }, [enrollments, hydrated, authStatus]);
+
+  // Signed in: import anything this browser recorded as a guest (once per
+  // account), then load the account's enrollments from the server.
+  useEffect(() => {
+    if (!hydrated || !signedIn || !userId) return;
+    let cancelled = false;
+
+    (async () => {
+      try {
+        if (!localStorage.getItem(MIGRATED_KEY(userId))) {
+          const local = JSON.parse(
+            localStorage.getItem(STORAGE_KEYS.enrollments) || "{}"
+          ) as Record<string, CourseEnrollment>;
+          const noteKeys = Object.keys(localStorage).filter((k) =>
+            k.startsWith("ytlearn.note.")
+          );
+          const payload = {
+            enrollments: Object.values(local).map((e) => ({
+              courseId: e.courseId,
+              completedLessonIds: e.completedLessonIds ?? [],
+              lastLessonId: e.lastLessonId,
+            })),
+            notes: noteKeys.map((k) => ({
+              lessonId: k.slice("ytlearn.note.".length),
+              content: localStorage.getItem(k) ?? "",
+            })),
+          };
+          const hasData =
+            payload.enrollments.length > 0 || payload.notes.length > 0;
+          const ok =
+            !hasData ||
+            (await sendJson("/api/me/import-local", "POST", payload));
+          if (ok) {
+            localStorage.setItem(
+              MIGRATED_KEY(userId),
+              new Date().toISOString()
+            );
+            if (hasData) {
+              localStorage.removeItem(STORAGE_KEYS.enrollments);
+              noteKeys.forEach((k) => localStorage.removeItem(k));
+            }
+          }
+        }
+      } catch {
+        // Import is best-effort; the account still loads below.
+      }
+
+      const res = await fetch("/api/me/enrollments").catch(() => null);
+      if (!cancelled && res?.ok) {
+        const { enrollments: server } = (await res.json()) as {
+          enrollments: Record<string, CourseEnrollment>;
+        };
+        setEnrollments(server);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [hydrated, signedIn, userId]);
 
   // Save custom courses
   useEffect(() => {
@@ -212,9 +303,22 @@ export const CourseProvider = ({ children }: { children: ReactNode }) => {
       };
 
       setEnrollments((prev) => ({ ...prev, [courseId]: newEnrollment }));
+      if (signedIn) {
+        sendJson<{ enrollment: CourseEnrollment }>(
+          "/api/me/enrollments",
+          "POST",
+          {
+            courseId,
+          }
+        ).then((r) => {
+          if (r?.enrollment) {
+            setEnrollments((prev) => ({ ...prev, [courseId]: r.enrollment }));
+          }
+        });
+      }
       return newEnrollment;
     },
-    [allCourses, enrollments]
+    [allCourses, enrollments, signedIn]
   );
 
   const markLessonComplete = useCallback(
@@ -258,8 +362,67 @@ export const CourseProvider = ({ children }: { children: ReactNode }) => {
           },
         };
       });
+
+      if (signedIn) {
+        // The server recomputes progress from its own rows; its answer wins.
+        sendJson<{ enrollment: CourseEnrollment }>("/api/me/progress", "PUT", {
+          lessonId,
+          completed: isCompleted,
+        }).then((r) => {
+          if (r?.enrollment) {
+            setEnrollments((prev) => ({ ...prev, [courseId]: r.enrollment }));
+          }
+        });
+      }
     },
-    [allCourses]
+    [allCourses, signedIn]
+  );
+
+  const noteTimers = useMemo(
+    () => new Map<string, ReturnType<typeof setTimeout>>(),
+    []
+  );
+
+  const loadNote = useCallback(
+    async (lessonId: string): Promise<string> => {
+      if (!signedIn) {
+        try {
+          return localStorage.getItem(NOTE_KEY(lessonId)) ?? "";
+        } catch {
+          return "";
+        }
+      }
+      const res = await fetch(
+        `/api/me/notes/${encodeURIComponent(lessonId)}`
+      ).catch(() => null);
+      if (!res?.ok) return "";
+      return ((await res.json()) as { content: string }).content;
+    },
+    [signedIn]
+  );
+
+  const saveNote = useCallback(
+    (lessonId: string, content: string) => {
+      if (!signedIn) {
+        try {
+          if (content) localStorage.setItem(NOTE_KEY(lessonId), content);
+          else localStorage.removeItem(NOTE_KEY(lessonId));
+        } catch {}
+        return;
+      }
+      // Debounced: one write after the learner pauses, not one per keystroke.
+      clearTimeout(noteTimers.get(lessonId));
+      noteTimers.set(
+        lessonId,
+        setTimeout(() => {
+          sendJson(`/api/me/notes/${encodeURIComponent(lessonId)}`, "PUT", {
+            content,
+          });
+          noteTimers.delete(lessonId);
+        }, 800)
+      );
+    },
+    [signedIn, noteTimers]
   );
 
   const updateLessonPosition = useCallback(
@@ -310,6 +473,9 @@ export const CourseProvider = ({ children }: { children: ReactNode }) => {
       getCourseById,
       loadCourse,
       catalogueLoaded,
+      progressStore: signedIn ? "account" : "browser",
+      loadNote,
+      saveNote,
     }),
     [
       allCourses,
@@ -324,6 +490,9 @@ export const CourseProvider = ({ children }: { children: ReactNode }) => {
       getCourseById,
       loadCourse,
       catalogueLoaded,
+      signedIn,
+      loadNote,
+      saveNote,
     ]
   );
 

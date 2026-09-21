@@ -7,6 +7,7 @@ import { chargeTokens, GENERATION_COST } from "@/lib/rateLimit";
 import { enqueueGeneration } from "@/lib/generation/jobs";
 import { kickWorker } from "@/lib/generation/kick";
 import { normalizeTopic } from "@/lib/generation/persist";
+import { canStartGeneration } from "@/lib/youtube/quota";
 
 const REUSE_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
 
@@ -75,6 +76,17 @@ export async function POST(request: Request) {
     if (existing) {
       return NextResponse.json({ existingCourse: existing }, { status: 200 });
     }
+  }
+
+  // Checked after reuse (which costs no quota) and before charging the user.
+  if (!(await canStartGeneration())) {
+    return NextResponse.json(
+      {
+        error:
+          "Course building is paused for today to keep video search working for everyone. It resumes after midnight Pacific time.",
+      },
+      { status: 503 }
+    );
   }
 
   const charge = await chargeTokens(userId, GENERATION_COST);

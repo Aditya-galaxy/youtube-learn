@@ -8,6 +8,12 @@
 import { google, type youtube_v3 } from "googleapis";
 import type { Course, Lesson, Module } from "../../../types/course";
 import { parseIsoDuration } from "./duration";
+import {
+  hasSearchQuota,
+  isQuotaError,
+  markQuotaExhausted,
+  recordYouTubeUnits,
+} from "./quota";
 
 export { extractPlaylistId, extractVideoId } from "./playlistUrl";
 
@@ -31,6 +37,14 @@ export async function importYouTubePlaylist({
   playlistId: string;
   apiKey: string;
 }): Promise<Partial<Course> | { error: string }> {
+  if (!(await hasSearchQuota())) {
+    return {
+      error:
+        "Today's YouTube budget is used up. Imports resume after midnight Pacific time.",
+    };
+  }
+  // Every call is 1 unit here: playlists.list, each page, each videos.list batch.
+  let units = 0;
   try {
     const youtube = google.youtube({
       version: "v3",
@@ -38,6 +52,7 @@ export async function importYouTubePlaylist({
     });
 
     // 1. Fetch playlist metadata
+    units += 1;
     const playlistRes = await youtube.playlists.list({
       part: ["snippet"],
       id: [playlistId],
@@ -66,6 +81,7 @@ export async function importYouTubePlaylist({
     for (let page = 0; page < MAX_PAGES; page += 1) {
       // Annotated explicitly: without it TS sees pageToken -> request ->
       // response -> pageToken as a circular inference (TS7022).
+      units += 1;
       const itemsPage: {
         data: youtube_v3.Schema$PlaylistItemListResponse;
       } = await youtube.playlistItems.list({
@@ -92,6 +108,7 @@ export async function importYouTubePlaylist({
     const durationMap = new Map<string, number>();
     for (let i = 0; i < videoIds.length; i += DETAILS_BATCH) {
       const batch = videoIds.slice(i, i + DETAILS_BATCH);
+      units += 1;
       const videoDetailsRes = await youtube.videos.list({
         part: ["contentDetails"],
         id: batch,
@@ -173,6 +190,7 @@ export async function importYouTubePlaylist({
       modules: [courseModule],
     };
   } catch (err: unknown) {
+    if (isQuotaError(err)) await markQuotaExhausted();
     console.error("Error importing playlist:", err);
     return {
       error:
@@ -180,5 +198,8 @@ export async function importYouTubePlaylist({
           ? err.message
           : "Failed to import YouTube playlist",
     };
+  } finally {
+    // Units are spent whether or not the import succeeds.
+    await recordYouTubeUnits(units);
   }
 }

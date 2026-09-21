@@ -188,6 +188,9 @@ model CourseEnrollment {
   progressPct    Int          @default(0)
   lastAccessedAt DateTime     @default(now())
   enrolledAt     DateTime     @default(now())
+  /// Where "Resume" should land. Not a foreign key on purpose: a lesson being
+  /// regenerated must not cascade-delete someone's enrollment.
+  lastLessonId   String?
 
   @@unique([userId, courseId])
   @@index([userId])
@@ -221,7 +224,9 @@ model LessonNote {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
-  @@index([userId, lessonId])
+  /// One note per user per lesson — the classroom has a single notes pad, and
+  /// a unique key lets saves be an upsert instead of find-then-write.
+  @@unique([userId, lessonId])
   @@map("lesson_notes")
 }
 
@@ -266,4 +271,17 @@ model CourseGenerationJob {
   @@index([userId, status])
   @@index([status, updatedAt])
   @@map("course_generation_jobs")
+}
+
+/// YouTube Data API units spent per quota day. The key is the date in Pacific
+/// time, because that is when YouTube resets the project's daily quota. One
+/// shared counter matters because every user draws on the same key: without
+/// it, a few course builds can exhaust the day and take the video feed down for
+/// everyone.
+model YoutubeQuotaUsage {
+  day       String   @id
+  unitsUsed Int      @default(0)
+  updatedAt DateTime @updatedAt
+
+  @@map("youtube_quota_usage")
 }

@@ -10,6 +10,12 @@ import { parseIsoDuration } from "@/lib/youtube/duration";
 // apart. The feed keeps its own fetch: it needs pageToken, the seen-video set
 // and the Video response shape, none of which the generator wants.
 import { hasSuspiciousTitle } from "@/lib/youtube/searchVideos";
+import {
+  hasSearchQuota,
+  isQuotaError,
+  markQuotaExhausted,
+  recordYouTubeUnits,
+} from "@/lib/youtube/quota";
 import type { Video } from "../../../types/video";
 
 interface VideoResponse {
@@ -194,8 +200,9 @@ async function fetchYouTubeVideos({
       nextPageToken: searchResponse.data.nextPageToken ?? undefined,
     };
   } catch (error) {
-    const err = error as { code?: number; message?: string };
-    if (err.code === 403 && err.message?.includes("quota")) {
+    if (isQuotaError(error)) {
+      // Stop every caller hammering a quota that is already gone.
+      await markQuotaExhausted();
       return {
         error: "YouTube API quota exceeded for today. Please try again later.",
       };
@@ -241,6 +248,15 @@ export default async function handler(
         .json({ error: "Server configuration error: YouTube API key not set" });
     }
 
+    // The project-wide daily budget, checked before the user's own hourly one
+    // so nobody is charged for a request that cannot be served.
+    if (!(await hasSearchQuota())) {
+      return res.status(503).json({
+        error:
+          "Today's YouTube search budget is used up. It resets at midnight Pacific time.",
+      });
+    }
+
     const tokenResult = await chargeTokens(userId);
     if ("error" in tokenResult) {
       return res
@@ -255,6 +271,8 @@ export default async function handler(
 
     const seenVideoIds = await getRecentlySeenVideoIds(userId);
 
+    // search.list (100) + videos.list (1). Recorded pessimistically even when
+    // the fetch fails partway: search.list is spent the moment it is called.
     const result = await fetchYouTubeVideos({
       youtube,
       searchQuery: q,
@@ -265,6 +283,7 @@ export default async function handler(
       region,
       order,
     });
+    await recordYouTubeUnits(101);
 
     if ("error" in result) {
       return res.status(502).json({ error: result.error });

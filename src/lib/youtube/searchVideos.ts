@@ -1,5 +1,12 @@
 import { google, type youtube_v3 } from "googleapis";
 import { parseIsoDuration } from "./duration";
+import {
+  hasSearchQuota,
+  isQuotaError,
+  markQuotaExhausted,
+  recordYouTubeUnits,
+  YouTubeQuotaExhaustedError,
+} from "./quota";
 
 /**
  * Shared YouTube search, used by both the browsable feed and the course
@@ -88,22 +95,35 @@ export async function searchVideos(
     filterSuspiciousTitles = true,
   } = options;
 
-  const searchResponse = await youtube.search.list({
-    part: ["snippet"],
-    maxResults,
-    type: ["video"],
-    ...(videoCategoryId ? { videoCategoryId } : {}),
-    order,
-    pageToken,
-    q: query,
-    relevanceLanguage: language,
-    regionCode: region,
-    safeSearch: "moderate",
-    // Everything is played in an iframe, so anything unembeddable is useless
-    // to us — it would render as "Video unavailable" inside a course.
-    videoEmbeddable: "true",
-    videoSyndicated: "true",
-  });
+  // Refuse before spending: past the day's ceiling the call can only fail, and
+  // failing here is cheaper and clearer than a raw 403 from Google.
+  if (!(await hasSearchQuota())) throw new YouTubeQuotaExhaustedError();
+
+  let searchResponse;
+  try {
+    searchResponse = await youtube.search.list({
+      part: ["snippet"],
+      maxResults,
+      type: ["video"],
+      ...(videoCategoryId ? { videoCategoryId } : {}),
+      order,
+      pageToken,
+      q: query,
+      relevanceLanguage: language,
+      regionCode: region,
+      safeSearch: "moderate",
+      // Everything is played in an iframe, so anything unembeddable is useless
+      // to us — it would render as "Video unavailable" inside a course.
+      videoEmbeddable: "true",
+      videoSyndicated: "true",
+    });
+  } catch (error) {
+    if (isQuotaError(error)) {
+      await markQuotaExhausted();
+      throw new YouTubeQuotaExhaustedError();
+    }
+    throw error;
+  }
 
   let unitsSpent = SEARCH_LIST_UNITS;
   const searchItems = searchResponse.data.items ?? [];
@@ -112,14 +132,26 @@ export async function searchVideos(
     .filter((id): id is string => Boolean(id));
 
   if (videoIds.length === 0) {
+    await recordYouTubeUnits(unitsSpent);
     return { candidates: [], nextPageToken: undefined, unitsSpent };
   }
 
-  const details = await youtube.videos.list({
-    part: ["contentDetails", "statistics", "snippet"],
-    id: videoIds,
-  });
+  let details;
+  try {
+    details = await youtube.videos.list({
+      part: ["contentDetails", "statistics", "snippet"],
+      id: videoIds,
+    });
+  } catch (error) {
+    await recordYouTubeUnits(unitsSpent);
+    if (isQuotaError(error)) {
+      await markQuotaExhausted();
+      throw new YouTubeQuotaExhaustedError();
+    }
+    throw error;
+  }
   unitsSpent += VIDEOS_LIST_UNITS;
+  await recordYouTubeUnits(unitsSpent);
 
   const candidates: VideoCandidate[] = [];
   for (const item of details.data.items ?? []) {

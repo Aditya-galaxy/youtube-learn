@@ -37,8 +37,14 @@ export const ClassroomPlayer: React.FC<ClassroomPlayerProps> = ({
 }) => {
   const router = useRouter();
   const { toast } = useToast();
-  const { getCourseEnrollment, enrollInCourse, markLessonComplete } =
-    useCourseContext();
+  const {
+    getCourseEnrollment,
+    enrollInCourse,
+    markLessonComplete,
+    loadNote,
+    saveNote: persistNote,
+    progressStore,
+  } = useCourseContext();
 
   // Enrolling is a state update, and calling it inline made it run during
   // render. Read what exists, and enrol as an effect after mount.
@@ -92,23 +98,22 @@ export const ClassroomPlayer: React.FC<ClassroomPlayerProps> = ({
   const progressPct =
     totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 0;
 
-  // Load saved note for this lesson
+  // Load this lesson's note — from the account when signed in, else from
+  // this browser. The guard drops a late response for a lesson already left.
   useEffect(() => {
-    try {
-      const savedNote = localStorage.getItem(
-        `ytlearn.note.${currentLesson.id}`
-      );
-      setNoteContent(savedNote || "");
-    } catch {
-      setNoteContent("");
-    }
-  }, [currentLesson.id]);
+    let cancelled = false;
+    setNoteContent("");
+    loadNote(currentLesson.id).then((content) => {
+      if (!cancelled) setNoteContent(content);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [currentLesson.id, loadNote]);
 
   const saveNote = (val: string) => {
     setNoteContent(val);
-    try {
-      localStorage.setItem(`ytlearn.note.${currentLesson.id}`, val);
-    } catch {}
+    persistNote(currentLesson.id, val);
   };
 
   const handleLessonSelect = (lesson: Lesson) => {
@@ -382,6 +387,11 @@ export const ClassroomPlayer: React.FC<ClassroomPlayerProps> = ({
                   placeholder="e.g. At 04:30 - Key formula for derivative rate..."
                   className="w-full rounded-lg border border-border bg-card p-3.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                 />
+                <p className="mt-2 text-xs tracking-tightish text-muted-foreground">
+                  {progressStore === "account"
+                    ? "Saved to your account."
+                    : "Saved in this browser only — sign in to keep notes and progress across devices."}
+                </p>
               </div>
             )}
           </div>

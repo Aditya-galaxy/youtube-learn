@@ -4,6 +4,7 @@ import { GenerationError } from "@/lib/ai/client";
 import type { SkillLevel, Syllabus } from "@/lib/ai/schemas";
 import { chargeTokens, GENERATION_COST } from "@/lib/rateLimit";
 import { createYouTubeClient } from "@/lib/youtube/searchVideos";
+import { YouTubeQuotaExhaustedError } from "@/lib/youtube/quota";
 import { generateSyllabus } from "./syllabus";
 import { buildModule } from "./module";
 import {
@@ -90,7 +91,11 @@ async function claim(jobId: string): Promise<CourseGenerationJob | null> {
   return prisma.courseGenerationJob.findUnique({ where: { id: jobId } });
 }
 
-async function fail(job: CourseGenerationJob, message: string) {
+async function fail(
+  job: CourseGenerationJob,
+  message: string,
+  options: { refund?: boolean } = {}
+) {
   await prisma.courseGenerationJob.update({
     where: { id: job.id },
     data: {
@@ -100,9 +105,11 @@ async function fail(job: CourseGenerationJob, message: string) {
       stageLabel: null,
     },
   });
-  // Refund when nothing expensive happened yet: a failed syllabus call spent
-  // a few cents, not the course's worth of YouTube quota.
-  if (job.step === 0) await chargeTokens(job.userId, -GENERATION_COST);
+  // Refund when nothing expensive happened yet (a failed syllabus call spent
+  // a few cents), or when the failure was not the user's doing.
+  if (job.step === 0 || options.refund) {
+    await chargeTokens(job.userId, -GENERATION_COST);
+  }
 }
 
 /**
@@ -241,6 +248,12 @@ export async function runNextStep(jobId: string): Promise<boolean> {
     });
     return false;
   } catch (error) {
+    // The project's daily YouTube quota ran out mid-build. Nothing retries
+    // until the day rolls over, so fail now, clearly, and refund the user.
+    if (error instanceof YouTubeQuotaExhaustedError) {
+      await fail(job, error.message, { refund: true });
+      return false;
+    }
     if (error instanceof GenerationError) {
       console.error(
         `[jobs] ${job.id} failed at step ${job.step} (${error.stage}):`,

@@ -14,7 +14,8 @@
     "generate:syllabus": "tsx --require ./scripts/load-env.cjs scripts/generate-syllabus.ts",
     "retrieve": "tsx --require ./scripts/load-env.cjs scripts/retrieve-candidates.ts",
     "generate:course": "tsx --require ./scripts/load-env.cjs scripts/generate-course.ts",
-    "db:migrate": "prisma migrate deploy"
+    "db:migrate": "prisma migrate deploy",
+    "db:seed": "tsx --require ./scripts/load-env.cjs prisma/seed.ts"
   },
   "dependencies": {
     "@google/genai": "^2.23.0",
