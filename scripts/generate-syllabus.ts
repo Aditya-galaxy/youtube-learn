@@ -3,9 +3,8 @@
  * just the model call and the ordering checks, so syllabus quality can be
  * inspected before any of the pipeline around it exists.
  *
- * Env comes from .env.local via tsx --env-file-if-exists, loaded before any
- * module executes — dotenv inside the script ran after ESM had already hoisted
- * the imports, so the client's startup check fired before the key existed.
+ * Env comes from .env.local via scripts/load-env.cjs, preloaded before any
+ * module executes.
  *
  *   npm run generate:syllabus -- "linear algebra" --level BEGINNER --hours 4
  *   npm run generate:syllabus -- "rust ownership" --json
