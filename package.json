@@ -12,7 +12,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "generate:syllabus": "tsx --require ./scripts/load-env.cjs scripts/generate-syllabus.ts",
-    "retrieve": "tsx --require ./scripts/load-env.cjs scripts/retrieve-candidates.ts"
+    "retrieve": "tsx --require ./scripts/load-env.cjs scripts/retrieve-candidates.ts",
+    "generate:course": "tsx --require ./scripts/load-env.cjs scripts/generate-course.ts"
   },
   "dependencies": {
     "@google/genai": "^2.23.0",

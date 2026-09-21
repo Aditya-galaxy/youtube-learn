@@ -3,6 +3,7 @@ import { z } from "zod/v4";
 import {
   GenerationError,
   getGeminiClient,
+  GENERATION_BACKEND,
   GENERATION_MODEL,
   MAX_OUTPUT_TOKENS,
 } from "./client";
@@ -34,16 +35,66 @@ const EMPTY_USAGE: UsageTotals = {
   thoughtTokens: 0,
 };
 
+const DECODING_CONSTRAINTS = [
+  "pattern",
+  "minLength",
+  "maxLength",
+  "minItems",
+  "maxItems",
+  "minimum",
+  "maximum",
+  "exclusiveMinimum",
+  "exclusiveMaximum",
+  "format",
+] as const;
+
 /**
- * zod v4 emits JSON Schema natively, so no SDK-specific helper is needed.
- * `io: "input"` keeps defaults out of the required list, and unrepresentable
- * constructs fail loudly here rather than confusing the model at call time.
+ * The schema the MODEL sees: shape, types and required fields only.
+ *
+ * Gemini compiles responseJsonSchema into constrained decoding, and the full
+ * schema — slug regexes, length bounds, nested array limits — exceeds what it
+ * will serve ("too many states"). So bounds are stripped here and folded into
+ * each field's description as a hint, while the full zod schema still
+ * validates every response server-side and feeds violations into the repair
+ * turn. The model gets guidance; zod keeps the guarantees.
  */
-function toJsonSchema(schema: z.ZodType): Record<string, unknown> {
-  return z.toJSONSchema(schema, {
+function toModelSchema(schema: z.ZodType): Record<string, unknown> {
+  const full = z.toJSONSchema(schema, {
     target: "draft-7",
     io: "input",
   }) as Record<string, unknown>;
+  return relax(full) as Record<string, unknown>;
+}
+
+function relax(node: unknown): unknown {
+  if (Array.isArray(node)) return node.map(relax);
+  if (!node || typeof node !== "object") return node;
+
+  const obj = node as Record<string, unknown>;
+  const hints: string[] = [];
+  const out: Record<string, unknown> = {};
+
+  for (const [key, value] of Object.entries(obj)) {
+    if (key === "$schema") continue;
+    if ((DECODING_CONSTRAINTS as readonly string[]).includes(key)) {
+      if (key === "pattern") hints.push("kebab-case");
+      else if (key === "minItems") hints.push(`at least ${value} items`);
+      else if (key === "maxItems") hints.push(`at most ${value} items`);
+      else if (key === "minLength") hints.push(`at least ${value} characters`);
+      else if (key === "maxLength") hints.push(`at most ${value} characters`);
+      else if (key === "minimum") hints.push(`minimum ${value}`);
+      else if (key === "maximum") hints.push(`maximum ${value}`);
+      continue;
+    }
+    out[key] = relax(value);
+  }
+
+  if (hints.length > 0) {
+    const base =
+      typeof out.description === "string" ? `${out.description} ` : "";
+    out.description = `${base}(${hints.join(", ")})`;
+  }
+  return out;
 }
 
 function readUsage(
@@ -57,6 +108,17 @@ function readUsage(
       total.cacheReadInputTokens + (usage?.cachedContentTokenCount ?? 0),
     thoughtTokens: total.thoughtTokens + (usage?.thoughtsTokenCount ?? 0),
   };
+}
+
+/**
+ * Gemini 3 models take a thinkingLevel; Gemini 2.x models reject it and take a
+ * token budget instead (-1 = let the model decide). Sending the wrong one is a
+ * hard 400, not a no-op.
+ */
+function thinkingConfigFor(model: string, level: ThinkingLevel) {
+  return /^gemini-2\./.test(model)
+    ? { thinkingBudget: -1 }
+    : { thinkingLevel: level };
 }
 
 /**
@@ -85,9 +147,11 @@ function toGenerationError(error: unknown, stage: string): GenerationError {
       stage
     );
   }
-  if (code === 403) {
+  if (code === 401 || code === 403) {
     return new GenerationError(
-      "Gemini rejected the API key. Check it is unrestricted or allows generativelanguage.googleapis.com.",
+      GENERATION_BACKEND === "vertex"
+        ? "Vertex AI rejected the credentials. Run `gcloud auth application-default login` locally, or give the production service account roles/aiplatform.user."
+        : "Gemini rejected the API key. Check it allows generativelanguage.googleapis.com.",
       stage
     );
   }
@@ -124,7 +188,7 @@ export async function parseWithRepair<T>(options: {
   } = options;
 
   const ai = getGeminiClient();
-  const responseJsonSchema = toJsonSchema(schema);
+  const responseJsonSchema = toModelSchema(schema);
   const contents: Content[] = [
     { role: "user", parts: [{ text: userMessage }] },
   ];
@@ -143,7 +207,7 @@ export async function parseWithRepair<T>(options: {
           systemInstruction: system,
           responseMimeType: "application/json",
           responseJsonSchema,
-          thinkingConfig: { thinkingLevel },
+          thinkingConfig: thinkingConfigFor(GENERATION_MODEL, thinkingLevel),
           maxOutputTokens,
         },
       });

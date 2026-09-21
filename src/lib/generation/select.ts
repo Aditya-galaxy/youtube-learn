@@ -10,6 +10,13 @@ import {
   type ModulePool,
   type PoolCandidate,
 } from "./retrieve";
+import { parseChaptersFromDescription } from "@/lib/youtube/chapterParser";
+
+/**
+ * Shortest a sliced lesson may be. The first live course produced a 60-second
+ * "lesson" (28:57-29:57) because nothing bounded slices from below.
+ */
+export const MIN_SLICE_SEC = 180;
 
 export interface ModuleSelection {
   moduleKey: string;
@@ -36,8 +43,20 @@ export async function selectVideosForModule(input: {
   module: SyllabusModule;
   pool: ModulePool;
   alreadyUsedVideoIds?: string[];
+  /**
+   * Videos already backing a FULL_VIDEO lesson in this module (from an earlier
+   * pass). Enforced, not a hint: the in-call duplicate check cannot see picks
+   * made by a previous call, and the first live organic-chemistry course gave
+   * two different lessons the same 11-minute video that way.
+   */
+  takenFullVideoIds?: string[];
 }): Promise<ModuleSelection> {
-  const { module: mod, pool, alreadyUsedVideoIds = [] } = input;
+  const {
+    module: mod,
+    pool,
+    alreadyUsedVideoIds = [],
+    takenFullVideoIds = [],
+  } = input;
 
   if (pool.candidates.length === 0) {
     return {
@@ -62,7 +81,8 @@ export async function selectVideosForModule(input: {
       poolText: formatPoolForPrompt(pool),
       alreadyUsedVideoIds,
     }),
-    semanticCheck: (value) => checkSelection(value, mod, pool),
+    semanticCheck: (value) =>
+      checkSelection(value, mod, pool, takenFullVideoIds),
   });
 
   const byIndex = new Map(pool.candidates.map((c) => [c.index, c]));
@@ -88,7 +108,8 @@ export async function selectVideosForModule(input: {
 export function checkSelection(
   selection: Selection,
   mod: SyllabusModule,
-  pool: ModulePool
+  pool: ModulePool,
+  takenFullVideoIds: string[] = []
 ): string[] {
   const violations: string[] = [];
   const maxIndex = pool.candidates.length - 1;
@@ -156,6 +177,18 @@ export function checkSelection(
         );
         continue;
       }
+      const chapters = parseChaptersFromDescription(
+        candidate.description,
+        candidate.durationSec
+      );
+      const sliceStart = chapters[fromIndex]?.startSeconds ?? 0;
+      const sliceEnd = chapters[toIndex]?.endSeconds ?? candidate.durationSec;
+      if (sliceEnd - sliceStart < MIN_SLICE_SEC) {
+        violations.push(
+          `chapterRange ${fromIndex}-${toIndex} of candidate ${s.candidateIndex} for "${s.lessonIntentKey}" is only ${Math.round(sliceEnd - sliceStart)} seconds — too short to be a lesson. Widen the range to include neighbouring chapters, use another candidate, or leave it unmatched.`
+        );
+        continue;
+      }
       const existing = slicesByVideo.get(candidate.videoId) ?? [];
       const overlap = existing.find(
         (r) => fromIndex <= r.to && toIndex >= r.from
@@ -173,6 +206,12 @@ export function checkSelection(
       if (!candidate.usableAsFullVideo) {
         violations.push(
           `Candidate ${s.candidateIndex} is ${Math.round(candidate.durationSec / 60)} minutes long and has no chapters, so it cannot be one lesson. Choose a shorter candidate or leave "${s.lessonIntentKey}" unmatched.`
+        );
+        continue;
+      }
+      if (takenFullVideoIds.includes(candidate.videoId)) {
+        violations.push(
+          `Candidate ${s.candidateIndex} already teaches another lesson in this module. Choose a different candidate for "${s.lessonIntentKey}" or leave it unmatched.`
         );
         continue;
       }

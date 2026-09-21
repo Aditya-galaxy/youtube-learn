@@ -2,6 +2,7 @@ import type { youtube_v3 } from "googleapis";
 import type { SyllabusModule } from "@/lib/ai/schemas";
 import { searchVideos, type VideoCandidate } from "@/lib/youtube/searchVideos";
 import { parseChaptersFromDescription } from "@/lib/youtube/chapterParser";
+import { formatSecondsToTime } from "@/lib/youtube/chapterParser";
 
 /**
  * Stage B: build a candidate pool per module.
@@ -26,6 +27,14 @@ export const MAX_LESSON_DURATION_SEC = 2700;
 /** Higher than the feed's floor: a course lesson should be well-established. */
 export const MIN_LESSON_VIEW_COUNT = 1000;
 export const CANDIDATES_PER_QUERY = 12;
+/**
+ * Stop searching a module once the pool is this deep. Running every query
+ * unconditionally cost ~1,300-1,500 units for a 5-module course (3 queries x
+ * 101 each) against the plan's ~500 budget. Coverage lost to stopping early is
+ * recovered by the gap-filling pass in module.ts, which runs the remaining
+ * queries only for modules that actually came back with unmatched lessons.
+ */
+export const GOOD_ENOUGH_POOL = 10;
 
 export interface PoolCandidate extends VideoCandidate {
   /** Index within this module's pool — what the model selects by. */
@@ -41,6 +50,8 @@ export interface ModulePool {
   moduleKey: string;
   candidates: PoolCandidate[];
   unitsSpent: number;
+  /** Queries actually run; early-stop may leave some for a gap-filling pass. */
+  queriesUsed: string[];
 }
 
 export async function retrieveCandidatesForModule(
@@ -50,8 +61,10 @@ export async function retrieveCandidatesForModule(
 ): Promise<ModulePool> {
   const byVideoId = new Map<string, VideoCandidate>();
   let unitsSpent = 0;
+  const queriesUsed: string[] = [];
 
   for (const query of mod.searchQueries) {
+    queriesUsed.push(query);
     const result = await searchVideos(youtube, {
       query,
       maxResults: CANDIDATES_PER_QUERY,
@@ -72,13 +85,15 @@ export async function retrieveCandidatesForModule(
         byVideoId.set(candidate.videoId, candidate);
       }
     }
+
+    if (byVideoId.size >= GOOD_ENOUGH_POOL) break;
   }
 
   const candidates = [...byVideoId.values()].map((candidate, index) =>
     toPoolCandidate(candidate, index)
   );
 
-  return { moduleKey: mod.key, candidates, unitsSpent };
+  return { moduleKey: mod.key, candidates, unitsSpent, queriesUsed };
 }
 
 export function toPoolCandidate(
@@ -122,11 +137,24 @@ export function formatPoolForPrompt(pool: ModulePool): string {
         : c.usableAsFullVideo
           ? ""
           : ", TOO LONG for one lesson and has no chapters — unusable";
-      return [
+      const lines = [
         `[${c.index}] ${c.title}`,
         `    ${c.channelName} · ${mins} min · ${views} views${chapters}`,
         `    ${c.description.slice(0, 220).replace(/\s+/g, " ").trim()}`,
-      ].join("\n");
+      ];
+      // Without the chapter list the model picks chapterRange blind — it only
+      // knew HOW MANY chapters existed, and produced a one-minute "lesson".
+      if (c.sliceable) {
+        const chs = parseChaptersFromDescription(c.description, c.durationSec);
+        lines.push("    chapters:");
+        for (const [i, ch] of chs.entries()) {
+          const dur = Math.round((ch.durationSec ?? 0) / 60);
+          lines.push(
+            `      ${i}. ${formatSecondsToTime(ch.startSeconds)} ${ch.title} (${dur} min)`
+          );
+        }
+      }
+      return lines.join("\n");
     })
     .join("\n");
 }
