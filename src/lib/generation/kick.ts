@@ -10,10 +10,7 @@
  */
 export async function kickWorker(jobId: string): Promise<void> {
   const secret = process.env.JOB_RUNNER_SECRET;
-  const origin =
-    process.env.APP_URL ??
-    process.env.NEXTAUTH_URL ??
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null);
+  const origin = process.env.APP_URL ?? process.env.NEXTAUTH_URL ?? null;
 
   if (!secret || !origin) {
     console.error(

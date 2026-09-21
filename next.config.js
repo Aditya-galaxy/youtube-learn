@@ -1,6 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  // Self-contained server bundle for the Cloud Run container image.
+  output: "standalone",
   poweredByHeader: false,
 
   images: {

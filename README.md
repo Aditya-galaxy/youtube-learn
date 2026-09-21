@@ -4,8 +4,6 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Next.js 15](https://img.shields.io/badge/Next.js-15-black?logo=next.js)](https://nextjs.org)
 
-**[Live demo →](https://youtube-learn.vercel.app)**
-
 A video-discovery app for educational content on YouTube. Sign in with Google, browse an
 Education-category feed from the YouTube Data API, search it, and keep a library, a saved
 list and a watch history.
@@ -130,6 +128,26 @@ cloud-sql-proxy --port 5434 --quota-project kronagent kronagent:us-east4:youtube
 
 `--quota-project` matters when your Application Default Credentials default to a
 different project — the proxy's Admin API calls fail there otherwise.
+
+## Deploying
+
+The app runs on **Cloud Run** in the `kronagent` GCP project, next to its Cloud SQL
+instance. Cloud Run reaches Cloud SQL over the built-in connector and Vertex AI through its
+service account, so there are no database passwords in URLs to expose and no model API keys.
+
+One-time setup:
+
+1. Grant the runtime service account `youtube-learn-vertex@kronagent.iam.gserviceaccount.com`
+   `roles/cloudsql.client`, `roles/aiplatform.user` and `roles/secretmanager.secretAccessor`.
+2. Create these Secret Manager secrets: `ytlearn-database-url`, `ytlearn-nextauth-secret`,
+   `ytlearn-google-client-id`, `ytlearn-google-client-secret`, `ytlearn-youtube-api-key`,
+   `ytlearn-job-runner-secret`. The database URL uses the connector socket:
+   `postgresql://ytlearn_app:<password>@localhost/ytlearn?host=/cloudsql/kronagent:us-east4:youtube-learn-pg`
+3. Apply migrations to prod through the Auth Proxy: `npm run db:migrate && npm run db:seed`.
+
+Deploy with `./scripts/deploy-cloudrun.sh`. It builds the `Dockerfile` with Cloud Build.
+Then add `<service URL>/api/auth/callback/google` as an authorised redirect URI on the
+OAuth client.
 
 ## API
 
