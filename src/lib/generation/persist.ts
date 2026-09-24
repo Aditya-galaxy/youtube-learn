@@ -68,6 +68,7 @@ export async function persistGeneratedCourse(input: {
         thumbnail: `https://i.ytimg.com/vi/${firstVideo}/mqdefault.jpg`,
         category: syllabus.category,
         difficulty: syllabus.difficulty,
+        tier: syllabus.difficulty,
         estimatedHours: Math.max(0.5, Math.round((totalSec / 3600) * 10) / 10),
         instructor: "Curated from YouTube",
         isPublic: true,

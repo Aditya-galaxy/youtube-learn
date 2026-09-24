@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { BookOpen, Clock, PlayCircle } from "lucide-react";
+import { BookOpen, Clock, GraduationCap, Landmark, PlayCircle, Sparkles } from "lucide-react";
 import type { Course } from "../../../types/course";
 import { useCourseContext } from "@/Helper/CourseContext";
 import { getCourseTotalLessons } from "@/lib/courseService";
@@ -19,14 +19,28 @@ export const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
   const isEnrolled = Boolean(enrollment);
   const progressPct = enrollment?.progressPct ?? 0;
 
-  const difficultyColors = {
+  const tier = (course.tier || course.difficulty || "BEGINNER").toUpperCase();
+
+  const tierColors: Record<string, string> = {
+    BASIC:
+      "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
     BEGINNER:
       "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
     INTERMEDIATE:
-      "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
+      "bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/20",
     ADVANCED:
-      "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20",
+      "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20",
+    EXPERT:
+      "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 shadow-sm",
   };
+
+  const isAcademic = Boolean(
+    course.institution &&
+      (course.institution.includes("MIT") ||
+        course.institution.includes("Harvard") ||
+        course.institution.includes("Stanford") ||
+        course.institution.includes("OpenCourseWare"))
+  );
 
   return (
     <div className="group relative flex flex-col overflow-hidden rounded-xl border border-border bg-card transition-all duration-200 hover:-translate-y-1 hover:border-primary/40 hover:shadow-lg">
@@ -42,6 +56,13 @@ export const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
           className="object-cover transition-transform duration-500 group-hover:scale-105"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60 transition-opacity group-hover:opacity-80" />
+
+        {isAcademic && (
+          <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 rounded-full bg-black/70 px-2.5 py-1 text-[11px] font-medium text-white backdrop-blur-md border border-white/10 shadow">
+            <Landmark className="h-3 w-3 text-amber-400" />
+            <span>{course.institution}</span>
+          </div>
+        )}
 
         <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-xs font-medium text-white">
           <span className="flex items-center gap-1 drop-shadow">
@@ -60,11 +81,18 @@ export const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
           <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
             {course.category}
           </span>
-          <span
-            className={`rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${difficultyColors[course.difficulty] || difficultyColors.BEGINNER}`}
-          >
-            {course.difficulty}
-          </span>
+          <div className="flex items-center gap-1.5">
+            {tier === "EXPERT" && (
+              <Sparkles className="h-3.5 w-3.5 text-amber-500 animate-pulse" />
+            )}
+            <span
+              className={`rounded-full border px-2.5 py-0.5 text-[11px] font-semibold tracking-wide ${
+                tierColors[tier] || tierColors.BEGINNER
+              }`}
+            >
+              {tier}
+            </span>
+          </div>
         </div>
 
         <h3 className="line-clamp-2 font-display text-lg font-bold leading-snug tracking-tight text-foreground group-hover:text-primary">
@@ -78,10 +106,10 @@ export const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
         </p>
 
         {course.instructor && (
-          <p className="mt-3 text-xs text-muted-foreground">
-            By{" "}
-            <span className="font-medium text-foreground">
-              {course.instructor}
+          <p className="mt-3 flex items-center gap-1 text-xs text-muted-foreground">
+            <GraduationCap className="h-3.5 w-3.5 shrink-0" />
+            <span>
+              By <span className="font-medium text-foreground">{course.instructor}</span>
             </span>
           </p>
         )}

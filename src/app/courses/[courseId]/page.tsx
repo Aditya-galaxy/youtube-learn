@@ -9,7 +9,9 @@ import {
   BookOpen,
   CheckCircle2,
   Clock,
+  ExternalLink,
   GraduationCap,
+  Landmark,
   PlayCircle,
   Share2,
   Sparkles,
@@ -100,9 +102,31 @@ export default function CourseDetailPage({ params }: PageProps) {
               <span className="rounded-full bg-secondary px-3 py-1 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
                 {course.category}
               </span>
-              <span className="rounded-full bg-primary/10 px-3 py-1 text-[11px] font-semibold text-primary">
-                {course.difficulty}
-              </span>
+              {course.tier ? (
+                <span
+                  className={`rounded-full px-3 py-1 text-[11px] font-semibold ${
+                    course.tier === "BASIC"
+                      ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                      : course.tier === "INTERMEDIATE"
+                      ? "bg-sky-500/10 text-sky-600 dark:text-sky-400"
+                      : course.tier === "ADVANCED"
+                      ? "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400"
+                      : "bg-amber-500/10 text-amber-600 dark:text-amber-400"
+                  }`}
+                >
+                  {course.tier} Tier
+                </span>
+              ) : (
+                <span className="rounded-full bg-primary/10 px-3 py-1 text-[11px] font-semibold text-primary">
+                  {course.difficulty}
+                </span>
+              )}
+              {course.institution && (
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-[11px] font-semibold text-primary">
+                  <Landmark className="h-3 w-3" />
+                  {course.institution}
+                </span>
+              )}
               {course.isAiGenerated && (
                 <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2.5 py-0.5 text-[11px] font-semibold text-amber-600 dark:text-amber-400">
                   <Sparkles className="h-3 w-3" />
@@ -127,6 +151,17 @@ export default function CourseDetailPage({ params }: PageProps) {
                     {course.instructor}
                   </span>
                 </div>
+              )}
+              {course.sourceUrl && (
+                <a
+                  href={course.sourceUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-primary hover:underline font-medium"
+                >
+                  Official Syllabus
+                  <ExternalLink className="h-3 w-3" />
+                </a>
               )}
               <div className="flex items-center gap-1">
                 <BookOpen className="h-3.5 w-3.5" />

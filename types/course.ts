@@ -1,7 +1,17 @@
-export type SkillLevel = "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
+export type SkillLevel =
+  | "BASIC"
+  | "BEGINNER"
+  | "INTERMEDIATE"
+  | "ADVANCED"
+  | "EXPERT";
+
+export type CourseTier = "BASIC" | "INTERMEDIATE" | "ADVANCED" | "EXPERT";
 
 export type CourseStatus =
-  "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED" | "ARCHIVED";
+  | "NOT_STARTED"
+  | "IN_PROGRESS"
+  | "COMPLETED"
+  | "ARCHIVED";
 
 export interface Lesson {
   id: string;
@@ -36,8 +46,12 @@ export interface Course {
   thumbnail: string;
   category: string;
   difficulty: SkillLevel;
+  tier?: CourseTier;
   estimatedHours: number;
   instructor?: string;
+  institution?: string;
+  sourceUrl?: string;
+  prerequisites?: string[];
   isPublic: boolean;
   isAiGenerated?: boolean;
   modules: Module[];

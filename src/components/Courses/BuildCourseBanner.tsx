@@ -7,7 +7,7 @@ import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { startCourseGeneration } from "@/lib/generation/start";
 
-type Level = "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
+type Level = "BEGINNER" | "INTERMEDIATE" | "ADVANCED" | "EXPERT";
 
 /**
  * Offers a structured course for whatever the user searched. Layered on top of
@@ -51,8 +51,7 @@ export function BuildCourseBanner({ topic }: { topic: string }) {
             Learn <em>{topic}</em> in order.
           </h2>
           <p className="mt-2 text-sm tracking-tightish text-muted-foreground">
-            A sequenced course built from real videos, prerequisites first.
-            Takes a few minutes.
+            A sequenced course built from real videos, from Basic fundamentals to Expert depth.
           </p>
           {error && (
             <p role="alert" className="mt-2 text-sm text-destructive">
@@ -68,9 +67,10 @@ export function BuildCourseBanner({ topic }: { topic: string }) {
             disabled={busy}
             className="h-10 rounded-full border border-border bg-card px-4 text-sm tracking-tightish"
           >
-            <option value="BEGINNER">Beginner</option>
+            <option value="BEGINNER">Basic / Beginner</option>
             <option value="INTERMEDIATE">Intermediate</option>
             <option value="ADVANCED">Advanced</option>
+            <option value="EXPERT">Expert</option>
           </select>
           <Button onClick={build} disabled={busy}>
             {busy ? <Loader2 className="animate-spin" /> : null}

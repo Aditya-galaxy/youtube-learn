@@ -22,8 +22,9 @@ const BodySchema = z.object({
     .refine((t) => !/https?:\/\/|www\./i.test(t), "Enter a topic, not a URL")
     .refine((t) => !/\p{Cc}/u.test(t), "Invalid characters"),
   difficulty: z
-    .enum(["BEGINNER", "INTERMEDIATE", "ADVANCED"])
+    .enum(["BASIC", "BEGINNER", "INTERMEDIATE", "ADVANCED", "EXPERT"])
     .default("BEGINNER"),
+  prioritizeAcademic: z.boolean().optional(),
   weeklyHours: z.number().int().min(1).max(40).optional(),
   /** Build a new course even if a recent one exists for this topic. */
   force: z.boolean().optional(),

@@ -1,6 +1,7 @@
 import type { Course } from "../../types/course";
+import { OPEN_COURSEWARE_COURSES } from "./openCourseWareData";
 
-export const CURATED_COURSES: Course[] = [
+const CORE_COURSES: Course[] = [
   {
     id: "course-python-masterclass",
     slug: "python-masterclass",
@@ -10,6 +11,8 @@ export const CURATED_COURSES: Course[] = [
     thumbnail: "https://i.ytimg.com/vi/rfscVS0vtbw/mqdefault.jpg",
     category: "Programming",
     difficulty: "BEGINNER",
+    tier: "BASIC",
+    institution: "freeCodeCamp",
     estimatedHours: 4.5,
     instructor: "FreeCodeCamp & Corey Schafer",
     isPublic: true,
@@ -186,6 +189,9 @@ export const CURATED_COURSES: Course[] = [
     thumbnail: "https://i.ytimg.com/vi/WUvTyaaNkzM/mqdefault.jpg",
     category: "Mathematics",
     difficulty: "INTERMEDIATE",
+    tier: "INTERMEDIATE",
+    institution: "3Blue1Brown",
+    sourceUrl: "https://www.3blue1brown.com/topics/calculus",
     estimatedHours: 3.2,
     instructor: "Grant Sanderson (3Blue1Brown)",
     isPublic: true,
@@ -327,6 +333,9 @@ export const CURATED_COURSES: Course[] = [
     thumbnail: "https://i.ytimg.com/vi/rGPpQdbDbwo/mqdefault.jpg",
     category: "Web Development",
     difficulty: "INTERMEDIATE",
+    tier: "INTERMEDIATE",
+    institution: "Vercel & Community",
+    sourceUrl: "https://nextjs.org/learn",
     estimatedHours: 3.8,
     instructor: "Jack Herrington & Lee Robinson",
     isPublic: true,
@@ -420,7 +429,10 @@ export const CURATED_COURSES: Course[] = [
       "A rigorous, visual introduction to machine learning principles, gradient descent, loss landscapes, and neural network architectures.",
     thumbnail: "https://i.ytimg.com/vi/Rt6beTKDtqY/mqdefault.jpg",
     category: "Artificial Intelligence",
-    difficulty: "INTERMEDIATE",
+    difficulty: "ADVANCED",
+    tier: "ADVANCED",
+    institution: "DeepLearning.AI & 3Blue1Brown",
+    sourceUrl: "https://www.deeplearning.ai/",
     estimatedHours: 3.5,
     instructor: "Grant Sanderson & Zach Star",
     isPublic: true,
@@ -508,4 +520,9 @@ export const CURATED_COURSES: Course[] = [
       },
     ],
   },
+];
+
+export const CURATED_COURSES: Course[] = [
+  ...OPEN_COURSEWARE_COURSES,
+  ...CORE_COURSES,
 ];

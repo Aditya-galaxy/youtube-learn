@@ -9,7 +9,8 @@ export type StartResult =
 /** Client entry point shared by the search banner and the courses dialog. */
 export async function startCourseGeneration(input: {
   topic: string;
-  difficulty?: "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
+  difficulty?: "BASIC" | "BEGINNER" | "INTERMEDIATE" | "ADVANCED" | "EXPERT";
+  prioritizeAcademic?: boolean;
   force?: boolean;
 }): Promise<StartResult> {
   let res: Response;

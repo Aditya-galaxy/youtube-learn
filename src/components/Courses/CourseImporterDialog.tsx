@@ -8,7 +8,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "../ui/dialog";
-import { Sparkles, Video, ListVideo, Loader2 } from "lucide-react";
+import { Sparkles, Video, ListVideo, Loader2, GraduationCap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useCourseContext } from "@/Helper/CourseContext";
 import { extractPlaylistId, extractVideoId } from "@/lib/youtube/playlistUrl";
@@ -52,7 +52,8 @@ export const CourseImporterDialog: React.FC<CourseImporterDialogProps> = ({
 
   // Tab 3: AI Learning Path
   const [aiTopic, setAiTopic] = useState("");
-  const [aiLevel, setAiLevel] = useState<SkillLevel>("BEGINNER");
+  const [aiLevel, setAiLevel] = useState<SkillLevel>("BASIC");
+  const [prioritizeAcademic, setPrioritizeAcademic] = useState(false);
 
   const handlePlaylistImport = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -215,6 +216,7 @@ export const CourseImporterDialog: React.FC<CourseImporterDialogProps> = ({
     const result = await startCourseGeneration({
       topic: aiTopic.trim(),
       difficulty: aiLevel,
+      prioritizeAcademic,
     });
     setLoading(false);
 
@@ -313,26 +315,59 @@ export const CourseImporterDialog: React.FC<CourseImporterDialogProps> = ({
 
               <div>
                 <label className="text-xs font-medium text-foreground">
-                  Your Current Experience Level
+                  Curriculum Mastery Tier
                 </label>
-                <div className="mt-1.5 grid grid-cols-3 gap-2">
+                <div className="mt-1.5 grid grid-cols-2 gap-2 sm:grid-cols-4">
                   {(
-                    ["BEGINNER", "INTERMEDIATE", "ADVANCED"] as SkillLevel[]
-                  ).map((level) => (
+                    [
+                      { key: "BASIC", label: "Basic", desc: "Foundations & 101" },
+                      { key: "INTERMEDIATE", label: "Intermediate", desc: "Practical & Applied" },
+                      { key: "ADVANCED", label: "Advanced", desc: "Scale & Architecture" },
+                      { key: "EXPERT", label: "Expert", desc: "Deep Internals & Theory" },
+                    ] as const
+                  ).map((tier) => (
                     <button
-                      key={level}
+                      key={tier.key}
                       type="button"
-                      onClick={() => setAiLevel(level)}
-                      className={`rounded-lg border px-3 py-2 text-xs font-medium transition-colors ${
-                        aiLevel === level
+                      onClick={() => setAiLevel(tier.key as SkillLevel)}
+                      className={`flex flex-col items-start rounded-lg border p-2.5 text-left transition-colors ${
+                        aiLevel === tier.key
                           ? "border-primary bg-primary/10 text-primary"
                           : "border-border bg-background text-muted-foreground hover:bg-secondary"
                       }`}
                     >
-                      {level}
+                      <span className="text-xs font-semibold text-foreground">
+                        {tier.label}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground line-clamp-1">
+                        {tier.desc}
+                      </span>
                     </button>
                   ))}
                 </div>
+              </div>
+
+              <div className="flex items-center justify-between rounded-lg border border-border bg-secondary/30 p-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-md bg-amber-500/10 text-amber-500">
+                    <GraduationCap className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium text-foreground">
+                      Prioritize OpenCourseWare & University Lectures
+                    </p>
+                    <p className="text-[11px] text-muted-foreground">
+                      Target MIT OCW, Harvard CS50, Stanford, & freeCodeCamp
+                    </p>
+                  </div>
+                </div>
+                <input
+                  type="checkbox"
+                  id="prioritizeAcademic"
+                  checked={prioritizeAcademic}
+                  onChange={(e) => setPrioritizeAcademic(e.target.checked)}
+                  className="h-4 w-4 rounded border-border text-primary focus:ring-primary cursor-pointer"
+                />
               </div>
 
               <button

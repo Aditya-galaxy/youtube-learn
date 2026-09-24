@@ -12,9 +12,11 @@ import { z } from "zod/v4";
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 export const SkillLevelSchema = z.enum([
+  "BASIC",
   "BEGINNER",
   "INTERMEDIATE",
   "ADVANCED",
+  "EXPERT",
 ]);
 export type SkillLevel = z.infer<typeof SkillLevelSchema>;
 
