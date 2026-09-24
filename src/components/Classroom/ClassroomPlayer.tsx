@@ -19,9 +19,11 @@ import {
   RotateCcw,
   Sparkles,
   X,
+  Bot,
 } from "lucide-react";
 import type { Course, Lesson } from "../../../types/course";
 import { useCourseContext } from "@/Helper/CourseContext";
+import { useTutorContext } from "@/Helper/TutorContext";
 import { formatSecondsToTime } from "@/lib/youtube/chapterParser";
 import {
   getNextLessonInSequence,
@@ -100,6 +102,30 @@ export const ClassroomPlayer: React.FC<ClassroomPlayerProps> = ({
     m.lessons.some((l) => l.id === currentLesson.id)
   );
   const pedagogy = resolveLessonPedagogy(currentLesson, course, currentModule);
+
+  const {
+    setLearningContext,
+    setIsOpen: setTutorOpen,
+    askTutorWithPrompt,
+  } = useTutorContext();
+
+  useEffect(() => {
+    setLearningContext({
+      courseTitle: course.title,
+      lessonTitle: currentLesson.title,
+      moduleTitle: currentModule?.title,
+      tier: course.tier || course.difficulty,
+      summary: currentLesson.summary,
+      videoId: currentLesson.videoId,
+    });
+  }, [
+    course.title,
+    course.tier,
+    course.difficulty,
+    currentLesson,
+    currentModule,
+    setLearningContext,
+  ]);
 
   // Auto-advance countdown
   const [countdown, setCountdown] = useState<number | null>(null);
@@ -320,6 +346,19 @@ export const ClassroomPlayer: React.FC<ClassroomPlayerProps> = ({
             </div>
 
             <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  setTutorOpen(true);
+                  askTutorWithPrompt(
+                    `I'm currently at "${currentLesson.title}". Can you give me a quick roadmap of what to watch out for in this video and how to approach the challenge?`
+                  );
+                }}
+                className="flex items-center gap-1.5 rounded-lg border border-primary/30 bg-primary/10 px-3.5 py-2 text-xs font-semibold text-primary transition-all hover:bg-primary/20"
+              >
+                <Bot className="h-4 w-4" />
+                <span>Ask AI Tutor</span>
+              </button>
+
               <button
                 onClick={toggleCompleteCurrent}
                 className={`flex items-center gap-2 rounded-lg border px-4 py-2 text-xs font-semibold transition-all ${

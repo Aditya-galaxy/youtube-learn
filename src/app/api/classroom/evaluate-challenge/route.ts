@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
-import { GoogleGenAI } from "@google/genai";
-import { GENERATION_MODEL } from "@/lib/ai/client";
+import { getGeminiClient, GENERATION_MODEL } from "@/lib/ai/client";
+import type { GoogleGenAI } from "@google/genai";
 
 export async function POST(request: Request) {
   try {
@@ -17,8 +17,10 @@ export async function POST(request: Request) {
       );
     }
 
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
+    let ai: GoogleGenAI;
+    try {
+      ai = getGeminiClient();
+    } catch {
       // Return structured fallback analysis if Gemini key is not set
       const codeLen = userCode.trim().length;
       return NextResponse.json({
@@ -37,8 +39,6 @@ export async function POST(request: Request) {
         ],
       });
     }
-
-    const ai = new GoogleGenAI({ apiKey });
     const prompt = `You are a world-class computer science educator and code reviewer.
 Analyze this student's solution to the challenge below:
 
