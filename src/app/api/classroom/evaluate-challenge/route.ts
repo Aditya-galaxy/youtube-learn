@@ -6,7 +6,7 @@ import type { GoogleGenAI } from "@google/genai";
 
 export async function POST(request: Request) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession(authOptions).catch(() => null);
     const body = await request.json().catch(() => ({}));
     const { challengeTitle, objective, userCode, solutionCode, lessonTitle } = body;
 

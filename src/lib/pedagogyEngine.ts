@@ -300,9 +300,18 @@ export function resolveLessonPedagogy(
   course: Course,
   module?: Module
 ): ResolvedPedagogy {
-  // 1. Direct curated match
-  if (CURATED_PEDAGOGY[lesson.id]) {
-    const curated = CURATED_PEDAGOGY[lesson.id];
+  // 1. Direct curated match or alias
+  const lookupKey =
+    CURATED_PEDAGOGY[lesson.id]
+      ? lesson.id
+      : lesson.id === "cs50less-4"
+      ? "cs50x-l4"
+      : lesson.id === "mit6824-less-3"
+      ? "mit-6824-raft"
+      : null;
+
+  if (lookupKey && CURATED_PEDAGOGY[lookupKey]) {
+    const curated = CURATED_PEDAGOGY[lookupKey];
     const fallback = generateSyntheticPedagogy(lesson, course, module);
     return {
       challenge: curated.challenge || fallback.challenge,

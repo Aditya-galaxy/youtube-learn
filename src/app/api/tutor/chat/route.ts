@@ -19,7 +19,7 @@ interface ChatRequest {
 
 export async function POST(request: Request) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession(authOptions).catch(() => null);
     const body: ChatRequest = await request.json().catch(() => ({ message: "" }));
     const { message, history = [], context = {} } = body;
 
