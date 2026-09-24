@@ -5,12 +5,15 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
+  BookOpen,
   CheckCircle2,
   ChevronDown,
   ChevronRight,
   Clock,
+  Code2,
   FileText,
   HelpCircle,
+  Layers,
   Menu,
   Play,
   RotateCcw,
@@ -25,6 +28,11 @@ import {
   getCourseTotalLessons,
 } from "@/lib/courseService";
 import { useToast } from "@/hooks/use-toast";
+import { resolveLessonPedagogy } from "@/lib/pedagogyEngine";
+import { ChallengeWorkbench } from "./ChallengeWorkbench";
+import { MentalModelViewer } from "./MentalModelViewer";
+import { ActiveRecallQuiz } from "./ActiveRecallQuiz";
+import { CuratedDeepDives } from "./CuratedDeepDives";
 
 interface ClassroomPlayerProps {
   course: Course;
@@ -84,7 +92,14 @@ export const ClassroomPlayer: React.FC<ClassroomPlayerProps> = ({
 
   // Notes state
   const [noteContent, setNoteContent] = useState("");
-  const [activeTab, setActiveTab] = useState<"summary" | "notes">("summary");
+  const [activeTab, setActiveTab] = useState<
+    "challenge" | "diagram" | "quiz" | "resources" | "summary" | "notes"
+  >("challenge");
+
+  const currentModule = course.modules.find((m) =>
+    m.lessons.some((l) => l.id === currentLesson.id)
+  );
+  const pedagogy = resolveLessonPedagogy(currentLesson, course, currentModule);
 
   // Auto-advance countdown
   const [countdown, setCountdown] = useState<number | null>(null);
@@ -329,69 +344,153 @@ export const ClassroomPlayer: React.FC<ClassroomPlayerProps> = ({
             </div>
           </div>
 
-          {/* Lower Workspace: Overview & Notes */}
+          {/* Lower Workspace: Research-Backed Interactive Pedagogy Suite */}
           <div className="flex-1 p-6">
-            <div className="mb-4 flex items-center gap-4 border-b border-border pb-2">
+            <div className="mb-6 flex flex-wrap items-center gap-2 border-b border-border pb-3">
               <button
-                onClick={() => setActiveTab("summary")}
-                className={`flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider pb-2 border-b-2 transition-colors ${
-                  activeTab === "summary"
-                    ? "border-primary text-primary"
-                    : "border-transparent text-muted-foreground hover:text-foreground"
+                onClick={() => setActiveTab("challenge")}
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
+                  activeTab === "challenge"
+                    ? "bg-primary text-primary-foreground shadow-xs"
+                    : "text-muted-foreground hover:bg-secondary hover:text-foreground"
                 }`}
               >
-                <FileText className="h-3.5 w-3.5" />
-                Lesson Summary
+                <Code2 className="h-3.5 w-3.5" />
+                Hands-on Lab & Challenge
               </button>
+
+              <button
+                onClick={() => setActiveTab("diagram")}
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
+                  activeTab === "diagram"
+                    ? "bg-primary text-primary-foreground shadow-xs"
+                    : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                }`}
+              >
+                <Layers className="h-3.5 w-3.5" />
+                Mental Model & Diagram
+              </button>
+
+              <button
+                onClick={() => setActiveTab("quiz")}
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
+                  activeTab === "quiz"
+                    ? "bg-primary text-primary-foreground shadow-xs"
+                    : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                }`}
+              >
+                <HelpCircle className="h-3.5 w-3.5" />
+                Active Recall Quiz
+              </button>
+
+              <button
+                onClick={() => setActiveTab("resources")}
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
+                  activeTab === "resources"
+                    ? "bg-primary text-primary-foreground shadow-xs"
+                    : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                }`}
+              >
+                <BookOpen className="h-3.5 w-3.5" />
+                Open Resources & OCW
+              </button>
+
               <button
                 onClick={() => setActiveTab("notes")}
-                className={`flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider pb-2 border-b-2 transition-colors ${
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
                   activeTab === "notes"
-                    ? "border-primary text-primary"
-                    : "border-transparent text-muted-foreground hover:text-foreground"
+                    ? "bg-primary text-primary-foreground shadow-xs"
+                    : "text-muted-foreground hover:bg-secondary hover:text-foreground"
                 }`}
               >
                 <Sparkles className="h-3.5 w-3.5" />
-                My Notes
+                Notes & Summary
               </button>
             </div>
 
-            {activeTab === "summary" ? (
-              <div className="space-y-4 max-w-3xl">
-                <p className="text-sm leading-relaxed text-muted-foreground">
-                  {currentLesson.summary ||
-                    "Watch this lesson attentively and follow along with the exercises to master the core concept."}
-                </p>
+            {/* Active Tab View */}
+            {activeTab === "challenge" && (
+              <ChallengeWorkbench
+                challenge={pedagogy.challenge}
+                lessonTitle={currentLesson.title}
+              />
+            )}
 
-                <div className="rounded-lg border border-border bg-card p-4">
-                  <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider">
-                    Pedagogical Takeaway
-                  </h4>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    This lesson prepares you for subsequent concepts in this
-                    track. Completing this video will update your personalized
-                    skill matrix.
+            {activeTab === "diagram" && (
+              <MentalModelViewer diagram={pedagogy.diagram} />
+            )}
+
+            {activeTab === "quiz" && (
+              <ActiveRecallQuiz
+                questions={pedagogy.quiz}
+                lessonTitle={currentLesson.title}
+              />
+            )}
+
+            {activeTab === "resources" && (
+              <CuratedDeepDives
+                resources={pedagogy.resources}
+                lessonTitle={currentLesson.title}
+              />
+            )}
+
+            {activeTab === "notes" && (
+              <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                <div className="space-y-4">
+                  <div className="rounded-xl border border-border bg-card p-5">
+                    <h4 className="font-display text-sm font-bold text-foreground">
+                      Lesson Overview
+                    </h4>
+                    <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+                      {currentLesson.summary ||
+                        "Watch this lesson attentively and follow along with the exercises to master the core concept."}
+                    </p>
+                  </div>
+
+                  <div className="rounded-xl border border-border bg-card p-5">
+                    <h4 className="font-display text-xs font-bold text-foreground uppercase tracking-wider">
+                      Core Pedagogical Takeaways
+                    </h4>
+                    <ul className="mt-2 space-y-1.5">
+                      {pedagogy.keyTakeaways.map((point, idx) => (
+                        <li
+                          key={idx}
+                          className="flex items-start gap-2 text-xs text-muted-foreground"
+                        >
+                          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 mt-0.5 shrink-0" />
+                          <span>{point}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-display text-sm font-bold text-foreground">
+                      Interactive Scratchpad
+                    </h4>
+                    <span className="text-[11px] text-muted-foreground">
+                      Auto-saved
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Jot down important timestamps, formulas, or personal insights
+                    while watching.
+                  </p>
+                  <textarea
+                    rows={8}
+                    value={noteContent}
+                    onChange={(e) => saveNote(e.target.value)}
+                    placeholder="e.g. At 04:30 - Key formula for derivative rate..."
+                    className="w-full rounded-lg border border-border bg-card p-3.5 text-xs font-mono text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                  <p className="text-[11px] text-muted-foreground">
+                    {progressStore === "account"
+                      ? "Saved to your account."
+                      : "Saved in this browser only — sign in to keep notes and progress across devices."}
                   </p>
                 </div>
-              </div>
-            ) : (
-              <div className="max-w-3xl space-y-2">
-                <p className="text-xs text-muted-foreground">
-                  Jot down important timestamps, insights, or code snippets for
-                  this lesson. Notes persist automatically.
-                </p>
-                <textarea
-                  rows={6}
-                  value={noteContent}
-                  onChange={(e) => saveNote(e.target.value)}
-                  placeholder="e.g. At 04:30 - Key formula for derivative rate..."
-                  className="w-full rounded-lg border border-border bg-card p-3.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-                />
-                <p className="mt-2 text-xs tracking-tightish text-muted-foreground">
-                  {progressStore === "account"
-                    ? "Saved to your account."
-                    : "Saved in this browser only — sign in to keep notes and progress across devices."}
-                </p>
               </div>
             )}
           </div>

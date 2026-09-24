@@ -13,6 +13,66 @@ export type CourseStatus =
   | "COMPLETED"
   | "ARCHIVED";
 
+export interface TestCase {
+  id: string;
+  description: string;
+  input?: string;
+  expectedOutput: string;
+}
+
+export interface LessonChallenge {
+  id: string;
+  title: string;
+  difficulty: "EASY" | "MEDIUM" | "HARD";
+  description: string;
+  objective: string;
+  starterCode: string;
+  solutionCode: string;
+  hints: string[];
+  testCases: TestCase[];
+  language?: string;
+}
+
+export interface LessonQuizQuestion {
+  id: string;
+  question: string;
+  options: string[];
+  correctIndex: number;
+  explanation: string;
+}
+
+export interface DiagramNode {
+  id: string;
+  label: string;
+  subtext?: string;
+  category?: "concept" | "input" | "process" | "output" | "storage" | "network";
+}
+
+export interface DiagramConnection {
+  from: string;
+  to: string;
+  label?: string;
+}
+
+export interface LessonDiagram {
+  id: string;
+  title: string;
+  caption: string;
+  type: "flowchart" | "architecture" | "sequence" | "concept_map";
+  nodes: DiagramNode[];
+  connections: DiagramConnection[];
+  takeaways: string[];
+}
+
+export interface DeepDiveResource {
+  id: string;
+  title: string;
+  url: string;
+  type: "github" | "docs" | "paper" | "playground" | "ocw";
+  description: string;
+  badge?: string;
+}
+
 export interface Lesson {
   id: string;
   moduleId: string;
@@ -25,6 +85,18 @@ export interface Lesson {
   endSeconds?: number;
   summary?: string;
   isCompleted?: boolean;
+  challenge?: LessonChallenge;
+  quiz?: LessonQuizQuestion[];
+  diagram?: LessonDiagram;
+  resources?: DeepDiveResource[];
+  keyTakeaways?: string[];
+}
+
+export interface ProjectMilestone {
+  title: string;
+  description: string;
+  deliverables: string[];
+  suggestedRepoTemplate?: string;
 }
 
 export interface Module {
@@ -36,6 +108,7 @@ export interface Module {
   orderIndex: number;
   description?: string;
   lessons: Lesson[];
+  projectMilestone?: ProjectMilestone;
 }
 
 export interface Course {
