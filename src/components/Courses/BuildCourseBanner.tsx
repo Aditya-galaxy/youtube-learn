@@ -51,7 +51,8 @@ export function BuildCourseBanner({ topic }: { topic: string }) {
             Learn <em>{topic}</em> in order.
           </h2>
           <p className="mt-2 text-sm tracking-tightish text-muted-foreground">
-            A sequenced course built from real videos, from Basic fundamentals to Expert depth.
+            A sequenced course built from real videos, from Basic fundamentals
+            to Expert depth.
           </p>
           {error && (
             <p role="alert" className="mt-2 text-sm text-destructive">

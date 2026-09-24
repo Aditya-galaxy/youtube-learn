@@ -3,7 +3,14 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { BookOpen, Clock, GraduationCap, Landmark, PlayCircle, Sparkles } from "lucide-react";
+import {
+  BookOpen,
+  Clock,
+  GraduationCap,
+  Landmark,
+  PlayCircle,
+  Sparkles,
+} from "lucide-react";
 import type { Course } from "../../../types/course";
 import { useCourseContext } from "@/Helper/CourseContext";
 import { getCourseTotalLessons } from "@/lib/courseService";
@@ -36,10 +43,10 @@ export const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
 
   const isAcademic = Boolean(
     course.institution &&
-      (course.institution.includes("MIT") ||
-        course.institution.includes("Harvard") ||
-        course.institution.includes("Stanford") ||
-        course.institution.includes("OpenCourseWare"))
+    (course.institution.includes("MIT") ||
+      course.institution.includes("Harvard") ||
+      course.institution.includes("Stanford") ||
+      course.institution.includes("OpenCourseWare"))
   );
 
   return (
@@ -109,7 +116,10 @@ export const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
           <p className="mt-3 flex items-center gap-1 text-xs text-muted-foreground">
             <GraduationCap className="h-3.5 w-3.5 shrink-0" />
             <span>
-              By <span className="font-medium text-foreground">{course.instructor}</span>
+              By{" "}
+              <span className="font-medium text-foreground">
+                {course.instructor}
+              </span>
             </span>
           </p>
         )}

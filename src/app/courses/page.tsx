@@ -1,7 +1,15 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { Plus, Search, Sparkles, Filter, BookOpen, Landmark, GraduationCap } from "lucide-react";
+import {
+  Plus,
+  Search,
+  Sparkles,
+  Filter,
+  BookOpen,
+  Landmark,
+  GraduationCap,
+} from "lucide-react";
 import { CourseCard } from "@/components/Courses/CourseCard";
 import { CourseImporterDialog } from "@/components/Courses/CourseImporterDialog";
 import { useCourseContext } from "@/Helper/CourseContext";
@@ -57,12 +65,15 @@ export default function CoursesPage() {
       const matchesTier =
         selectedTier === "ALL" ||
         cTier === selectedTier ||
-        (selectedTier === "BASIC" && (cTier === "BASIC" || cTier === "BEGINNER"));
+        (selectedTier === "BASIC" &&
+          (cTier === "BASIC" || cTier === "BEGINNER"));
 
       const matchesSource =
         selectedSource === "ALL" ||
-        (c.institution && c.institution.toLowerCase().includes(selectedSource.toLowerCase())) ||
-        (c.instructor && c.instructor.toLowerCase().includes(selectedSource.toLowerCase()));
+        (c.institution &&
+          c.institution.toLowerCase().includes(selectedSource.toLowerCase())) ||
+        (c.instructor &&
+          c.instructor.toLowerCase().includes(selectedSource.toLowerCase()));
 
       return matchesSearch && matchesCat && matchesTier && matchesSource;
     });
@@ -84,7 +95,9 @@ export default function CoursesPage() {
             Educational Courses & OpenCourseWare
           </h1>
           <p className="mt-3 max-w-2xl text-sm text-muted-foreground">
-            Master subjects step-by-step through sequenced university lectures from MIT, Harvard, Stanford, and premier educators—progressing from Basic to Intermediate, Advanced, and Expert.
+            Master subjects step-by-step through sequenced university lectures
+            from MIT, Harvard, Stanford, and premier educators—progressing from
+            Basic to Intermediate, Advanced, and Expert.
           </p>
         </div>
 
@@ -144,7 +157,11 @@ export default function CoursesPage() {
               aria-label="Filter by OpenCourseWare source"
             >
               {SOURCES.map((s) => (
-                <option key={s.value} value={s.value} className="bg-card text-foreground">
+                <option
+                  key={s.value}
+                  value={s.value}
+                  className="bg-card text-foreground"
+                >
                   {s.label}
                 </option>
               ))}
@@ -179,7 +196,8 @@ export default function CoursesPage() {
               No matching courses found
             </h3>
             <p className="mt-1 max-w-sm text-xs text-muted-foreground">
-              Try adjusting your tier or institution filter, or generate a customized course for this subject right now.
+              Try adjusting your tier or institution filter, or generate a
+              customized course for this subject right now.
             </p>
             <button
               onClick={() => setIsImporterOpen(true)}

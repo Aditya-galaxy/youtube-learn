@@ -120,8 +120,8 @@ export const ChallengeWorkbench: React.FC<ChallengeWorkbenchProps> = ({
                 challenge.difficulty === "HARD"
                   ? "bg-rose-500/10 text-rose-500"
                   : challenge.difficulty === "MEDIUM"
-                  ? "bg-amber-500/10 text-amber-500"
-                  : "bg-emerald-500/10 text-emerald-500"
+                    ? "bg-amber-500/10 text-amber-500"
+                    : "bg-emerald-500/10 text-emerald-500"
               }`}
             >
               {challenge.difficulty} Lab
@@ -214,8 +214,8 @@ export const ChallengeWorkbench: React.FC<ChallengeWorkbenchProps> = ({
                 testingStatus === "passed"
                   ? "text-emerald-400"
                   : testingStatus === "failed"
-                  ? "text-rose-400"
-                  : "text-zinc-300"
+                    ? "text-rose-400"
+                    : "text-zinc-300"
               }`}
             >
               {testOutput}

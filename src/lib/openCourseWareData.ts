@@ -168,8 +168,7 @@ export const OPEN_COURSEWARE_COURSES: Course[] = [
     estimatedHours: 8.5,
     instructor: "Prof. Gilbert Strang",
     institution: "MIT OpenCourseWare",
-    sourceUrl:
-      "https://ocw.mit.edu/courses/18-06-linear-algebra-spring-2010/",
+    sourceUrl: "https://ocw.mit.edu/courses/18-06-linear-algebra-spring-2010/",
     isPublic: true,
     modules: [
       {
@@ -241,7 +240,8 @@ export const OPEN_COURSEWARE_COURSES: Course[] = [
           {
             id: "mit1806-less-5",
             moduleId: "mit1806-mod-2",
-            title: "Lecture 7: Solving Ax = 0: Pivot Variables & Special Solutions",
+            title:
+              "Lecture 7: Solving Ax = 0: Pivot Variables & Special Solutions",
             orderIndex: 2,
             videoId: "VqP_228_wPo",
             channelName: "MIT OpenCourseWare",
@@ -267,7 +267,8 @@ export const OPEN_COURSEWARE_COURSES: Course[] = [
       {
         id: "mit1806-mod-3",
         courseId: "course-mit-1806-linear-algebra",
-        title: "Module 3: Eigenvalues, Eigenvectors & Positive Definite Systems",
+        title:
+          "Module 3: Eigenvalues, Eigenvectors & Positive Definite Systems",
         orderIndex: 3,
         description:
           "Characteristic equations, diagonalizing matrices, differential equations, and SVD.",
@@ -496,7 +497,8 @@ export const OPEN_COURSEWARE_COURSES: Course[] = [
           {
             id: "cs229-less-2",
             moduleId: "cs229-mod-1",
-            title: "Lecture 2: Linear Regression, Gradient Descent & Normal Equations",
+            title:
+              "Lecture 2: Linear Regression, Gradient Descent & Normal Equations",
             orderIndex: 2,
             videoId: "4b4MUYve_U8",
             channelName: "Stanford",
@@ -662,7 +664,8 @@ export const OPEN_COURSEWARE_COURSES: Course[] = [
           {
             id: "mit6824-less-4",
             moduleId: "mit6824-mod-2",
-            title: "Lecture 6: Fault Tolerance: Raft Consensus II (Log Compaction)",
+            title:
+              "Lecture 6: Fault Tolerance: Raft Consensus II (Log Compaction)",
             orderIndex: 2,
             videoId: "R2-9sDY_IaE",
             channelName: "MIT OpenCourseWare",
@@ -684,7 +687,8 @@ export const OPEN_COURSEWARE_COURSES: Course[] = [
           {
             id: "mit6824-less-5",
             moduleId: "mit6824-mod-3",
-            title: "Lecture 12: Distributed Transactions & Two-Phase Commit (2PC)",
+            title:
+              "Lecture 12: Distributed Transactions & Two-Phase Commit (2PC)",
             orderIndex: 1,
             videoId: "Ea1e0bH_7v0",
             channelName: "MIT OpenCourseWare",

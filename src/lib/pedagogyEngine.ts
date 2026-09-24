@@ -104,7 +104,11 @@ int main() {
         },
       ],
       connections: [
-        { from: "stack_main", to: "stack_swap", label: "Pass addresses (&x, &y)" },
+        {
+          from: "stack_main",
+          to: "stack_swap",
+          label: "Pass addresses (&x, &y)",
+        },
         { from: "stack_swap", to: "deref", label: "Resolve addresses via *" },
         { from: "deref", to: "stack_main", label: "Mutates caller memory" },
       ],
@@ -116,7 +120,8 @@ int main() {
     quiz: [
       {
         id: "q1",
-        question: "What does the '&' operator evaluate to when prefixed to variable 'int count = 10;'?",
+        question:
+          "What does the '&' operator evaluate to when prefixed to variable 'int count = 10;'?",
         options: [
           "The value 10",
           "The physical memory address where 'count' is stored",
@@ -129,7 +134,8 @@ int main() {
       },
       {
         id: "q2",
-        question: "Why does calling swap(x, y) without pointers fail to change x and y in the caller?",
+        question:
+          "Why does calling swap(x, y) without pointers fail to change x and y in the caller?",
         options: [
           "C compiler optimizes out the function call",
           "Arguments are copied by value into swap's local stack frame",
@@ -147,7 +153,8 @@ int main() {
         title: "Harvard CS50x Memory Problem Set (Filter)",
         url: "https://cs50.harvard.edu/x/2024/psets/4/",
         type: "ocw",
-        description: "Official CS50 problem set on manipulating 24-bit BMP image pixels in C.",
+        description:
+          "Official CS50 problem set on manipulating 24-bit BMP image pixels in C.",
         badge: "Harvard CS50",
       },
       {
@@ -155,7 +162,8 @@ int main() {
         title: "Valgrind: Memory Leak & Pointer Checker",
         url: "https://valgrind.org/docs/manual/quick-start.html",
         type: "docs",
-        description: "Standard open-source tool suite to detect memory leaks and invalid accesses.",
+        description:
+          "Standard open-source tool suite to detect memory leaks and invalid accesses.",
         badge: "Tooling",
       },
     ],
@@ -236,15 +244,46 @@ func (rf *RaftNode) OnElectionTimeout() {
         "State transitions among Follower, Candidate, and Leader with term increment rules.",
       type: "architecture",
       nodes: [
-        { id: "follower", label: "Follower", subtext: "Listens for leader AppendEntries heartbeats", category: "input" },
-        { id: "candidate", label: "Candidate", subtext: "Increments term, requests votes from peers", category: "process" },
-        { id: "leader", label: "Leader", subtext: "Replicates log entries & maintains quorum", category: "output" },
+        {
+          id: "follower",
+          label: "Follower",
+          subtext: "Listens for leader AppendEntries heartbeats",
+          category: "input",
+        },
+        {
+          id: "candidate",
+          label: "Candidate",
+          subtext: "Increments term, requests votes from peers",
+          category: "process",
+        },
+        {
+          id: "leader",
+          label: "Leader",
+          subtext: "Replicates log entries & maintains quorum",
+          category: "output",
+        },
       ],
       connections: [
-        { from: "follower", to: "candidate", label: "Election timeout expires" },
-        { from: "candidate", to: "leader", label: "Wins majority of cluster votes" },
-        { from: "candidate", to: "follower", label: "Discovers higher term leader" },
-        { from: "leader", to: "follower", label: "Discovers peer with higher term" },
+        {
+          from: "follower",
+          to: "candidate",
+          label: "Election timeout expires",
+        },
+        {
+          from: "candidate",
+          to: "leader",
+          label: "Wins majority of cluster votes",
+        },
+        {
+          from: "candidate",
+          to: "follower",
+          label: "Discovers higher term leader",
+        },
+        {
+          from: "leader",
+          to: "follower",
+          label: "Discovers peer with higher term",
+        },
       ],
       takeaways: [
         "Safety invariant: At most one leader can be elected in a given term.",
@@ -254,7 +293,8 @@ func (rf *RaftNode) OnElectionTimeout() {
     quiz: [
       {
         id: "q1",
-        question: "Why does Raft use randomized election timeouts across nodes in the cluster?",
+        question:
+          "Why does Raft use randomized election timeouts across nodes in the cluster?",
         options: [
           "To reduce CPU clock synchronization requirements",
           "To prevent persistent split-vote scenarios where candidates divide votes equally",
@@ -269,10 +309,12 @@ func (rf *RaftNode) OnElectionTimeout() {
     resources: [
       {
         id: "r1",
-        title: "The Raft Paper (In Search of an Understandable Consensus Algorithm)",
+        title:
+          "The Raft Paper (In Search of an Understandable Consensus Algorithm)",
         url: "https://raft.github.io/raft.pdf",
         type: "paper",
-        description: "Original Ongaro & Ousterhout paper detailing Raft consensus.",
+        description:
+          "Original Ongaro & Ousterhout paper detailing Raft consensus.",
         badge: "Academic Paper",
       },
       {
@@ -280,7 +322,8 @@ func (rf *RaftNode) OnElectionTimeout() {
         title: "Raft Interactive Visualization",
         url: "https://thesecretlivesofdata.com/raft/",
         type: "playground",
-        description: "Visual animated walkthrough of leader election and log replication.",
+        description:
+          "Visual animated walkthrough of leader election and log replication.",
         badge: "Interactive Lab",
       },
     ],
@@ -301,14 +344,13 @@ export function resolveLessonPedagogy(
   module?: Module
 ): ResolvedPedagogy {
   // 1. Direct curated match or alias
-  const lookupKey =
-    CURATED_PEDAGOGY[lesson.id]
-      ? lesson.id
-      : lesson.id === "cs50less-4"
+  const lookupKey = CURATED_PEDAGOGY[lesson.id]
+    ? lesson.id
+    : lesson.id === "cs50less-4"
       ? "cs50x-l4"
       : lesson.id === "mit6824-less-3"
-      ? "mit-6824-raft"
-      : null;
+        ? "mit-6824-raft"
+        : null;
 
   if (lookupKey && CURATED_PEDAGOGY[lookupKey]) {
     const curated = CURATED_PEDAGOGY[lookupKey];
@@ -537,7 +579,11 @@ console.log(createSolution("test"));`,
     id: `diag-${lesson.id}`,
     title: `Visual Mental Model: ${lesson.title}`,
     caption: `Structured cognitive model breaking down data flow, execution sequence, and core invariants.`,
-    type: isDistributed ? "architecture" : isAlgorithms ? "flowchart" : "concept_map",
+    type: isDistributed
+      ? "architecture"
+      : isAlgorithms
+        ? "flowchart"
+        : "concept_map",
     nodes: [
       {
         id: "step1",
@@ -622,7 +668,8 @@ console.log(createSolution("test"));`,
       title: "MIT OpenCourseWare & Academic Lectures",
       url: "https://ocw.mit.edu",
       type: "ocw",
-      description: "Original university lecture notes, problem sets, and reading materials from MIT.",
+      description:
+        "Original university lecture notes, problem sets, and reading materials from MIT.",
       badge: "University OCW",
     },
     {
@@ -630,7 +677,8 @@ console.log(createSolution("test"));`,
       title: "GitHub Open Source Implementations",
       url: `https://github.com/search?q=${encodeURIComponent(lesson.title)}`,
       type: "github",
-      description: "Explore real-world production codebases and community implementations on GitHub.",
+      description:
+        "Explore real-world production codebases and community implementations on GitHub.",
       badge: "GitHub Repo",
     },
     {
@@ -638,7 +686,8 @@ console.log(createSolution("test"));`,
       title: "Official Standards & Reference Documentation",
       url: "https://devdocs.io",
       type: "docs",
-      description: "Comprehensive API references, specification standards, and cheat sheets.",
+      description:
+        "Comprehensive API references, specification standards, and cheat sheets.",
       badge: "Official Specs",
     },
     {
@@ -646,7 +695,8 @@ console.log(createSolution("test"));`,
       title: "Interactive Code Sandbox & Playground",
       url: "https://stackblitz.com",
       type: "playground",
-      description: "Zero-setup in-browser development environment to experiment with live code.",
+      description:
+        "Zero-setup in-browser development environment to experiment with live code.",
       badge: "Interactive Lab",
     },
   ];

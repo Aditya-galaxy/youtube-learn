@@ -160,32 +160,44 @@ export function generateTieredCourse({
   const tierMetadata = {
     BASIC: {
       titlePrefix: "Foundations of",
-      descriptionPrefix: "An introductory, zero-assumption visual curriculum covering first principles, mental models, and setup for",
-      channel: prioritizeAcademic ? "MIT OpenCourseWare & CS50" : "Curated University Educators",
+      descriptionPrefix:
+        "An introductory, zero-assumption visual curriculum covering first principles, mental models, and setup for",
+      channel: prioritizeAcademic
+        ? "MIT OpenCourseWare & CS50"
+        : "Curated University Educators",
       mod1Title: "Core Mental Models & Visual Intuition",
       mod2Title: "Hands-on Syntax & First Working Examples",
       hours: 2.5,
     },
     INTERMEDIATE: {
       titlePrefix: "Applied Mastery of",
-      descriptionPrefix: "A practical, production-focused curriculum covering real-world architecture, idioms, and standard patterns for",
-      channel: prioritizeAcademic ? "MIT OCW & Stanford Online" : "Top Industry Practitioners",
+      descriptionPrefix:
+        "A practical, production-focused curriculum covering real-world architecture, idioms, and standard patterns for",
+      channel: prioritizeAcademic
+        ? "MIT OCW & Stanford Online"
+        : "Top Industry Practitioners",
       mod1Title: "Architecture, Idiomatic Patterns & Standard APIs",
       mod2Title: "Building a Full Real-World Application",
       hours: 4.0,
     },
     ADVANCED: {
       titlePrefix: "Advanced Systems & Invariants in",
-      descriptionPrefix: "A deep technical dive into algorithmic performance, memory profiling, concurrency, and internal mechanics of",
-      channel: prioritizeAcademic ? "MIT 6.006 & Stanford Computer Science" : "Senior Systems Engineers",
+      descriptionPrefix:
+        "A deep technical dive into algorithmic performance, memory profiling, concurrency, and internal mechanics of",
+      channel: prioritizeAcademic
+        ? "MIT 6.006 & Stanford Computer Science"
+        : "Senior Systems Engineers",
       mod1Title: "Algorithmic Complexity & Deep Internals",
       mod2Title: "Performance Profiling & Distributed Concurrency",
       hours: 6.0,
     },
     EXPERT: {
       titlePrefix: "Expert Research & Distributed Invariants:",
-      descriptionPrefix: "An elite, graduate-level exploration of distributed consensus, low-level hardware memory barriers, and formal proofs in",
-      channel: prioritizeAcademic ? "MIT 6.824 & Stanford CS229" : "Principal Research Engineers",
+      descriptionPrefix:
+        "An elite, graduate-level exploration of distributed consensus, low-level hardware memory barriers, and formal proofs in",
+      channel: prioritizeAcademic
+        ? "MIT 6.824 & Stanford CS229"
+        : "Principal Research Engineers",
       mod1Title: "Distributed Invariants & Formal Verification",
       mod2Title: "Low-Level Kernel/Hardware Concurrency & SMR",
       hours: 8.5,
@@ -204,7 +216,9 @@ export function generateTieredCourse({
     tier,
     estimatedHours: tierMetadata.hours,
     instructor: tierMetadata.channel,
-    institution: prioritizeAcademic ? "OpenCourseWare Academic Consortium" : undefined,
+    institution: prioritizeAcademic
+      ? "OpenCourseWare Academic Consortium"
+      : undefined,
     sourceUrl: prioritizeAcademic ? "https://ocw.mit.edu" : undefined,
     isPublic: false,
     isAiGenerated: true,
@@ -221,7 +235,12 @@ export function generateTieredCourse({
             moduleId: `mod-1-${slug}`,
             title: `1. Deep Dive: ${cleanTopic} Fundamentals & Theoretical Mechanics`,
             orderIndex: 1,
-            videoId: tier === "BASIC" ? "LfaMVlDaQ24" : tier === "EXPERT" ? "cQP8WApzIQQ" : "WUvTyaaNkzM",
+            videoId:
+              tier === "BASIC"
+                ? "LfaMVlDaQ24"
+                : tier === "EXPERT"
+                  ? "cQP8WApzIQQ"
+                  : "WUvTyaaNkzM",
             channelName: tierMetadata.channel,
             durationSec: 1200,
             startSeconds: 0,
@@ -232,7 +251,12 @@ export function generateTieredCourse({
             moduleId: `mod-1-${slug}`,
             title: `2. Structural Analysis & Systematic Breakdown`,
             orderIndex: 2,
-            videoId: tier === "BASIC" ? "rfscVS0vtbw" : tier === "EXPERT" ? "UzxXb4khtPU" : "kqtD5dpn9C8",
+            videoId:
+              tier === "BASIC"
+                ? "rfscVS0vtbw"
+                : tier === "EXPERT"
+                  ? "UzxXb4khtPU"
+                  : "kqtD5dpn9C8",
             channelName: tierMetadata.channel,
             durationSec: 1450,
             startSeconds: 0,
@@ -252,7 +276,12 @@ export function generateTieredCourse({
             moduleId: `mod-2-${slug}`,
             title: `3. Complex Patterns & Implementation Trade-Offs`,
             orderIndex: 1,
-            videoId: tier === "BASIC" ? "W8KRzm-HUcc" : tier === "EXPERT" ? "Ea1e0bH_7v0" : "8pDqJVdNa4g",
+            videoId:
+              tier === "BASIC"
+                ? "W8KRzm-HUcc"
+                : tier === "EXPERT"
+                  ? "Ea1e0bH_7v0"
+                  : "8pDqJVdNa4g",
             channelName: tierMetadata.channel,
             durationSec: 1600,
             startSeconds: 0,

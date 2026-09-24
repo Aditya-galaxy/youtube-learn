@@ -514,8 +514,8 @@ export const ClassroomPlayer: React.FC<ClassroomPlayerProps> = ({
                     </span>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Jot down important timestamps, formulas, or personal insights
-                    while watching.
+                    Jot down important timestamps, formulas, or personal
+                    insights while watching.
                   </p>
                   <textarea
                     rows={8}

@@ -8,7 +8,13 @@ import {
   DialogTitle,
   DialogDescription,
 } from "../ui/dialog";
-import { Sparkles, Video, ListVideo, Loader2, GraduationCap } from "lucide-react";
+import {
+  Sparkles,
+  Video,
+  ListVideo,
+  Loader2,
+  GraduationCap,
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useCourseContext } from "@/Helper/CourseContext";
 import { extractPlaylistId, extractVideoId } from "@/lib/youtube/playlistUrl";
@@ -320,10 +326,26 @@ export const CourseImporterDialog: React.FC<CourseImporterDialogProps> = ({
                 <div className="mt-1.5 grid grid-cols-2 gap-2 sm:grid-cols-4">
                   {(
                     [
-                      { key: "BASIC", label: "Basic", desc: "Foundations & 101" },
-                      { key: "INTERMEDIATE", label: "Intermediate", desc: "Practical & Applied" },
-                      { key: "ADVANCED", label: "Advanced", desc: "Scale & Architecture" },
-                      { key: "EXPERT", label: "Expert", desc: "Deep Internals & Theory" },
+                      {
+                        key: "BASIC",
+                        label: "Basic",
+                        desc: "Foundations & 101",
+                      },
+                      {
+                        key: "INTERMEDIATE",
+                        label: "Intermediate",
+                        desc: "Practical & Applied",
+                      },
+                      {
+                        key: "ADVANCED",
+                        label: "Advanced",
+                        desc: "Scale & Architecture",
+                      },
+                      {
+                        key: "EXPERT",
+                        label: "Expert",
+                        desc: "Deep Internals & Theory",
+                      },
                     ] as const
                   ).map((tier) => (
                     <button

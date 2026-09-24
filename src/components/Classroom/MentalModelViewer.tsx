@@ -76,10 +76,10 @@ export const MentalModelViewer: React.FC<MentalModelViewerProps> = ({
                         node.category === "input"
                           ? "bg-emerald-500/10 text-emerald-500"
                           : node.category === "process"
-                          ? "bg-sky-500/10 text-sky-500"
-                          : node.category === "output"
-                          ? "bg-indigo-500/10 text-indigo-500"
-                          : "bg-amber-500/10 text-amber-500"
+                            ? "bg-sky-500/10 text-sky-500"
+                            : node.category === "output"
+                              ? "bg-indigo-500/10 text-indigo-500"
+                              : "bg-amber-500/10 text-amber-500"
                       }`}
                     >
                       {node.category || "concept"}
@@ -136,8 +136,7 @@ export const MentalModelViewer: React.FC<MentalModelViewerProps> = ({
                   key={idx}
                   className="rounded-md border border-border bg-secondary/50 px-2 py-1 text-[11px] text-muted-foreground"
                 >
-                  {conn.from} → {conn.to}{" "}
-                  {conn.label ? `(${conn.label})` : ""}
+                  {conn.from} → {conn.to} {conn.label ? `(${conn.label})` : ""}
                 </span>
               ))}
           </div>

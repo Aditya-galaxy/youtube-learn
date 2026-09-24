@@ -1,17 +1,10 @@
 export type SkillLevel =
-  | "BASIC"
-  | "BEGINNER"
-  | "INTERMEDIATE"
-  | "ADVANCED"
-  | "EXPERT";
+  "BASIC" | "BEGINNER" | "INTERMEDIATE" | "ADVANCED" | "EXPERT";
 
 export type CourseTier = "BASIC" | "INTERMEDIATE" | "ADVANCED" | "EXPERT";
 
 export type CourseStatus =
-  | "NOT_STARTED"
-  | "IN_PROGRESS"
-  | "COMPLETED"
-  | "ARCHIVED";
+  "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED" | "ARCHIVED";
 
 export interface TestCase {
   id: string;

@@ -20,7 +20,9 @@ interface ChatRequest {
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions).catch(() => null);
-    const body: ChatRequest = await request.json().catch(() => ({ message: "" }));
+    const body: ChatRequest = await request
+      .json()
+      .catch(() => ({ message: "" }));
     const { message, history = [], context = {} } = body;
 
     if (!message || typeof message !== "string") {
@@ -51,9 +53,17 @@ export async function POST(request: Request) {
         "Quiz me on this lesson",
       ];
 
-      if (lower.includes("explain") || lower.includes("what is") || lower.includes("how does")) {
+      if (
+        lower.includes("explain") ||
+        lower.includes("what is") ||
+        lower.includes("how does")
+      ) {
         reply = `Here is how to think about **${lessonTitle}** at the **${tier}** tier:\n\n1. **Core Intuition**: Imagine this as a state transition system where every action has an invariant.\n2. **The Mechanism**: In the lecture video, observe how the instructor breaks this down into modular components.\n3. **Practical Application**: Rather than just memorizing, open the **Hands-on Lab** tab below the video and test the starter template!\n\nWould you like me to walk through a concrete example or test you with a quick check question?`;
-      } else if (lower.includes("challenge") || lower.includes("code") || lower.includes("lab")) {
+      } else if (
+        lower.includes("challenge") ||
+        lower.includes("code") ||
+        lower.includes("lab")
+      ) {
         reply = `Let's conquer the hands-on challenge for **${lessonTitle}** together!\n\n💡 **Tutor Guidance**: Start by defining the edge cases before writing the main loop. In the Challenge Workbench, review Hint 1. What data structure or variable are you planning to use to store intermediate state?`;
         suggestions = [
           "I'm stuck on edge cases",
@@ -139,7 +149,9 @@ Respond strictly in valid JSON matching this schema:
     }
 
     return NextResponse.json({
-      reply: parsed.reply || "Let's explore that together. What part is on your mind?",
+      reply:
+        parsed.reply ||
+        "Let's explore that together. What part is on your mind?",
       suggestions: parsed.suggestions || [
         "Explain this concept with an analogy",
         "Help me with the challenge",

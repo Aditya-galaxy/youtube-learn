@@ -47,14 +47,20 @@ async function runTests() {
   );
 
   for (const course of allCourses) {
-    assert(Boolean(course.id && course.title), `Course valid id & title: "${course.title}"`);
+    assert(
+      Boolean(course.id && course.title),
+      `Course valid id & title: "${course.title}"`
+    );
     assert(
       ["BASIC", "BEGINNER", "INTERMEDIATE", "ADVANCED", "EXPERT"].includes(
         course.difficulty
       ),
       `Course valid difficulty level: ${course.difficulty}`
     );
-    assert(course.modules.length > 0, `Course has modules (${course.modules.length})`);
+    assert(
+      course.modules.length > 0,
+      `Course has modules (${course.modules.length})`
+    );
 
     let totalLessons = 0;
     for (const mod of course.modules) {
@@ -71,7 +77,10 @@ async function runTests() {
         );
       }
     }
-    assert(totalLessons > 0, `Course "${course.title}" has ${totalLessons} total lessons`);
+    assert(
+      totalLessons > 0,
+      `Course "${course.title}" has ${totalLessons} total lessons`
+    );
   }
 
   // -------------------------------------------------------------------------
@@ -80,9 +89,17 @@ async function runTests() {
   console.log("\n2. Testing Pedagogy Engine & 4-Tier Heuristics...");
 
   // Test Curated Harvard CS50x Memory lesson
-  const cs50Course = OPEN_COURSEWARE_COURSES.find((c) => c.id === "course-harvard-cs50x")!;
-  const cs50Lesson = cs50Course.modules[1].lessons.find((l) => l.id === "cs50less-4")!;
-  const cs50Pedagogy = resolveLessonPedagogy(cs50Lesson, cs50Course, cs50Course.modules[1]);
+  const cs50Course = OPEN_COURSEWARE_COURSES.find(
+    (c) => c.id === "course-harvard-cs50x"
+  )!;
+  const cs50Lesson = cs50Course.modules[1].lessons.find(
+    (l) => l.id === "cs50less-4"
+  )!;
+  const cs50Pedagogy = resolveLessonPedagogy(
+    cs50Lesson,
+    cs50Course,
+    cs50Course.modules[1]
+  );
 
   assert(
     cs50Pedagogy.challenge.title.includes("Memory Allocation & Swap"),
@@ -153,7 +170,9 @@ async function runTests() {
     );
 
     assert(
-      Boolean(synthPedagogy.challenge.title && synthPedagogy.challenge.starterCode),
+      Boolean(
+        synthPedagogy.challenge.title && synthPedagogy.challenge.starterCode
+      ),
       `Dynamic challenge generated for ${tier} tier`
     );
     assert(
@@ -169,20 +188,26 @@ async function runTests() {
   // -------------------------------------------------------------------------
   // 3. COURSE SERVICE & TRAVERSAL LOGIC
   // -------------------------------------------------------------------------
-  console.log("\n3. Testing Course Service, Progression & Next-Lesson Traversal...");
+  console.log(
+    "\n3. Testing Course Service, Progression & Next-Lesson Traversal..."
+  );
 
   // Progress computation
   const sampleCourse = allCourses[0];
   const total = getCourseTotalLessons(sampleCourse);
   const halfLessons = sampleCourse.modules[0].lessons.map((l) => l.id);
   const progress50 = calculateCourseProgress(sampleCourse, halfLessons);
-  assert(progress50 > 0 && progress50 <= 100, `Calculated progress: ${progress50}%`);
+  assert(
+    progress50 > 0 && progress50 <= 100,
+    `Calculated progress: ${progress50}%`
+  );
 
   // Next-lesson traversal
   const firstLesson = sampleCourse.modules[0].lessons[0];
   const nextInfo = getNextLessonInSequence(sampleCourse, firstLesson.id);
   assert(
-    nextInfo.nextLesson !== null || sampleCourse.modules[0].lessons.length === 1,
+    nextInfo.nextLesson !== null ||
+      sampleCourse.modules[0].lessons.length === 1,
     `Next lesson resolved from first lesson (${nextInfo.nextLesson?.title || "end"})`
   );
 
@@ -193,10 +218,15 @@ async function runTests() {
     prioritizeAcademic: true,
   });
   assert(
-    Boolean(tiered.institution && tiered.institution.includes("OpenCourseWare")),
+    Boolean(
+      tiered.institution && tiered.institution.includes("OpenCourseWare")
+    ),
     "generateTieredCourse sets academic OpenCourseWare institution"
   );
-  assert(tiered.modules.length > 0, "generateTieredCourse generates structured modules");
+  assert(
+    tiered.modules.length > 0,
+    "generateTieredCourse generates structured modules"
+  );
 
   // -------------------------------------------------------------------------
   // 4. API ROUTE: /api/classroom/evaluate-challenge
@@ -204,13 +234,19 @@ async function runTests() {
   console.log("\n4. Testing /api/classroom/evaluate-challenge Handler...");
 
   // Bad request (no code)
-  const emptyReq = new Request("http://localhost:3000/api/classroom/evaluate-challenge", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({}),
-  });
+  const emptyReq = new Request(
+    "http://localhost:3000/api/classroom/evaluate-challenge",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+    }
+  );
   const resBad = await handleEvaluateChallenge(emptyReq);
-  assert(resBad.status === 400, "Evaluate challenge rejects empty request with 400");
+  assert(
+    resBad.status === 400,
+    "Evaluate challenge rejects empty request with 400"
+  );
 
   // Valid evaluation request
   const validEvalReq = new Request(
@@ -220,7 +256,8 @@ async function runTests() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         challengeTitle: "Safe Pointer Swap in C",
-        objective: "Swap two integer variables using memory pointers without leaking",
+        objective:
+          "Swap two integer variables using memory pointers without leaking",
         userCode: `void swap(int *a, int *b) {
           if (a == NULL || b == NULL) return;
           int temp = *a;
@@ -236,10 +273,22 @@ async function runTests() {
   const resEval = await handleEvaluateChallenge(validEvalReq);
   assert(resEval.status === 200, "Evaluate challenge returns status 200");
   const evalData = await resEval.json();
-  assert(typeof evalData.score === "number", `Evaluation returned score: ${evalData.score}`);
-  assert(typeof evalData.verdict === "string", `Evaluation returned verdict: "${evalData.verdict}"`);
-  assert(Array.isArray(evalData.strengths), "Evaluation returned strengths array");
-  assert(Array.isArray(evalData.improvements), "Evaluation returned improvements array");
+  assert(
+    typeof evalData.score === "number",
+    `Evaluation returned score: ${evalData.score}`
+  );
+  assert(
+    typeof evalData.verdict === "string",
+    `Evaluation returned verdict: "${evalData.verdict}"`
+  );
+  assert(
+    Array.isArray(evalData.strengths),
+    "Evaluation returned strengths array"
+  );
+  assert(
+    Array.isArray(evalData.improvements),
+    "Evaluation returned improvements array"
+  );
 
   // -------------------------------------------------------------------------
   // 5. API ROUTE: /api/tutor/chat (AI Tutor Mentor)
@@ -253,7 +302,10 @@ async function runTests() {
     body: JSON.stringify({}),
   });
   const resBadChat = await handleTutorChat(badChatReq);
-  assert(resBadChat.status === 400, "Tutor chat rejects empty message with 400");
+  assert(
+    resBadChat.status === 400,
+    "Tutor chat rejects empty message with 400"
+  );
 
   // Valid tutoring request with context
   const validChatReq = new Request("http://localhost:3000/api/tutor/chat", {
@@ -286,7 +338,9 @@ async function runTests() {
   // SUMMARY
   // -------------------------------------------------------------------------
   console.log("\n=======================================================");
-  console.log(`   TOTAL TESTS: ${passedCount + failedCount} | PASSED: ${passedCount} | FAILED: ${failedCount}`);
+  console.log(
+    `   TOTAL TESTS: ${passedCount + failedCount} | PASSED: ${passedCount} | FAILED: ${failedCount}`
+  );
   console.log("=======================================================\n");
 
   if (failedCount > 0) {

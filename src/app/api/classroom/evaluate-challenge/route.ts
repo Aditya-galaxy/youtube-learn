@@ -8,7 +8,8 @@ export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions).catch(() => null);
     const body = await request.json().catch(() => ({}));
-    const { challengeTitle, objective, userCode, solutionCode, lessonTitle } = body;
+    const { challengeTitle, objective, userCode, solutionCode, lessonTitle } =
+      body;
 
     if (!userCode || typeof userCode !== "string") {
       return NextResponse.json(
@@ -78,8 +79,7 @@ Respond strictly in valid JSON with this exact schema:
     return NextResponse.json({
       score: parsed.score ?? 85,
       verdict:
-        parsed.verdict ??
-        "Great effort! You captured the essential mechanism.",
+        parsed.verdict ?? "Great effort! You captured the essential mechanism.",
       strengths: Array.isArray(parsed.strengths)
         ? parsed.strengths
         : ["Clean logic structure"],

@@ -108,12 +108,10 @@ export const TutorProvider: React.FC<{ children: ReactNode }> = ({
       setIsTyping(true);
 
       try {
-        const historyForApi = messages
-          .slice(-8)
-          .map((m) => ({
-            role: m.sender === "user" ? ("user" as const) : ("model" as const),
-            text: m.text,
-          }));
+        const historyForApi = messages.slice(-8).map((m) => ({
+          role: m.sender === "user" ? ("user" as const) : ("model" as const),
+          text: m.text,
+        }));
 
         const res = await fetch("/api/tutor/chat", {
           method: "POST",
@@ -133,7 +131,9 @@ export const TutorProvider: React.FC<{ children: ReactNode }> = ({
         const tutorReply: TutorMessage = {
           id: `tutor-${Date.now()}`,
           sender: "tutor",
-          text: data.reply || "Let's explore that! Could you elaborate on what part felt tricky?",
+          text:
+            data.reply ||
+            "Let's explore that! Could you elaborate on what part felt tricky?",
           timestamp: new Date(),
           suggestions: data.suggestions || [
             "Explain it another way",
