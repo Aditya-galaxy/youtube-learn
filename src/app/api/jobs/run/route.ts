@@ -5,8 +5,8 @@ import { runNextStep } from "@/lib/generation/jobs";
 import { kickWorker } from "@/lib/generation/kick";
 
 // One step (a syllabus or a module) can take a couple of minutes with model
-// thinking plus YouTube calls; the whole build would not fit one invocation.
-export const maxDuration = 300;
+// thinking plus YouTube calls. Capped at 60s for Vercel Hobby plan limits.
+export const maxDuration = 60;
 export const dynamic = "force-dynamic";
 
 const BodySchema = z.object({ jobId: z.string().min(1).max(64) });
