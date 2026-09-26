@@ -1,4 +1,5 @@
 import { google, type youtube_v3 } from "googleapis";
+import { decodeDeep } from "@/lib/youtube/decodeEntities";
 import { parseIsoDuration } from "./duration";
 import {
   hasSearchQuota,
@@ -158,7 +159,7 @@ export async function searchVideos(
     const videoId = item.id;
     if (!videoId) continue;
 
-    const title = item.snippet?.title ?? "";
+    const title = decodeDeep(item.snippet?.title ?? "");
     const durationSec = parseIsoDuration(item.contentDetails?.duration ?? "");
     const viewCount = Number(item.statistics?.viewCount ?? 0);
 
@@ -169,8 +170,8 @@ export async function searchVideos(
     candidates.push({
       videoId,
       title,
-      description: item.snippet?.description ?? "",
-      channelName: item.snippet?.channelTitle ?? "",
+      description: decodeDeep(item.snippet?.description ?? ""),
+      channelName: decodeDeep(item.snippet?.channelTitle ?? ""),
       channelId: item.snippet?.channelId ?? "",
       publishedAt: item.snippet?.publishedAt ?? "",
       durationSec,

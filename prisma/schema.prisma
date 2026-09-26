@@ -44,12 +44,20 @@ model UserTokens {
   @@map("user_tokens")
 }
 
+/// One row per video a user has been shown, with watchedAt set only once they
+/// actually watched it.
+///
+/// The feed records every video it serves so the next page does not repeat it.
+/// That is "shown to you", not "watched by you" — conflating the two made the
+/// feed label videos as Watched that the user had never opened.
 model ViewedVideos {
-  id       String   @id @default(cuid())
-  userId   String
-  videoId  String
-  viewedAt DateTime @default(now())
-  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id        String    @id @default(cuid())
+  userId    String
+  videoId   String
+  viewedAt  DateTime  @default(now())
+  /// Set when the video was actually watched, not merely listed.
+  watchedAt DateTime?
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, videoId])
   @@index([userId])

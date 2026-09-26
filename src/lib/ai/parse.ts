@@ -143,8 +143,20 @@ function toGenerationError(error: unknown, stage: string): GenerationError {
   }
   if (code === 429) {
     return new GenerationError(
-      "Gemini rate limit reached. Retry shortly.",
-      stage
+      "Gemini is rate limiting this project. Retrying shortly.",
+      stage,
+      [],
+      true
+    );
+  }
+  // 500/503/504 are the backend being busy or slow, not the request being
+  // wrong, so they are worth another attempt too.
+  if (code === 500 || code === 503 || code === 504) {
+    return new GenerationError(
+      "The model backend is unavailable. Retrying shortly.",
+      stage,
+      [],
+      true
     );
   }
   if (code === 401 || code === 403) {
@@ -159,6 +171,9 @@ function toGenerationError(error: unknown, stage: string): GenerationError {
   console.error(`[ai] unexpected ${stage} failure:`, raw.slice(0, 400));
   return new GenerationError("The model request failed.", stage);
 }
+
+/** Backoff attempts for a rate limit or a busy backend, before giving up. */
+const MAX_TRANSIENT_RETRIES = 3;
 
 /**
  * Calls the model for structured output, and on a schema or semantic failure
@@ -195,6 +210,7 @@ export async function parseWithRepair<T>(options: {
 
   let usage = EMPTY_USAGE;
   let lastViolations: string[] = [];
+  let transientRetries = 0;
 
   for (let attempt = 1; attempt <= 2; attempt += 1) {
     let response;
@@ -212,7 +228,20 @@ export async function parseWithRepair<T>(options: {
         },
       });
     } catch (error) {
-      throw toGenerationError(error, stage);
+      const failure = toGenerationError(error, stage);
+      // A rate limit usually clears in seconds, so absorb it here rather than
+      // bouncing the whole step back to the job engine.
+      if (failure.retryable && transientRetries < MAX_TRANSIENT_RETRIES) {
+        transientRetries += 1;
+        const waitMs = 2_000 * 2 ** (transientRetries - 1);
+        console.warn(
+          `[ai] ${stage}: ${failure.message} attempt ${transientRetries}/${MAX_TRANSIENT_RETRIES} in ${waitMs}ms`
+        );
+        await new Promise((resolve) => setTimeout(resolve, waitMs));
+        attempt -= 1; // this attempt never reached the model
+        continue;
+      }
+      throw failure;
     }
 
     usage = readUsage(
