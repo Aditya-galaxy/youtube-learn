@@ -4,12 +4,9 @@ import { z } from "zod";
 import { runNextStep } from "@/lib/generation/jobs";
 import { kickWorker } from "@/lib/generation/kick";
 
-// One step (a syllabus or a module) can take a couple of minutes with model
-// thinking plus YouTube calls, so 60s would kill steps mid-flight and leave
-// the stall detector retrying them forever. Vercel Hobby allows 300 with
-// Fluid compute, which vercel.json turns on; Cloud Run ignores this and uses
-// the service timeout instead.
-export const maxDuration = 300;
+// A step (a syllabus or a module) can take a couple of minutes with model
+// thinking plus YouTube calls. On Cloud Run the service timeout governs how
+// long an invocation may run; there is no per-route cap to declare here.
 export const dynamic = "force-dynamic";
 
 const BodySchema = z.object({ jobId: z.string().min(1).max(64) });
