@@ -19,8 +19,8 @@ export const PlansPage: React.FC = () => {
           Learn <em>deliberately</em>.
         </h1>
         <p className="mx-auto mt-5 max-w-md text-base leading-relaxed tracking-tightish text-muted-foreground">
-          Start free. Upgrade when you want learning paths, progress tracking
-          and an unlimited feed.
+          Everything below is free while the app is in development. The paid
+          tiers are what is planned next, not something you can buy yet.
         </p>
       </div>
 

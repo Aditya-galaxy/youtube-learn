@@ -1,49 +1,52 @@
 import { Plan } from "./types";
 
+/**
+ * Everything listed under Free exists today. Pro and Team are marked as
+ * planned and cannot be bought: there is no payment integration, and listing
+ * features the app does not have (offline downloads, a community forum, a
+ * mobile app, an API) as if they were on sale is a promise nothing keeps.
+ */
 export const plans: Plan[] = [
   {
     name: "Free",
     price: "$0",
-    period: "forever",
+    period: "while in development",
     features: [
-      "Basic course access",
-      "Unlimited access to articles",
-      "Community forum access",
-      "Mobile app access",
-      "Limited Videos access",
-      "Limited practice exercises",
+      "The full course catalogue, including MIT, Harvard and Stanford courseware",
+      "Build a course on any topic from YouTube",
+      "The AI tutor alongside every lesson",
+      "Hands-on challenges, recall quizzes and diagrams",
+      "Progress and notes saved to your account",
+      "Fair-use limits on search and course building",
     ],
     buttonText: "Current Plan",
     isPopular: false,
   },
   {
     name: "Pro",
-    price: "$15",
-    period: "per month",
+    price: "Planned",
+    period: "not available yet",
     features: [
-      "All Free features",
-      "Advanced learning paths",
-      "Personalized feedback",
-      "Progress analytics",
-      "Offline downloads",
-      "Priority support",
+      "Everything in Free",
+      "Higher daily limits on building courses",
+      "Spaced review that schedules what you revisit",
+      "Export a course to Notion",
+      "Deeper progress analytics",
     ],
-    buttonText: "Upgrade Now",
+    buttonText: "Not available yet",
     isPopular: true,
   },
   {
     name: "Team",
-    price: "$49",
-    period: "per month",
+    price: "Planned",
+    period: "not available yet",
     features: [
-      "All Pro features",
-      "Team management",
-      "Advanced analytics",
-      "Custom learning paths",
-      "API access",
-      "Dedicated support",
+      "Everything in Pro",
+      "Shared courses across a group",
+      "Group progress overview",
+      "Central billing",
     ],
-    buttonText: "Upgrade Now",
+    buttonText: "Not available yet",
     isPopular: false,
   },
 ];

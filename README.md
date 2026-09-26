@@ -4,15 +4,33 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Next.js 15](https://img.shields.io/badge/Next.js-15-black?logo=next.js)](https://nextjs.org)
 
-A video-discovery app for educational content on YouTube. Sign in with Google, browse an
-Education-category feed from the YouTube Data API, search it, and keep a library, a saved
-list and a watch history.
+**[Live on Cloud Run →](https://youtube-learn-761390104675.us-east4.run.app)**
+
+Type a topic and get a real course built from YouTube: modules and lessons in a defensible
+teaching order, each backed by a lecture that actually plays, with an AI tutor sitting
+alongside every lesson. It also ships a curated catalogue including Harvard CS50, MIT 18.06,
+MIT 6.006, MIT 6.824 and Stanford CS229, plus the original Education-category video feed.
 
 Built with Next.js 15 (App Router + a small Pages-Router API surface), React 19, TypeScript,
-Tailwind, shadcn/ui, NextAuth and Prisma/PostgreSQL.
+Tailwind, shadcn/ui, NextAuth and Prisma/PostgreSQL, with Gemini on Vertex AI for course
+generation and tutoring. It runs on Cloud Run against Cloud SQL in Google Cloud.
 
 ## Features
 
+- **Course generation.** A topic becomes a syllabus, then real lessons: the model plans the
+  curriculum, retrieval finds candidate lectures, and selection happens by index into that
+  candidate pool, so a video id can never be invented. Long lectures are sliced into lessons
+  on their own chapter markers. Runs as a resumable background job with live progress.
+- **An AI tutor that drives the lesson.** It reads where you are from your account — course,
+  module, position, what you have finished — opens each lesson with what to listen for and
+  the question it will ask afterwards, corrects wrong answers instead of flattering them,
+  and can act: replay the segment, open the challenge or quiz, mark the lesson done, move on.
+  It is told plainly that it has not watched the video, so it never invents timestamps.
+- **Open courseware catalogue** from Harvard, MIT and Stanford. Every lesson video is checked
+  against the YouTube API for existence and embeddability (`npm run verify:videos`).
+- **Practice per lesson:** hands-on challenges, active-recall quizzes, diagrams and notes.
+- **Progress on your account:** enrolments, completion and notes follow you across devices,
+  with the completion percentage always recomputed server-side.
 - **Google sign-in** via NextAuth with a Prisma adapter and JWT sessions.
 - **Educational feed** from the YouTube Data API, filtered to the Education category and to
   videos that are embeddable, long enough to be substantive, and not obviously clickbait.
@@ -20,7 +38,8 @@ Tailwind, shadcn/ui, NextAuth and Prisma/PostgreSQL.
 - **Infinite scroll** using YouTube page tokens.
 - **Library / Saved / History**, persisted per-browser in `localStorage`.
 - **Per-user rate limiting** on the API so a single account cannot burn the project's daily
-  YouTube quota.
+  YouTube quota, plus a **project-wide daily quota guard** that pauses course building at 80%
+  of the day's YouTube units so the feed keeps working.
 - **Light and dark themes.**
 - Signed-out visitors get a local sample feed instead of an error.
 
@@ -131,11 +150,15 @@ different project — the proxy's Admin API calls fail there otherwise.
 
 ## Deploying
 
-The app runs on **Cloud Run** in the `kronagent` GCP project, next to its Cloud SQL
-instance. Cloud Run reaches Cloud SQL over the built-in connector and Vertex AI through its
+The app is deployed at
+**<https://youtube-learn-761390104675.us-east4.run.app>**, on **Cloud Run** in the
+`kronagent` GCP project, next to its Cloud SQL instance. Cloud Run reaches Cloud SQL over the built-in connector and Vertex AI through its
 service account, so there are no database passwords in URLs to expose and no model API keys.
 
-One-time setup:
+Ship a change with `./scripts/deploy-cloudrun.sh`, which builds the `Dockerfile` with Cloud
+Build and rolls out a new revision.
+
+One-time setup (already done for `kronagent`, listed for anyone forking this):
 
 1. Grant the runtime service account `youtube-learn-vertex@kronagent.iam.gserviceaccount.com`
    `roles/cloudsql.client`, `roles/aiplatform.user` and `roles/secretmanager.secretAccessor`.
@@ -145,7 +168,6 @@ One-time setup:
    `postgresql://ytlearn_app:<password>@localhost/ytlearn?host=/cloudsql/kronagent:us-east4:youtube-learn-pg`
 3. Apply migrations to prod through the Auth Proxy: `npm run db:migrate && npm run db:seed`.
 
-Deploy with `./scripts/deploy-cloudrun.sh`. It builds the `Dockerfile` with Cloud Build.
 Then add `<service URL>/api/auth/callback/google` as an authorised redirect URI on the
 OAuth client.
 
@@ -183,9 +205,15 @@ session, never from the request body.
 ## Known limitations
 
 - Library, Saved and History live in `localStorage`, so they do not follow a user across
-  devices. Moving them server-side needs new Prisma models and endpoints.
+  devices. Course enrolments, progress and notes do sync; these three do not yet.
+- The tutor has not watched the videos. It teaches from lesson metadata and the course
+  structure, so it can say what to listen for but cannot quote the lecture or point at a
+  timestamp. Transcript grounding is the next step.
+- Per-lesson challenges and quizzes outside the curated set come from topic templates rather
+  than the lecture itself, and are labelled as general practice in the classroom.
 - Profile edits on `/profile` are in-memory only; there is no profile write endpoint.
-- `/plans` and `/settings` are UI only — there is no payment provider and settings are not stored.
+- `/plans` and `/settings` are UI only — there is no payment provider, so the paid tiers are
+  marked as planned, and settings are not stored.
 - Notifications in the navbar are placeholder content.
 
 ## License

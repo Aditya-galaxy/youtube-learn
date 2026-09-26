@@ -28,7 +28,7 @@ export const PlanCard: React.FC<PlanCardProps> = ({ plan, onSelect }) => (
       </p>
       {plan.isPopular && (
         <span className="rounded-full bg-primary-foreground/15 px-3 py-1 text-xs tracking-tightish">
-          Most popular
+          Planned next
         </span>
       )}
     </div>
