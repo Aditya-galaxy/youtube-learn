@@ -213,12 +213,18 @@ export const ClassroomPlayer: React.FC<ClassroomPlayerProps> = ({
   useEffect(() => {
     registerActionHandler((action) => {
       switch (action.type) {
+        case "seek":
         case "replaySegment":
           playerRef.current?.contentWindow?.postMessage(
             JSON.stringify({
               event: "command",
               func: "seekTo",
-              args: [currentLesson.startSeconds || 0, true],
+              args: [
+                action.type === "seek"
+                  ? action.seconds
+                  : currentLesson.startSeconds || 0,
+                true,
+              ],
             }),
             "https://www.youtube.com"
           );

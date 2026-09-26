@@ -177,10 +177,33 @@ model Lesson {
   summary      String?
   progress     UserLessonProgress[]
   notes        LessonNote[]
+  grounding    LessonGrounding?
 
   @@unique([moduleId, orderIndex])
   @@index([videoId])
   @@map("lessons")
+}
+
+/// What the model found when it actually watched this lesson's video.
+///
+/// Built once per lesson and shared by every learner, so the tutor can teach
+/// from the lecture's own structure instead of guessing at it. Timestamps are
+/// the model's reading of the video and are treated as approximate: the tutor
+/// may offer to jump to a section start, never to a precise claim like "at
+/// 4:10 he says X".
+model LessonGrounding {
+  lessonId     String   @id
+  lesson       Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  videoId      String
+  model        String
+  /// [{ startSeconds, title, summary }], ordered, within the video's length.
+  sections     Json
+  /// [{ term, definition }] taught in this lecture.
+  keyConcepts  Json
+  promptTokens Int      @default(0)
+  createdAt    DateTime @default(now())
+
+  @@map("lesson_grounding")
 }
 
 model CourseEnrollment {

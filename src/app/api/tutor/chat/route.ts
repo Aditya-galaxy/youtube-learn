@@ -4,6 +4,7 @@ import { requireUserId } from "@/lib/requireUser";
 import { chargeTokens, TUTOR_MESSAGE_COST } from "@/lib/rateLimit";
 import { loadTutorLessonContext } from "@/lib/tutor/context";
 import { tutorTurn, TutorUnavailableError } from "@/lib/tutor/respond";
+import { readGrounding } from "@/lib/tutor/grounding";
 
 export const dynamic = "force-dynamic";
 
@@ -51,6 +52,7 @@ export async function POST(request: Request) {
         ctx,
         message: parsed.data.message,
         history: parsed.data.history,
+        grounding: await readGrounding(ctx.lessonId),
       })
     );
   } catch (error) {
