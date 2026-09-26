@@ -6,6 +6,10 @@ import {
   type TutorAction,
 } from "@/lib/tutor/actions";
 import { describeContext, type TutorLessonContext } from "@/lib/tutor/context";
+import {
+  describeGrounding,
+  type LessonGroundingData,
+} from "@/lib/tutor/grounding";
 
 export interface TutorTurn {
   reply: string;
@@ -34,19 +38,27 @@ function stanceFor(tier: string): string {
   return `This learner is at an intermediate level. Ask them to attempt or predict first, then fill the gaps their attempt reveals and connect it to the idiomatic pattern.`;
 }
 
-function systemInstruction(ctx: TutorLessonContext): string {
+function systemInstruction(
+  ctx: TutorLessonContext,
+  grounding?: LessonGroundingData | null
+): string {
   return `You are Nova, a patient one-to-one tutor sitting beside a learner inside a video-based course. You are a mentor, not a search box: you know where they are and you drive the session.
 
 WHERE THE LEARNER IS (read from their account — this is fact, not something they told you):
 ${describeContext(ctx)}
 
+${grounding ? `\n${describeGrounding(grounding)}\n` : ""}
 ${stanceFor(ctx.courseTier)}
 
 HOW YOU WORK
 1. Every reply moves them forward: point at a specific thing to watch, ask them to explain something back, or set them a small task. Never end with only "let me know if you have questions".
 2. Check understanding by asking them to retrieve it, not by asking whether they understood. A learner who has just watched something needs to say it back in their own words before it sticks.
 3. When they are wrong, say so plainly and show where the reasoning broke. Encouragement that hides an error costs them the lesson.
-4. You have not watched this video and cannot see inside it. Never name a timestamp, never say "at 4:10 the instructor explains X", and never invent an example or analogy from the lecture. Describe what to listen for, in your own words, and let them find it.
+4. ${
+    grounding
+      ? 'Teach from the outline above: it came from watching this recording, so you may say what the lecture covers and roughly where. Its times are approximate to within a couple of minutes — say "around" and never claim a specific sentence or example happens at a specific time. Anything not in that outline you have not seen.'
+      : 'You have not watched this video and cannot see inside it. Never name a timestamp, never say "at 4:10 the instructor explains X", and never invent an example or analogy from the lecture. Describe what to listen for, in your own words, and let them find it.'
+  }
 5. Be brief and conversational. Bullets, bold key terms, short code snippets. No essays.
 
 ${ACTION_INSTRUCTIONS}
@@ -62,6 +74,7 @@ export async function tutorTurn(input: {
   ctx: TutorLessonContext;
   message: string;
   history?: { role: "user" | "model"; text: string }[];
+  grounding?: LessonGroundingData | null;
 }): Promise<TutorTurn> {
   let ai;
   try {
@@ -80,7 +93,7 @@ export async function tutorTurn(input: {
       { role: "user" as const, parts: [{ text: input.message }] },
     ],
     config: {
-      systemInstruction: systemInstruction(input.ctx),
+      systemInstruction: systemInstruction(input.ctx, input.grounding),
       responseMimeType: "application/json",
     },
   });
@@ -97,8 +110,38 @@ export async function tutorTurn(input: {
   }
 
   return {
-    reply: parsed.data.reply,
+    reply: redactUngroundedTimes(parsed.data.reply, input.grounding),
     suggestions: parsed.data.suggestions.slice(0, 3),
-    action: sanitizeAction(parsed.data.action, input.ctx),
+    action: sanitizeAction(parsed.data.action, input.ctx, input.grounding),
   };
+}
+
+const TIMESTAMP = /\b(\d{1,3}):([0-5]\d)\b/g;
+
+/**
+ * Removes timestamps the grounding does not support.
+ *
+ * The instruction not to name times is not reliably obeyed: asked where CS50's
+ * memory lecture reaches pointers, an ungrounded tutor answered "around the
+ * 23:44 mark" — right, as it happens, because the model has seen that lecture
+ * before, but produced the same way it would have produced a wrong one. Times
+ * the learner sees now trace back to sections we actually derived, or they do
+ * not appear at all.
+ */
+function redactUngroundedTimes(
+  reply: string,
+  grounding?: LessonGroundingData | null
+): string {
+  const allowed = new Set<number>();
+  for (const section of grounding?.sections ?? []) {
+    // Both the rounded-down minute and the exact second read as the same
+    // moment to a learner, so accept either spelling of a known start.
+    allowed.add(section.startSeconds);
+    allowed.add(section.startSeconds - (section.startSeconds % 60));
+  }
+
+  return reply.replace(TIMESTAMP, (match, mins: string, secs: string) => {
+    const total = Number(mins) * 60 + Number(secs);
+    return allowed.has(total) ? match : "later in the video";
+  });
 }

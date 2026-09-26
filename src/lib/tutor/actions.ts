@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { TutorLessonContext } from "@/lib/tutor/context";
+import type { LessonGroundingData } from "@/lib/tutor/grounding";
 
 /**
  * Things the tutor can do in the classroom, beyond talking.
@@ -10,12 +11,17 @@ import type { TutorLessonContext } from "@/lib/tutor/context";
  * the browser.
  */
 export const TutorActionSchema = z.discriminatedUnion("type", [
-  // Deliberately NOT an arbitrary "seek to 4:10": the tutor cannot watch the
-  // video, so any timestamp it names is a guess, and a confident jump to the
-  // wrong minute teaches the wrong thing. Replaying this lesson's own segment
-  // is a position we actually know.
   z.object({
     type: z.literal("replaySegment"),
+    label: z.string().max(80),
+  }),
+  // A jump is only allowed to a section start that came out of watching the
+  // video, never to a timestamp composed mid-sentence: spot-checking the
+  // grounding found boundaries drifting by minutes, and free-form guesses were
+  // worse still. sanitizeAction drops anything not in the stored sections.
+  z.object({
+    type: z.literal("seek"),
+    seconds: z.number().int().min(0).max(86_400),
     label: z.string().max(80),
   }),
   z.object({
@@ -44,9 +50,17 @@ export const TutorReplySchema = z.object({
 /** Drops an action that does not apply where the learner currently is. */
 export function sanitizeAction(
   action: TutorAction | null | undefined,
-  ctx: TutorLessonContext
+  ctx: TutorLessonContext,
+  grounding?: LessonGroundingData | null
 ): TutorAction | null {
   if (!action) return null;
+
+  if (action.type === "seek") {
+    const known = grounding?.sections.some(
+      (s) => s.startSeconds === action.seconds
+    );
+    if (!known) return null;
+  }
 
   if (action.type === "nextLesson" && !ctx.nextLessonTitle) return null;
   if (action.type === "markComplete" && ctx.isCompleted) return null;
@@ -57,7 +71,8 @@ export function sanitizeAction(
 export const ACTION_INSTRUCTIONS = `ACTIONS
 You may propose at most one action per reply, in the "action" field, or null when none helps.
 - {"type":"replaySegment","label":"Replay this section"} — restart this lesson's video segment from its beginning.
-You cannot see or hear the video, so you must never name a timestamp, claim what happens at a particular minute, or describe an analogy the instructor supposedly used. Tell the learner what to listen for instead.
+- {"type":"seek","seconds":<int>,"label":"Jump to about 23:44 — Memory Addresses and Pointers"} — jump to a section of the lecture. Allowed ONLY when a lecture outline is given below, and ONLY using one of its exact startSeconds values. Any other timestamp is discarded.
+Section times are approximate to within a couple of minutes, so offer them as "about", and never claim that a particular sentence or example occurs at a particular time.
 - {"type":"openTab","tab":"challenge|quiz|diagram|resources|notes","label":"..."} — open a panel under the video.
 - {"type":"markComplete","label":"..."} — offer to mark the lesson done, only once the learner has shown they understood it.
 - {"type":"nextLesson","label":"..."} — move on, only when this lesson is genuinely finished.

@@ -183,6 +183,28 @@ model Lesson {
   @@map("lessons")
 }
 
+/// What the model found when it watched a video, keyed by the video itself.
+///
+/// Keyed by videoId, not by lesson: generated courses slice one long lecture
+/// into many lessons, and they all share this single pass. Each lesson reads
+/// back only the sections inside its own segment.
+///
+/// Timestamps are the model's reading of the video and are approximate —
+/// spot-checking found section boundaries drifting by minutes — so the tutor
+/// offers them as "around" and never as an exact claim.
+model VideoGrounding {
+  videoId      String   @id
+  model        String
+  /// [{ startSeconds, title, summary }] across the whole video, ordered.
+  sections     Json
+  /// [{ term, definition }] taught in the video.
+  keyConcepts  Json
+  promptTokens Int      @default(0)
+  createdAt    DateTime @default(now())
+
+  @@map("video_grounding")
+}
+
 model CourseEnrollment {
   id             String       @id @default(cuid())
   userId         String
