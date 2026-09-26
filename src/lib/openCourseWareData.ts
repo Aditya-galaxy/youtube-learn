@@ -7,7 +7,7 @@ export const OPEN_COURSEWARE_COURSES: Course[] = [
     title: "CS50x: Introduction to Computer Science",
     description:
       "Harvard University's legendary introduction to the intellectual enterprises of computer science and the art of programming. Learn algorithmic thinking, problem-solving, memory, and software design from scratch.",
-    thumbnail: "https://i.ytimg.com/vi/LfaMVlDaQ24/maxresdefault.jpg",
+    thumbnail: "https://i.ytimg.com/vi/3LPJfIKxwWc/maxresdefault.jpg",
     category: "Computer Science",
     difficulty: "BASIC",
     tier: "BASIC",
@@ -30,9 +30,9 @@ export const OPEN_COURSEWARE_COURSES: Course[] = [
             moduleId: "cs50mod-1",
             title: "Lecture 0: Computational Thinking, Binary & Scratch",
             orderIndex: 1,
-            videoId: "LfaMVlDaQ24",
+            videoId: "3LPJfIKxwWc",
             channelName: "CS50",
-            durationSec: 8400,
+            durationSec: 7495,
             startSeconds: 0,
             summary:
               "How computers represent information using binary, ASCII, and RGB, and introductory programming mental models.",
@@ -42,9 +42,9 @@ export const OPEN_COURSEWARE_COURSES: Course[] = [
             moduleId: "cs50mod-1",
             title: "Lecture 1: The C Programming Language & Syntax",
             orderIndex: 2,
-            videoId: "y62Zj_07mF8",
+            videoId: "cwtpLIWylAw",
             channelName: "CS50",
-            durationSec: 8100,
+            durationSec: 8861,
             startSeconds: 0,
             summary:
               "Source code, compilation, variables, conditionals, loops, and terminal workflows.",
@@ -62,11 +62,11 @@ export const OPEN_COURSEWARE_COURSES: Course[] = [
           {
             id: "cs50less-3",
             moduleId: "cs50mod-2",
-            title: "Lecture 2: Arrays, Strings & Memory Layout",
+            title: "Lecture 2: Arrays, Strings & Compilation",
             orderIndex: 1,
-            videoId: "g1A_X_1K87I",
+            videoId: "4vU4aEFmTSo",
             channelName: "CS50",
-            durationSec: 7900,
+            durationSec: 7924,
             startSeconds: 0,
             summary:
               "Contiguous blocks of memory, character arrays, string termination (null byte), and command line arguments.",
@@ -76,9 +76,9 @@ export const OPEN_COURSEWARE_COURSES: Course[] = [
             moduleId: "cs50mod-2",
             title: "Lecture 4: Memory, Hexadecimal & Pointers",
             orderIndex: 2,
-            videoId: "X8h4Z7yS_kU",
+            videoId: "F9-yqoS7b8w",
             channelName: "CS50",
-            durationSec: 8600,
+            durationSec: 8243,
             startSeconds: 0,
             summary:
               "Pointers, addresses, hexadecimal notation, malloc, free, and avoiding segmentation faults.",
@@ -98,9 +98,9 @@ export const OPEN_COURSEWARE_COURSES: Course[] = [
             moduleId: "cs50mod-3",
             title: "Lecture 3: Algorithms, Asymptotic Notation & Recursion",
             orderIndex: 1,
-            videoId: "4T_eS02tZ2s",
+            videoId: "jZzyERW7h1A",
             channelName: "CS50",
-            durationSec: 8000,
+            durationSec: 7332,
             startSeconds: 0,
             summary:
               "Big O, Omega, Theta notation, bubble sort, selection sort, merge sort, and recursion.",
@@ -110,9 +110,9 @@ export const OPEN_COURSEWARE_COURSES: Course[] = [
             moduleId: "cs50mod-3",
             title: "Lecture 5: Data Structures, Hash Tables & Trees",
             orderIndex: 2,
-            videoId: "1fL3iPauq6U",
+            videoId: "0euvEdPwQnQ",
             channelName: "CS50",
-            durationSec: 8500,
+            durationSec: 7369,
             startSeconds: 0,
             summary:
               "Dynamically growing memory, linked list operations, binary search trees, hash tables, and collision handling.",
@@ -132,9 +132,9 @@ export const OPEN_COURSEWARE_COURSES: Course[] = [
             moduleId: "cs50mod-4",
             title: "Lecture 6: Python Programming & Rapid Prototyping",
             orderIndex: 1,
-            videoId: "9LpTq2iG_Bw",
+            videoId: "EHi0RDZ31VA",
             channelName: "CS50",
-            durationSec: 8200,
+            durationSec: 7743,
             startSeconds: 0,
             summary:
               "Python syntax, dictionaries, exceptions, file I/O, third-party libraries, and audio/image processing.",
@@ -144,9 +144,9 @@ export const OPEN_COURSEWARE_COURSES: Course[] = [
             moduleId: "cs50mod-4",
             title: "Lecture 7: SQL, Relational Databases & Indexing",
             orderIndex: 2,
-            videoId: "_kQz6n_Ua6A",
+            videoId: "1RCMYG8RUSE",
             channelName: "CS50",
-            durationSec: 8300,
+            durationSec: 8045,
             startSeconds: 0,
             summary:
               "Relational database schemas, primary and foreign keys, SQL joins, indexes, and race condition transactions.",
@@ -161,7 +161,7 @@ export const OPEN_COURSEWARE_COURSES: Course[] = [
     title: "MIT 18.06: Linear Algebra",
     description:
       "The world-renowned MIT mathematics curriculum taught by Prof. Gilbert Strang. Covers vector spaces, matrix factorizations, orthogonal projections, eigenvalues, and positive definite systems with deep geometric intuition.",
-    thumbnail: "https://i.ytimg.com/vi/ZK3O402wf1c/maxresdefault.jpg",
+    thumbnail: "https://i.ytimg.com/vi/J7DzL2_Na80/maxresdefault.jpg",
     category: "Mathematics",
     difficulty: "INTERMEDIATE",
     tier: "INTERMEDIATE",
@@ -184,9 +184,9 @@ export const OPEN_COURSEWARE_COURSES: Course[] = [
             moduleId: "mit1806-mod-1",
             title: "Lecture 1: The Geometry of Linear Equations",
             orderIndex: 1,
-            videoId: "ZK3O402wf1c",
+            videoId: "J7DzL2_Na80",
             channelName: "MIT OpenCourseWare",
-            durationSec: 2380,
+            durationSec: 2389,
             startSeconds: 0,
             summary:
               "Row picture, column picture, and matrix form of linear equations Ax = b.",
@@ -194,11 +194,11 @@ export const OPEN_COURSEWARE_COURSES: Course[] = [
           {
             id: "mit1806-less-2",
             moduleId: "mit1806-mod-1",
-            title: "Lecture 2: Elimination with Matrices & Pivots",
+            title: "Lecture 2: Elimination with Matrices",
             orderIndex: 2,
             videoId: "QVKj3LADCnA",
             channelName: "MIT OpenCourseWare",
-            durationSec: 2860,
+            durationSec: 2862,
             startSeconds: 0,
             summary:
               "Success and failure of elimination, pivots, and elementary elimination matrices.",
@@ -210,7 +210,7 @@ export const OPEN_COURSEWARE_COURSES: Course[] = [
             orderIndex: 3,
             videoId: "FX4C-JpTFgY",
             channelName: "MIT OpenCourseWare",
-            durationSec: 2800,
+            durationSec: 2809,
             startSeconds: 0,
             summary:
               "Five ways to multiply matrices, Gauss-Jordan elimination for matrix inverses.",
@@ -228,11 +228,11 @@ export const OPEN_COURSEWARE_COURSES: Course[] = [
           {
             id: "mit1806-less-4",
             moduleId: "mit1806-mod-2",
-            title: "Lecture 6: Column Space and Nullspace of A",
+            title: "Lecture 6: Column Space and Nullspace",
             orderIndex: 1,
-            videoId: "8o5CmfpeUm8",
+            videoId: "8o5Cmfpeo6g",
             channelName: "MIT OpenCourseWare",
-            durationSec: 2750,
+            durationSec: 2761,
             startSeconds: 0,
             summary:
               "Definitions of vector spaces and subspaces, spanning vectors, and linear independence.",
@@ -241,9 +241,9 @@ export const OPEN_COURSEWARE_COURSES: Course[] = [
             id: "mit1806-less-5",
             moduleId: "mit1806-mod-2",
             title:
-              "Lecture 7: Solving Ax = 0: Pivot Variables & Special Solutions",
+              "Lecture 7: Solving Ax = 0 — Pivot Variables & Special Solutions",
             orderIndex: 2,
-            videoId: "VqP_228_wPo",
+            videoId: "VqP2tREMvt0",
             channelName: "MIT OpenCourseWare",
             durationSec: 2600,
             startSeconds: 0,
@@ -255,9 +255,9 @@ export const OPEN_COURSEWARE_COURSES: Course[] = [
             moduleId: "mit1806-mod-2",
             title: "Lecture 14: Orthogonal Vectors and Subspaces",
             orderIndex: 3,
-            videoId: "Y_Ac6KiQ1t0",
+            videoId: "YzZUIYRCE38",
             channelName: "MIT OpenCourseWare",
-            durationSec: 2980,
+            durationSec: 2988,
             startSeconds: 0,
             summary:
               "Orthogonality of the four fundamental subspaces, row space orthogonal to nullspace.",
@@ -276,11 +276,11 @@ export const OPEN_COURSEWARE_COURSES: Course[] = [
           {
             id: "mit1806-less-7",
             moduleId: "mit1806-mod-3",
-            title: "Lecture 21: Eigenvalues and Eigenvectors Explained",
+            title: "Lecture 21: Eigenvalues and Eigenvectors",
             orderIndex: 1,
-            videoId: "cdZbc_iFw-E",
+            videoId: "cdZnhQjJu4I",
             channelName: "MIT OpenCourseWare",
-            durationSec: 3080,
+            durationSec: 3083,
             startSeconds: 0,
             summary:
               "Ax = lambda x, det(A - lambda I) = 0, trace and determinant relationships.",
@@ -288,11 +288,11 @@ export const OPEN_COURSEWARE_COURSES: Course[] = [
           {
             id: "mit1806-less-8",
             moduleId: "mit1806-mod-3",
-            title: "Lecture 29: Positive Definite Matrices and Minima",
+            title: "Lecture 22: Diagonalization and Powers of A",
             orderIndex: 2,
             videoId: "13r9QY6cmjc",
             channelName: "MIT OpenCourseWare",
-            durationSec: 3050,
+            durationSec: 3110,
             startSeconds: 0,
             summary:
               "Tests for positive definiteness, energy curves, saddle points, and quadratic forms.",
@@ -333,7 +333,7 @@ export const OPEN_COURSEWARE_COURSES: Course[] = [
             orderIndex: 1,
             videoId: "HtSuA80QTyo",
             channelName: "MIT OpenCourseWare",
-            durationSec: 3080,
+            durationSec: 3202,
             startSeconds: 0,
             summary:
               "1D and 2D peak finding, dividing problem space in half, and O(log n) efficiency.",
@@ -341,11 +341,11 @@ export const OPEN_COURSEWARE_COURSES: Course[] = [
           {
             id: "mit6006-less-2",
             moduleId: "mit6006-mod-1",
-            title: "Lecture 3: Insertion Sort, Merge Sort & Recurrences",
+            title: "Lecture 3: Insertion Sort & Merge Sort",
             orderIndex: 2,
-            videoId: "Kg4bqm1QDic",
+            videoId: "Kg4bqzAqRBM",
             channelName: "MIT OpenCourseWare",
-            durationSec: 3050,
+            durationSec: 3080,
             startSeconds: 0,
             summary:
               "Why sorting matters, recurrence trees, and proving O(n log n) merge sort bounds.",
@@ -353,11 +353,11 @@ export const OPEN_COURSEWARE_COURSES: Course[] = [
           {
             id: "mit6006-less-3",
             moduleId: "mit6006-mod-1",
-            title: "Lecture 4: Heaps and Priority Queues",
+            title: "Lecture 4: Heaps and Heap Sort",
             orderIndex: 3,
             videoId: "B7hVxCmfPtM",
             channelName: "MIT OpenCourseWare",
-            durationSec: 3120,
+            durationSec: 3152,
             startSeconds: 0,
             summary:
               "Binary heaps, max-heap invariant, max-heapify, build-max-heap in O(n), and heapsort.",
@@ -375,11 +375,11 @@ export const OPEN_COURSEWARE_COURSES: Course[] = [
           {
             id: "mit6006-less-4",
             moduleId: "mit6006-mod-2",
-            title: "Lecture 5: Binary Search Trees & Inorder Traversal",
+            title: "Lecture 5: Binary Search Trees & BST Sort",
             orderIndex: 1,
             videoId: "9Jry5-82I68",
             channelName: "MIT OpenCourseWare",
-            durationSec: 3000,
+            durationSec: 3160,
             startSeconds: 0,
             summary:
               "BST property, find, insert, delete, successor operations, and worst-case skews.",
@@ -387,11 +387,11 @@ export const OPEN_COURSEWARE_COURSES: Course[] = [
           {
             id: "mit6006-less-5",
             moduleId: "mit6006-mod-2",
-            title: "Lecture 6: AVL Trees & Balance Rotations",
+            title: "Lecture 6: AVL Trees & AVL Sort",
             orderIndex: 2,
             videoId: "FNeL18KsWPc",
             channelName: "MIT OpenCourseWare",
-            durationSec: 3100,
+            durationSec: 3119,
             startSeconds: 0,
             summary:
               "Height balance invariant (|left - right| <= 1), left and right rotations in O(1).",
@@ -399,11 +399,11 @@ export const OPEN_COURSEWARE_COURSES: Course[] = [
           {
             id: "mit6006-less-6",
             moduleId: "mit6006-mod-2",
-            title: "Lecture 7: Hashing with Chaining & Hash Functions",
+            title: "Lecture 8: Hashing with Chaining",
             orderIndex: 3,
-            videoId: "0M_kIqhG65U",
+            videoId: "0M_kIqhwbFo",
             channelName: "MIT OpenCourseWare",
-            durationSec: 3080,
+            durationSec: 3076,
             startSeconds: 0,
             summary:
               "Direct access tables, collision resolution via chaining, simple uniform hashing.",
@@ -421,11 +421,11 @@ export const OPEN_COURSEWARE_COURSES: Course[] = [
           {
             id: "mit6006-less-7",
             moduleId: "mit6006-mod-3",
-            title: "Lecture 11: Breadth-First Search (BFS) & Shortest Paths",
+            title: "Lecture 13: Breadth-First Search (BFS)",
             orderIndex: 1,
             videoId: "s-CYnVz-uh4",
             channelName: "MIT OpenCourseWare",
-            durationSec: 2950,
+            durationSec: 3048,
             startSeconds: 0,
             summary:
               "Adjacency lists vs matrices, queue exploration, frontier sets, and unweighted shortest paths.",
@@ -433,11 +433,11 @@ export const OPEN_COURSEWARE_COURSES: Course[] = [
           {
             id: "mit6006-less-8",
             moduleId: "mit6006-mod-3",
-            title: "Lecture 12: Depth-First Search (DFS) & Topological Sorting",
+            title: "Lecture 14: Depth-First Search (DFS) & Topological Sort",
             orderIndex: 2,
             videoId: "AfSk24UTFS8",
             channelName: "MIT OpenCourseWare",
-            durationSec: 3040,
+            durationSec: 3031,
             startSeconds: 0,
             summary:
               "Recursive graph traversal, discovery/finishing times, edge classification, and DAG ordering.",
@@ -445,11 +445,12 @@ export const OPEN_COURSEWARE_COURSES: Course[] = [
           {
             id: "mit6006-less-9",
             moduleId: "mit6006-mod-3",
-            title: "Lecture 19: Dynamic Programming: Memoization & Subproblems",
+            title:
+              "Lecture 19: Dynamic Programming I — Fibonacci & Shortest Paths",
             orderIndex: 3,
             videoId: "OQ5jsbhAv_M",
             channelName: "MIT OpenCourseWare",
-            durationSec: 3180,
+            durationSec: 3107,
             startSeconds: 0,
             summary:
               "The 5-step DP recipe: define subproblems, guess choices, relate subproblems, topological order, and solve.",
@@ -464,13 +465,13 @@ export const OPEN_COURSEWARE_COURSES: Course[] = [
     title: "Stanford CS229: Machine Learning",
     description:
       "Stanford University's definitive, mathematically rigorous course on machine learning by Prof. Andrew Ng. Features deep derivations of supervised learning, SVM duals, kernel tricks, and Markov decision processes.",
-    thumbnail: "https://i.ytimg.com/vi/jGwO_UgTS7I/maxresdefault.jpg",
+    thumbnail: "https://i.ytimg.com/vi/UzxYlbK2c7E/maxresdefault.jpg",
     category: "Artificial Intelligence",
     difficulty: "EXPERT",
     tier: "EXPERT",
     estimatedHours: 9.5,
     instructor: "Prof. Andrew Ng",
-    institution: "Stanford Online",
+    institution: "Stanford University",
     sourceUrl: "https://cs229.stanford.edu/",
     isPublic: true,
     modules: [
@@ -485,11 +486,11 @@ export const OPEN_COURSEWARE_COURSES: Course[] = [
           {
             id: "cs229-less-1",
             moduleId: "cs229-mod-1",
-            title: "Lecture 1: Introduction to Machine Learning & Taxonomy",
+            title: "Lecture 1: Introduction & Course Overview",
             orderIndex: 1,
-            videoId: "jGwO_UgTS7I",
+            videoId: "UzxYlbK2c7E",
             channelName: "Stanford",
-            durationSec: 4600,
+            durationSec: 4120,
             startSeconds: 0,
             summary:
               "Supervised vs unsupervised learning, reinforcement learning, problem formulation, and course logistics.",
@@ -500,9 +501,9 @@ export const OPEN_COURSEWARE_COURSES: Course[] = [
             title:
               "Lecture 2: Linear Regression, Gradient Descent & Normal Equations",
             orderIndex: 2,
-            videoId: "4b4MUYve_U8",
+            videoId: "5u4G23_OohI",
             channelName: "Stanford",
-            durationSec: 4700,
+            durationSec: 4576,
             startSeconds: 0,
             summary:
               "LMS algorithm, derivation of gradient descent update rules, matrix derivative derivation of normal equations.",
@@ -510,11 +511,11 @@ export const OPEN_COURSEWARE_COURSES: Course[] = [
           {
             id: "cs229-less-3",
             moduleId: "cs229-mod-1",
-            title: "Lecture 3: Locally Weighted & Logistic Regression (GLM)",
+            title: "Lecture 3: Locally Weighted & Logistic Regression",
             orderIndex: 3,
-            videoId: "het9HFqo1TQ",
+            videoId: "HZ4cvaztQEs",
             channelName: "Stanford",
-            durationSec: 4800,
+            durationSec: 4394,
             startSeconds: 0,
             summary:
               "Parametric vs non-parametric algorithms, bandwidth parameter tau, sigmoid function, and maximum likelihood.",
@@ -532,11 +533,11 @@ export const OPEN_COURSEWARE_COURSES: Course[] = [
           {
             id: "cs229-less-4",
             moduleId: "cs229-mod-2",
-            title: "Lecture 6: Support Vector Machines & The Dual Formulation",
+            title: "Lecture 7: Optimal Margin Classifiers & Kernels",
             orderIndex: 1,
-            videoId: "lDwow4aOrtg",
+            videoId: "s8B4A5ubw6c",
             channelName: "Stanford",
-            durationSec: 4650,
+            durationSec: 4545,
             startSeconds: 0,
             summary:
               "Maximizing geometric margins, primal optimization problem, Lagrange multipliers, and the dual optimization problem.",
@@ -544,11 +545,11 @@ export const OPEN_COURSEWARE_COURSES: Course[] = [
           {
             id: "cs229-less-5",
             moduleId: "cs229-mod-2",
-            title: "Lecture 7: Kernels, Mercer's Theorem & Soft Margins",
+            title: "Lecture 8: Support Vector Machines, Soft Margin & SMO",
             orderIndex: 2,
             videoId: "bUv9bfMPMb4",
             channelName: "Stanford",
-            durationSec: 4750,
+            durationSec: 4639,
             startSeconds: 0,
             summary:
               "Implicit high-dimensional feature mappings, polynomial and Gaussian kernels, Mercer's theorem, and L1 soft-margins.",
@@ -566,23 +567,23 @@ export const OPEN_COURSEWARE_COURSES: Course[] = [
           {
             id: "cs229-less-6",
             moduleId: "cs229-mod-3",
-            title: "Lecture 11: Introduction to Deep Neural Networks",
+            title: "Lecture 12: Unsupervised Learning, k-means & EM",
             orderIndex: 1,
-            videoId: "rpebdymfOow",
+            videoId: "ZZGTuAkF-Hw",
             channelName: "Stanford",
-            durationSec: 4700,
+            durationSec: 4463,
             startSeconds: 0,
             summary:
-              "Biological vs artificial neurons, multi-layer perceptrons, activation derivatives, and backpropagation.",
+              "Clustering with k-means, mixture of Gaussians, and the Expectation-Maximization algorithm.",
           },
           {
             id: "cs229-less-7",
             moduleId: "cs229-mod-3",
-            title: "Lecture 16: Reinforcement Learning & Bellman Equations",
+            title: "Lecture 16: Reinforcement Learning & MDPs",
             orderIndex: 2,
-            videoId: "RtxI449VkSc",
+            videoId: "RtxI449ZjSc",
             channelName: "Stanford",
-            durationSec: 4850,
+            durationSec: 4386,
             startSeconds: 0,
             summary:
               "Markov Decision Processes (S, A, P, gamma, R), policy iteration, value iteration, and Bellman optimality equations.",
@@ -618,11 +619,11 @@ export const OPEN_COURSEWARE_COURSES: Course[] = [
           {
             id: "mit6824-less-1",
             moduleId: "mit6824-mod-1",
-            title: "Lecture 1: Introduction, Key Challenges & Infrastructure",
+            title: "Lecture 1: Introduction",
             orderIndex: 1,
             videoId: "cQP8WApzIQQ",
             channelName: "MIT OpenCourseWare",
-            durationSec: 3600,
+            durationSec: 4775,
             startSeconds: 0,
             summary:
               "Core motivations: parallelism, fault tolerance, physical locality. Linearizability vs eventual consistency.",
@@ -630,11 +631,11 @@ export const OPEN_COURSEWARE_COURSES: Course[] = [
           {
             id: "mit6824-less-2",
             moduleId: "mit6824-mod-1",
-            title: "Lecture 3: GFS: The Google File System Architecture",
+            title: "Lecture 3: GFS — The Google File System",
             orderIndex: 2,
-            videoId: "EpIgvowZr0A",
+            videoId: "EpIgvowZr00",
             channelName: "MIT OpenCourseWare",
-            durationSec: 3750,
+            durationSec: 4942,
             startSeconds: 0,
             summary:
               "Big data workloads, single coordinator/master design, chunkservers, append consistency, and replication.",
@@ -652,11 +653,11 @@ export const OPEN_COURSEWARE_COURSES: Course[] = [
           {
             id: "mit6824-less-3",
             moduleId: "mit6824-mod-2",
-            title: "Lecture 5: Fault Tolerance: Raft Consensus I (Elections)",
+            title: "Lecture 6: Fault Tolerance — Raft (1)",
             orderIndex: 1,
-            videoId: "UzxXb4khtPU",
+            videoId: "64Zp3tzNbpE",
             channelName: "MIT OpenCourseWare",
-            durationSec: 3900,
+            durationSec: 4801,
             startSeconds: 0,
             summary:
               "Split-brain scenarios, majority quorums (2F+1), randomized election timeouts, and requestVote RPCs.",
@@ -664,12 +665,11 @@ export const OPEN_COURSEWARE_COURSES: Course[] = [
           {
             id: "mit6824-less-4",
             moduleId: "mit6824-mod-2",
-            title:
-              "Lecture 6: Fault Tolerance: Raft Consensus II (Log Compaction)",
+            title: "Lecture 7: Fault Tolerance — Raft (2)",
             orderIndex: 2,
-            videoId: "R2-9sDY_IaE",
+            videoId: "4r8Mz3MMivY",
             channelName: "MIT OpenCourseWare",
-            durationSec: 4100,
+            durationSec: 4657,
             startSeconds: 0,
             summary:
               "Log matching property, handling split networks, committing entries from previous terms, and snapshotting.",
@@ -687,12 +687,11 @@ export const OPEN_COURSEWARE_COURSES: Course[] = [
           {
             id: "mit6824-less-5",
             moduleId: "mit6824-mod-3",
-            title:
-              "Lecture 12: Distributed Transactions & Two-Phase Commit (2PC)",
+            title: "Lecture 12: Distributed Transactions",
             orderIndex: 1,
-            videoId: "Ea1e0bH_7v0",
+            videoId: "aDp99WDIM_4",
             channelName: "MIT OpenCourseWare",
-            durationSec: 3800,
+            durationSec: 4644,
             startSeconds: 0,
             summary:
               "ACID semantics across machines, prepare and commit phases, write-ahead logs, and coordinator timeout recovery.",

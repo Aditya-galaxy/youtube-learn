@@ -452,6 +452,7 @@ export const ClassroomPlayer: React.FC<ClassroomPlayerProps> = ({
               <ChallengeWorkbench
                 challenge={pedagogy.challenge}
                 lessonTitle={currentLesson.title}
+                isGeneric={pedagogy.isGeneric}
               />
             )}
 

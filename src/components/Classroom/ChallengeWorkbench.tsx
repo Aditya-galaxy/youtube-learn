@@ -17,11 +17,14 @@ import type { LessonChallenge } from "../../../types/course";
 interface ChallengeWorkbenchProps {
   challenge: LessonChallenge;
   lessonTitle: string;
+  /** The exercise came from a topic template, not from this lecture. */
+  isGeneric?: boolean;
 }
 
 export const ChallengeWorkbench: React.FC<ChallengeWorkbenchProps> = ({
   challenge,
   lessonTitle,
+  isGeneric = false,
 }) => {
   const [code, setCode] = useState(challenge.starterCode);
   const [revealedHints, setRevealedHints] = useState<number>(0);
@@ -39,31 +42,40 @@ export const ChallengeWorkbench: React.FC<ChallengeWorkbenchProps> = ({
     strengths: string[];
     improvements: string[];
   } | null>(null);
+  const [aiError, setAiError] = useState<string | null>(null);
 
+  // There is no sandbox in the app, so nothing here executes the learner's
+  // code. This is a local readiness check, and it says so rather than
+  // printing invented pass marks, timings and memory figures.
   const handleRunTests = () => {
     setTestingStatus("running");
-    setTestOutput("Running test harness in isolated runner…");
+    setTestOutput("Checking your draft…");
 
     setTimeout(() => {
-      // Basic heuristic: if user modified code beyond starter or included logic
-      const isSubstantial =
-        code.trim().length > challenge.starterCode.trim().length - 10 &&
-        !code.includes("// TODO");
+      const untouched =
+        code.trim() === challenge.starterCode.trim() ||
+        code.includes("// TODO");
 
-      if (isSubstantial || code.includes("return") || code.includes("solve")) {
-        setTestingStatus("passed");
-        setTestOutput(
-          `✓ Test Case 1: PASS (${challenge.testCases[0]?.description || "Standard invariant verification"})\n✓ Execution time: 1.4ms\n✓ Memory: 0.12 MB\n\n🎉 Challenge criteria satisfied! You built and verified the mental model.`
-        );
-      } else {
+      if (untouched) {
         setTestingStatus("failed");
         setTestOutput(
-          `✗ Test Case 1: FAIL\nExpected: ${
-            challenge.testCases[0]?.expectedOutput || "Verified output"
-          }\nActual: null or incomplete implementation\n\nTip: Click 'Need a Hint?' below or consult the Lesson Diagram.`
+          `The starter template still has its TODO in place.\n\nWhat this check does: it only looks at whether you have written something yet — your code is not executed here.\n\nTarget behaviour: ${
+            challenge.testCases[0]?.description || "see the objective above"
+          }\nExpected output: ${
+            challenge.testCases[0]?.expectedOutput || "see the objective above"
+          }`
+        );
+      } else {
+        setTestingStatus("passed");
+        setTestOutput(
+          `Your draft is ready to review.\n\nYour code is not executed here, so this is not a pass: run it in your own editor against the case below, then send it for review.\n\nTarget behaviour: ${
+            challenge.testCases[0]?.description || "see the objective above"
+          }\nExpected output: ${
+            challenge.testCases[0]?.expectedOutput || "see the objective above"
+          }`
         );
       }
-    }, 600);
+    }, 300);
   };
 
   const handleRevealNextHint = () => {
@@ -87,23 +99,28 @@ export const ChallengeWorkbench: React.FC<ChallengeWorkbenchProps> = ({
         }),
       });
 
-      if (!res.ok) throw new Error("Evaluation failed");
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(
+          typeof body.error === "string"
+            ? body.error
+            : res.status === 401
+              ? "Sign in to have your code reviewed."
+              : "Could not review your code just now. Please try again."
+        );
+      }
       const data = await res.json();
       setAiFeedback(data);
-    } catch {
-      // Fallback feedback if network or AI key unavailable
-      setAiFeedback({
-        score: 85,
-        verdict: "Solid implementation! Good decomposition of the problem.",
-        strengths: [
-          "Appropriate data structures selected",
-          "Logical flow addresses core requirement",
-        ],
-        improvements: [
-          "Consider guarding against empty edge cases or null pointers",
-          "Add time complexity comments for production readability",
-        ],
-      });
+      setAiError(null);
+    } catch (err) {
+      // No invented score: an earlier version returned a flat 85 whenever the
+      // reviewer was unreachable, grading work nothing had read.
+      setAiFeedback(null);
+      setAiError(
+        err instanceof Error
+          ? err.message
+          : "Could not review your code just now. Please try again."
+      );
     } finally {
       setAiLoading(false);
     }
@@ -189,7 +206,7 @@ export const ChallengeWorkbench: React.FC<ChallengeWorkbenchProps> = ({
               ) : (
                 <Play className="h-3.5 w-3.5" />
               )}
-              Verify & Run Tests
+              Check my draft
             </button>
           </div>
         </div>
@@ -223,6 +240,19 @@ export const ChallengeWorkbench: React.FC<ChallengeWorkbenchProps> = ({
           </div>
         )}
       </div>
+
+      {isGeneric && (
+        <p className="text-xs text-muted-foreground">
+          A general practice exercise for this topic area, not written from this
+          specific lecture.
+        </p>
+      )}
+
+      {aiError && (
+        <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4">
+          <p className="text-xs font-medium text-destructive">{aiError}</p>
+        </div>
+      )}
 
       {/* AI Feedback Panel */}
       {aiFeedback && (

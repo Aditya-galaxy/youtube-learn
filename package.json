@@ -16,7 +16,8 @@
     "generate:course": "tsx --require ./scripts/load-env.cjs scripts/generate-course.ts",
     "db:migrate": "prisma migrate deploy",
     "db:seed": "tsx --require ./scripts/load-env.cjs prisma/seed.ts",
-    "test:backend": "tsx --require ./scripts/load-env.cjs scripts/verify-backend.ts"
+    "test:backend": "tsx --require ./scripts/load-env.cjs scripts/verify-backend.ts",
+    "verify:videos": "tsx --require ./scripts/load-env.cjs scripts/verify-catalogue-videos.ts"
   },
   "dependencies": {
     "@google/genai": "^2.23.0",
