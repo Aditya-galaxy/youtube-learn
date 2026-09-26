@@ -11,8 +11,14 @@ async function main() {
   if (!lessonId)
     throw new Error("usage: npm run ground -- <lessonId> [--force]");
 
-  if (flags.includes("--force"))
-    await prisma.lessonGrounding.deleteMany({ where: { lessonId } });
+  if (flags.includes("--force")) {
+    const l = await prisma.lesson.findUnique({
+      where: { id: lessonId },
+      select: { videoId: true },
+    });
+    if (l)
+      await prisma.videoGrounding.deleteMany({ where: { videoId: l.videoId } });
+  }
 
   const lesson = await prisma.lesson.findUnique({
     where: { id: lessonId },

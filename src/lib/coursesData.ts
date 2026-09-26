@@ -32,7 +32,7 @@ const CORE_COURSES: Course[] = [
             orderIndex: 1,
             videoId: "rfscVS0vtbw",
             channelName: "freeCodeCamp.org",
-            durationSec: 720,
+            durationSec: 16012,
             startSeconds: 0,
             summary:
               "Learn how the Python interpreter executes code, setting up VS Code, and writing clean print statements.",
@@ -44,7 +44,7 @@ const CORE_COURSES: Course[] = [
             orderIndex: 2,
             videoId: "kqtD5dpn9C8",
             channelName: "Corey Schafer",
-            durationSec: 1040,
+            durationSec: 3606,
             startSeconds: 0,
             summary:
               "Mastering f-strings, string methods, slicing, and memory referencing in Python.",
@@ -56,7 +56,7 @@ const CORE_COURSES: Course[] = [
             orderIndex: 3,
             videoId: "DZwmZ8Usvnk",
             channelName: "Corey Schafer",
-            durationSec: 960,
+            durationSec: 988,
             startSeconds: 0,
             summary:
               "Using if, elif, else statements and short-circuit boolean evaluations.",
@@ -78,7 +78,7 @@ const CORE_COURSES: Course[] = [
             orderIndex: 1,
             videoId: "W8KRzm-HUcc",
             channelName: "Corey Schafer",
-            durationSec: 1320,
+            durationSec: 1745,
             startSeconds: 0,
             summary:
               "Array-like behavior in Python, sorting, mutating lists, and immutable tuples.",
@@ -90,7 +90,7 @@ const CORE_COURSES: Course[] = [
             orderIndex: 2,
             videoId: "daefaLgNkw0",
             channelName: "Corey Schafer",
-            durationSec: 1180,
+            durationSec: 599,
             startSeconds: 0,
             summary:
               "O(1) key-value lookups, dictionary methods, set intersections, and differences.",
@@ -103,7 +103,7 @@ const CORE_COURSES: Course[] = [
             orderIndex: 3,
             videoId: "6iF8Xb7Z3wQ",
             channelName: "Corey Schafer",
-            durationSec: 1100,
+            durationSec: 614,
             startSeconds: 0,
             summary:
               "Looping patterns, enumerate, zip, and idiomatic Python list comprehensions.",
@@ -125,7 +125,7 @@ const CORE_COURSES: Course[] = [
             orderIndex: 1,
             videoId: "9Os0o3wzS_I",
             channelName: "Corey Schafer",
-            durationSec: 1200,
+            durationSec: 1308,
             startSeconds: 0,
             summary:
               "Pure functions, positional arguments, keyword arguments, and scope rules.",
@@ -137,7 +137,7 @@ const CORE_COURSES: Course[] = [
             orderIndex: 2,
             videoId: "ZDa-Z5JzLYM",
             channelName: "Corey Schafer",
-            durationSec: 1400,
+            durationSec: 924,
             startSeconds: 0,
             summary:
               "Understanding self, __init__ constructor, instance vs class variables.",
@@ -149,7 +149,7 @@ const CORE_COURSES: Course[] = [
             orderIndex: 3,
             videoId: "RSl87lqOXDE",
             channelName: "Corey Schafer",
-            durationSec: 1350,
+            durationSec: 1180,
             startSeconds: 0,
             summary:
               "Subclasses, method overriding, super() patterns, and modular OOP design.",
@@ -171,7 +171,7 @@ const CORE_COURSES: Course[] = [
             orderIndex: 1,
             videoId: "NIWwJbo-9_8",
             channelName: "Corey Schafer",
-            durationSec: 960,
+            durationSec: 634,
             startSeconds: 0,
             summary:
               "Handling runtime crashes gracefully and creating custom exception classes.",
@@ -211,7 +211,7 @@ const CORE_COURSES: Course[] = [
             orderIndex: 1,
             videoId: "WUvTyaaNkzM",
             channelName: "3Blue1Brown",
-            durationSec: 1024,
+            durationSec: 1025,
             startSeconds: 0,
             summary:
               "How finding the area of a circle naturally bridges algebra and calculus.",
@@ -223,7 +223,7 @@ const CORE_COURSES: Course[] = [
             orderIndex: 2,
             videoId: "9vKqVkMQHKk",
             channelName: "3Blue1Brown",
-            durationSec: 1042,
+            durationSec: 1010,
             startSeconds: 0,
             summary:
               "Instantaneous velocity and the geometric meaning of dx and dt.",
@@ -235,7 +235,7 @@ const CORE_COURSES: Course[] = [
             orderIndex: 3,
             videoId: "S0_qX4VJhMQ",
             channelName: "3Blue1Brown",
-            durationSec: 1118,
+            durationSec: 1054,
             startSeconds: 0,
             summary:
               "Powers, squares, and geometric nudges that produce polynomial derivatives.",
@@ -257,7 +257,7 @@ const CORE_COURSES: Course[] = [
             orderIndex: 1,
             videoId: "YG15m2VwSjA",
             channelName: "3Blue1Brown",
-            durationSec: 980,
+            durationSec: 956,
             startSeconds: 0,
             summary:
               "Why product rules look like expanding rectangles, and how chain rules compose rates.",
@@ -269,7 +269,7 @@ const CORE_COURSES: Course[] = [
             orderIndex: 2,
             videoId: "FnJqaIESC2s",
             channelName: "3Blue1Brown",
-            durationSec: 1170,
+            durationSec: 759,
             startSeconds: 0,
             summary:
               "Accumulation, continuous addition, Riemann sums, and visual areas under curves.",
@@ -281,7 +281,7 @@ const CORE_COURSES: Course[] = [
             orderIndex: 3,
             videoId: "rfG8ce4nNh0",
             channelName: "3Blue1Brown",
-            durationSec: 1055,
+            durationSec: 1246,
             startSeconds: 0,
             summary:
               "Why differentiation and integration are inverse operations.",
@@ -303,7 +303,7 @@ const CORE_COURSES: Course[] = [
             orderIndex: 1,
             videoId: "3d6DsjIBzJ4",
             channelName: "3Blue1Brown",
-            durationSec: 1335,
+            durationSec: 1340,
             startSeconds: 0,
             summary:
               "How matching higher-order derivatives allows polynomial approximations of functions.",
@@ -315,7 +315,7 @@ const CORE_COURSES: Course[] = [
             orderIndex: 2,
             videoId: "kfF40MiS7zA",
             channelName: "3Blue1Brown",
-            durationSec: 1085,
+            durationSec: 1107,
             startSeconds: 0,
             summary:
               "A rigorous yet intuitive definition of limits in calculus.",
@@ -355,7 +355,7 @@ const CORE_COURSES: Course[] = [
             orderIndex: 1,
             videoId: "rGPpQdbDbwo",
             channelName: "Lee Robinson",
-            durationSec: 850,
+            durationSec: 948,
             startSeconds: 0,
             summary:
               "Network boundary rules, serialization, and keeping sensitive code on the server.",
@@ -378,7 +378,7 @@ const CORE_COURSES: Course[] = [
             orderIndex: 1,
             videoId: "wm5gMKuwSYk",
             channelName: "Jack Herrington",
-            durationSec: 1100,
+            durationSec: 12389,
             startSeconds: 0,
             summary:
               "Advanced layout hierarchies, error boundaries, loading skeletons, and intercepting routes.",
@@ -390,7 +390,7 @@ const CORE_COURSES: Course[] = [
             orderIndex: 2,
             videoId: "dDpZfOQBMaU",
             channelName: "Jack Herrington",
-            durationSec: 1020,
+            durationSec: 627,
             startSeconds: 0,
             summary:
               "Mutating data without API boilerplate, Zod schema validation, and revalidatePath.",
@@ -412,7 +412,7 @@ const CORE_COURSES: Course[] = [
             orderIndex: 1,
             videoId: "1MTyCvS05V4",
             channelName: "CodeWithAntonio",
-            durationSec: 1400,
+            durationSec: 28857,
             startSeconds: 0,
             summary:
               "Google OAuth, JWT session strategy, middleware protection, and user associations.",
@@ -452,7 +452,7 @@ const CORE_COURSES: Course[] = [
             orderIndex: 1,
             videoId: "Rt6beTKDtqY",
             channelName: "Zach Star",
-            durationSec: 993,
+            durationSec: 994,
             startSeconds: 0,
             summary:
               "Overview of linear algebra, calculus, and probability matrices used in ML models.",
@@ -465,7 +465,7 @@ const CORE_COURSES: Course[] = [
             orderIndex: 2,
             videoId: "Gv9_4yMHFhI",
             channelName: "StatQuest with Josh Starmer",
-            durationSec: 740,
+            durationSec: 765,
             startSeconds: 0,
             summary:
               "Classification, regression, clustering, overfitting, and test/train validation splits.",
@@ -487,7 +487,7 @@ const CORE_COURSES: Course[] = [
             orderIndex: 1,
             videoId: "aircAruvnKk",
             channelName: "3Blue1Brown",
-            durationSec: 1150,
+            durationSec: 1120,
             startSeconds: 0,
             summary:
               "Layers, weights, biases, and activation functions for digit recognition.",
@@ -499,7 +499,7 @@ const CORE_COURSES: Course[] = [
             orderIndex: 2,
             videoId: "IHZwWFHWa-w",
             channelName: "3Blue1Brown",
-            durationSec: 1260,
+            durationSec: 1233,
             startSeconds: 0,
             summary:
               "Loss functions, high-dimensional gradient vectors, and optimization landscapes.",
@@ -511,7 +511,7 @@ const CORE_COURSES: Course[] = [
             orderIndex: 3,
             videoId: "Ilg3gGewQ5U",
             channelName: "3Blue1Brown",
-            durationSec: 835,
+            durationSec: 767,
             startSeconds: 0,
             summary:
               "The chain rule applied backward through computational graphs to compute weight gradients.",

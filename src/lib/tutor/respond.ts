@@ -110,8 +110,38 @@ export async function tutorTurn(input: {
   }
 
   return {
-    reply: parsed.data.reply,
+    reply: redactUngroundedTimes(parsed.data.reply, input.grounding),
     suggestions: parsed.data.suggestions.slice(0, 3),
     action: sanitizeAction(parsed.data.action, input.ctx, input.grounding),
   };
+}
+
+const TIMESTAMP = /\b(\d{1,3}):([0-5]\d)\b/g;
+
+/**
+ * Removes timestamps the grounding does not support.
+ *
+ * The instruction not to name times is not reliably obeyed: asked where CS50's
+ * memory lecture reaches pointers, an ungrounded tutor answered "around the
+ * 23:44 mark" — right, as it happens, because the model has seen that lecture
+ * before, but produced the same way it would have produced a wrong one. Times
+ * the learner sees now trace back to sections we actually derived, or they do
+ * not appear at all.
+ */
+function redactUngroundedTimes(
+  reply: string,
+  grounding?: LessonGroundingData | null
+): string {
+  const allowed = new Set<number>();
+  for (const section of grounding?.sections ?? []) {
+    // Both the rounded-down minute and the exact second read as the same
+    // moment to a learner, so accept either spelling of a known start.
+    allowed.add(section.startSeconds);
+    allowed.add(section.startSeconds - (section.startSeconds % 60));
+  }
+
+  return reply.replace(TIMESTAMP, (match, mins: string, secs: string) => {
+    const total = Number(mins) * 60 + Number(secs);
+    return allowed.has(total) ? match : "later in the video";
+  });
 }
