@@ -16,6 +16,7 @@ import type {
   UserLearningProfile,
 } from "../../types/course";
 import { useSession } from "next-auth/react";
+import { toast } from "@/hooks/use-toast";
 import { CURATED_COURSES } from "@/lib/coursesData";
 import { calculateCourseProgress } from "@/lib/courseService";
 
@@ -313,7 +314,22 @@ export const CourseProvider = ({ children }: { children: ReactNode }) => {
         ).then((r) => {
           if (r?.enrollment) {
             setEnrollments((prev) => ({ ...prev, [courseId]: r.enrollment }));
+            return;
           }
+          // The server refused (most often a course that exists only in the
+          // static catalogue). Signed-in progress is never written to local
+          // storage, so keeping the optimistic row would show progress that
+          // silently vanishes on reload. Drop it and say so.
+          setEnrollments((prev) => {
+            const next = { ...prev };
+            delete next[courseId];
+            return next;
+          });
+          toast({
+            title: "Could not save your enrolment",
+            description: "Please try again.",
+            variant: "destructive",
+          });
         });
       }
       return newEnrollment;

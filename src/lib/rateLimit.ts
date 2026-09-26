@@ -13,6 +13,10 @@ export const PLAYLIST_IMPORT_COST = 150;
  * shared YouTube key: four generations per user per hour.
  */
 export const GENERATION_COST = 2_500;
+/** One tutor turn: a model call with a short prompt and a short answer. */
+export const TUTOR_MESSAGE_COST = 100;
+/** One challenge review: a longer prompt carrying the student's code. */
+export const CHALLENGE_REVIEW_COST = 150;
 
 export type ChargeResult =
   { tokensRemaining: number } | { error: string; status: 429 | 500 };

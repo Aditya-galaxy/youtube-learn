@@ -15,6 +15,8 @@ export interface TutorMessage {
   text: string;
   timestamp: Date;
   suggestions?: string[];
+  /** A failure notice rather than tutoring, rendered so the learner can tell. */
+  isError?: boolean;
 }
 
 export interface TutorLearningContext {
@@ -124,7 +126,14 @@ export const TutorProvider: React.FC<{ children: ReactNode }> = ({
         });
 
         if (!res.ok) {
-          throw new Error("Chat request failed");
+          const body = await res.json().catch(() => ({}));
+          throw new Error(
+            typeof body.error === "string"
+              ? body.error
+              : res.status === 401
+                ? "Sign in to chat with the tutor."
+                : "The tutor could not answer just now. Please try again."
+          );
         }
 
         const data = await res.json();
@@ -145,21 +154,21 @@ export const TutorProvider: React.FC<{ children: ReactNode }> = ({
         setMessages((prev) => [...prev, tutorReply]);
       } catch (err) {
         console.error("[TutorContext] Error sending message:", err);
-        // Fallback pedagogical response
-        const fallbackReply: TutorMessage = {
-          id: `tutor-${Date.now()}`,
-          sender: "tutor",
-          text: `Great question regarding **${
-            learningContext.lessonTitle || "this topic"
-          }**!\n\nHere is how I recommend breaking it down:\n1. **First, grasp the mental model**: Think of this concept as a system with defined inputs and invariants.\n2. **Next, check the hands-on lab**: Try modifying the starter code or reviewing the visual diagram tab.\n3. **Active retrieval**: Can you explain to me in your own words what happens when this executes?`,
-          timestamp: new Date(),
-          suggestions: [
-            "Break down the challenge for me",
-            "Show me an analogy",
-            "What should I watch next?",
-          ],
-        };
-        setMessages((prev) => [...prev, fallbackReply]);
+        // Report the failure instead of improvising a reply the tutor never
+        // gave: canned guidance dressed as an answer is worse than none.
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `tutor-error-${Date.now()}`,
+            sender: "tutor",
+            text:
+              err instanceof Error
+                ? err.message
+                : "The tutor is unavailable right now. Please try again.",
+            timestamp: new Date(),
+            isError: true,
+          },
+        ]);
       } finally {
         setIsTyping(false);
       }

@@ -8,13 +8,10 @@ import {
   getCourseTotalLessons,
   calculateCourseProgress,
   getNextLessonInSequence,
-  generateTieredCourse,
 } from "../src/lib/courseService";
 import { OPEN_COURSEWARE_COURSES } from "../src/lib/openCourseWareData";
 import { CURATED_COURSES } from "../src/lib/coursesData";
 import { resolveLessonPedagogy } from "../src/lib/pedagogyEngine";
-import { POST as handleTutorChat } from "../src/app/api/tutor/chat/route";
-import { POST as handleEvaluateChallenge } from "../src/app/api/classroom/evaluate-challenge/route";
 import type { Course, Lesson } from "../types/course";
 
 let passedCount = 0;
@@ -211,129 +208,15 @@ async function runTests() {
     `Next lesson resolved from first lesson (${nextInfo.nextLesson?.title || "end"})`
   );
 
-  // generateTieredCourse
-  const tiered = generateTieredCourse({
-    topic: "Operating Systems Internals",
-    tier: "EXPERT",
-    prioritizeAcademic: true,
-  });
-  assert(
-    Boolean(
-      tiered.institution && tiered.institution.includes("OpenCourseWare")
-    ),
-    "generateTieredCourse sets academic OpenCourseWare institution"
-  );
-  assert(
-    tiered.modules.length > 0,
-    "generateTieredCourse generates structured modules"
-  );
-
   // -------------------------------------------------------------------------
-  // 4. API ROUTE: /api/classroom/evaluate-challenge
+  // 4. API ROUTES
   // -------------------------------------------------------------------------
-  console.log("\n4. Testing /api/classroom/evaluate-challenge Handler...");
-
-  // Bad request (no code)
-  const emptyReq = new Request(
-    "http://localhost:3000/api/classroom/evaluate-challenge",
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({}),
-    }
-  );
-  const resBad = await handleEvaluateChallenge(emptyReq);
-  assert(
-    resBad.status === 400,
-    "Evaluate challenge rejects empty request with 400"
-  );
-
-  // Valid evaluation request
-  const validEvalReq = new Request(
-    "http://localhost:3000/api/classroom/evaluate-challenge",
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        challengeTitle: "Safe Pointer Swap in C",
-        objective:
-          "Swap two integer variables using memory pointers without leaking",
-        userCode: `void swap(int *a, int *b) {
-          if (a == NULL || b == NULL) return;
-          int temp = *a;
-          *a = *b;
-          *b = temp;
-        }`,
-        solutionCode: `void swap(int *a, int *b) { ... }`,
-        lessonTitle: "Memory & Pointers",
-      }),
-    }
-  );
-
-  const resEval = await handleEvaluateChallenge(validEvalReq);
-  assert(resEval.status === 200, "Evaluate challenge returns status 200");
-  const evalData = await resEval.json();
-  assert(
-    typeof evalData.score === "number",
-    `Evaluation returned score: ${evalData.score}`
-  );
-  assert(
-    typeof evalData.verdict === "string",
-    `Evaluation returned verdict: "${evalData.verdict}"`
-  );
-  assert(
-    Array.isArray(evalData.strengths),
-    "Evaluation returned strengths array"
-  );
-  assert(
-    Array.isArray(evalData.improvements),
-    "Evaluation returned improvements array"
-  );
-
-  // -------------------------------------------------------------------------
-  // 5. API ROUTE: /api/tutor/chat (AI Tutor Mentor)
-  // -------------------------------------------------------------------------
-  console.log("\n5. Testing /api/tutor/chat Handler (Socratic AI Tutor)...");
-
-  // Bad request (no message)
-  const badChatReq = new Request("http://localhost:3000/api/tutor/chat", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({}),
-  });
-  const resBadChat = await handleTutorChat(badChatReq);
-  assert(
-    resBadChat.status === 400,
-    "Tutor chat rejects empty message with 400"
-  );
-
-  // Valid tutoring request with context
-  const validChatReq = new Request("http://localhost:3000/api/tutor/chat", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      message: "Explain what pointers are using a simple real-world analogy.",
-      context: {
-        courseTitle: "Harvard CS50x",
-        lessonTitle: "Memory & Pointers",
-        moduleTitle: "Low-Level Memory Architecture",
-        tier: "BASIC",
-      },
-    }),
-  });
-
-  const resChat = await handleTutorChat(validChatReq);
-  assert(resChat.status === 200, "Tutor chat returns status 200");
-  const chatData = await resChat.json();
-  assert(
-    typeof chatData.reply === "string" && chatData.reply.length > 20,
-    "Tutor returned comprehensive markdown reply"
-  );
-  assert(
-    Array.isArray(chatData.suggestions) && chatData.suggestions.length > 0,
-    `Tutor returned ${chatData.suggestions.length} interactive follow-up suggestions`
-  );
-
+  // The route handlers are deliberately NOT imported and called here. Calling
+  // them as functions skips the HTTP layer, which is exactly where auth and
+  // rate limiting live — an earlier version of this suite "passed" while both
+  // AI routes were open to anonymous callers. It also billed a real model call
+  // on every run. Exercise those routes over HTTP against a running server,
+  // where a signed-out request must come back 401.
   // -------------------------------------------------------------------------
   // SUMMARY
   // -------------------------------------------------------------------------

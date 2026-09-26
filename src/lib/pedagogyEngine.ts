@@ -14,6 +14,13 @@ export interface ResolvedPedagogy {
   diagram: LessonDiagram;
   resources: DeepDiveResource[];
   keyTakeaways: string[];
+  /**
+   * True when these artifacts came from the keyword templates rather than
+   * from material written for this lesson. The classroom says so: a generic
+   * exercise presented as "your lesson's lab" misleads the learner about how
+   * closely it tracks the video.
+   */
+  isGeneric: boolean;
 }
 
 /**
@@ -361,6 +368,7 @@ export function resolveLessonPedagogy(
       diagram: curated.diagram || fallback.diagram,
       resources: curated.resources || fallback.resources,
       keyTakeaways: curated.keyTakeaways || fallback.keyTakeaways,
+      isGeneric: !curated.challenge || !curated.quiz,
     };
   }
 
@@ -713,5 +721,6 @@ console.log(createSolution("test"));`,
     diagram,
     resources,
     keyTakeaways,
+    isGeneric: true,
   };
 }
