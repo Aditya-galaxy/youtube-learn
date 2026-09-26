@@ -15,6 +15,24 @@ Built with Next.js 15 (App Router + a small Pages-Router API surface), React 19,
 Tailwind, shadcn/ui, NextAuth and Prisma/PostgreSQL, with Gemini on Vertex AI for course
 generation and tutoring. It runs on Cloud Run against Cloud SQL in Google Cloud.
 
+## How it works
+
+**Pick a course, or build one from a topic.** The catalogue carries Harvard CS50, MIT 18.06, 6.006 and 6.824, and Stanford CS229 alongside generated courses, filtered by tier and source.
+
+![The course catalogue](docs/screenshots/courses.png)
+
+**Each course is a sequence, not a playlist.** Modules and lessons in teaching order, with your progress against them.
+
+![A course page](docs/screenshots/course.png)
+
+**Lessons play the relevant part of a lecture.** Long recordings are sliced on their own chapter markers, so a lesson on installing Python starts at 1:45 and ends nine minutes later instead of dropping you into a four-hour video. Under the player: a hands-on challenge, a mental model diagram, a recall quiz, further reading and your notes.
+
+![The classroom](docs/screenshots/classroom.png)
+
+**A tutor that has watched the lecture.** It opens each lesson with what to listen for and the question it will ask afterwards, answers doubts in context, and can jump the video to a section. Its timestamps come from an outline built by watching the recording — anything it cannot support is stripped before you see it.
+
+![The AI tutor](docs/screenshots/tutor.png)
+
 ## Features
 
 - **Course generation.** A topic becomes a syllabus, then real lessons: the model plans the

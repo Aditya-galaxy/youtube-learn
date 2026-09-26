@@ -161,7 +161,7 @@ export const OPEN_COURSEWARE_COURSES: Course[] = [
     title: "MIT 18.06: Linear Algebra",
     description:
       "The world-renowned MIT mathematics curriculum taught by Prof. Gilbert Strang. Covers vector spaces, matrix factorizations, orthogonal projections, eigenvalues, and positive definite systems with deep geometric intuition.",
-    thumbnail: "https://i.ytimg.com/vi/J7DzL2_Na80/maxresdefault.jpg",
+    thumbnail: "https://i.ytimg.com/vi/J7DzL2_Na80/hqdefault.jpg",
     category: "Mathematics",
     difficulty: "INTERMEDIATE",
     tier: "INTERMEDIATE",
@@ -307,7 +307,7 @@ export const OPEN_COURSEWARE_COURSES: Course[] = [
     title: "MIT 6.006: Introduction to Algorithms",
     description:
       "MIT's rigorous, fast-paced algorithmic curriculum taught by Erik Demaine and Srini Devadas. Master sorting, self-balancing trees, hashing invariants, graph traversal, and dynamic programming.",
-    thumbnail: "https://i.ytimg.com/vi/HtSuA80QTyo/maxresdefault.jpg",
+    thumbnail: "https://i.ytimg.com/vi/HtSuA80QTyo/hqdefault.jpg",
     category: "Computer Science",
     difficulty: "ADVANCED",
     tier: "ADVANCED",
@@ -465,7 +465,7 @@ export const OPEN_COURSEWARE_COURSES: Course[] = [
     title: "Stanford CS229: Machine Learning",
     description:
       "Stanford University's definitive, mathematically rigorous course on machine learning by Prof. Andrew Ng. Features deep derivations of supervised learning, SVM duals, kernel tricks, and Markov decision processes.",
-    thumbnail: "https://i.ytimg.com/vi/UzxYlbK2c7E/maxresdefault.jpg",
+    thumbnail: "https://i.ytimg.com/vi/UzxYlbK2c7E/hqdefault.jpg",
     category: "Artificial Intelligence",
     difficulty: "EXPERT",
     tier: "EXPERT",
