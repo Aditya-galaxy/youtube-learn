@@ -25,8 +25,11 @@ export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
     GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID ?? "",
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
+      // Trimmed: a secret stored from a terminal paste picks up a trailing
+      // newline, and Google answers "Error 401: invalid_client" without
+      // hinting that the id is merely one byte too long.
+      clientId: (process.env.GOOGLE_CLIENT_ID ?? "").trim(),
+      clientSecret: (process.env.GOOGLE_CLIENT_SECRET ?? "").trim(),
       // Google verifies the emails it returns, and Google is the only provider
       // here, so linking by email is safe. This replaces the hand-rolled
       // account-linking that used to run inside the signIn callback and could
