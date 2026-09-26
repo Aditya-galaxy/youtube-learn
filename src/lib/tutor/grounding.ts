@@ -2,6 +2,8 @@ import { z } from "zod";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getGeminiClient, TUTOR_MODEL } from "@/lib/ai/client";
+import { parseChaptersFromDescription } from "@/lib/youtube/chapterParser";
+import { hasSearchQuota, recordYouTubeUnits } from "@/lib/youtube/quota";
 
 /**
  * Grounding: one pass in which the model actually watches a video and reports
@@ -102,12 +104,76 @@ const RESPONSE_SCHEMA = {
   required: ["sections", "keyConcepts"],
 };
 
+/**
+ * The creator's own chapter markers, when the description carries them.
+ *
+ * These beat anything the model reports: they are exact, and the model's own
+ * sense of elapsed time degrades badly on long videos. Grounding a 4.5-hour
+ * course, its last section landed at 1:37 when the video runs 4:27, placing
+ * "Inheritance" three minutes in.
+ */
+async function fetchVideoMeta(videoId: string): Promise<{
+  chapters: { title: string; startSeconds: number }[];
+  durationSec: number;
+}> {
+  const empty = { chapters: [], durationSec: 0 };
+  const apiKey = process.env.YOUTUBE_API_KEY;
+  if (!apiKey) return empty;
+
+  try {
+    if (!(await hasSearchQuota())) return empty;
+    const url = new URL("https://www.googleapis.com/youtube/v3/videos");
+    url.searchParams.set("part", "snippet,contentDetails");
+    url.searchParams.set("id", videoId);
+    url.searchParams.set("key", apiKey);
+    const res = await fetch(url);
+    await recordYouTubeUnits(1);
+    if (!res.ok) return empty;
+
+    const body = (await res.json()) as {
+      items?: {
+        snippet: { description: string };
+        contentDetails: { duration: string };
+      }[];
+    };
+    const item = body.items?.[0];
+    if (!item) return empty;
+
+    const m = /PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/.exec(
+      item.contentDetails.duration
+    );
+    const total =
+      Number(m?.[1] ?? 0) * 3600 +
+      Number(m?.[2] ?? 0) * 60 +
+      Number(m?.[3] ?? 0);
+
+    return {
+      durationSec: total,
+      chapters: parseChaptersFromDescription(item.snippet.description, total)
+        .filter((c) => c.startSeconds <= total)
+        .map((c) => ({ title: c.title, startSeconds: c.startSeconds })),
+    };
+  } catch {
+    return empty;
+  }
+}
+
 /** Watches a video. Throws if the model or the response is unusable. */
 export async function buildVideoGrounding(videoId: string): Promise<{
   data: LessonGroundingData;
   promptTokens: number;
 }> {
   const ai = getGeminiClient();
+  const { chapters, durationSec } = await fetchVideoMeta(videoId);
+  const useChapters = chapters.length >= 3;
+
+  const instruction = useChapters
+    ? `${PROMPT}
+
+The video's own chapter markers are below. Use them as the timeline: return one section per chapter, in this order, reusing each chapter's startSeconds and title exactly, and writing the summary yourself from what you watch.
+
+${chapters.map((c) => `${c.startSeconds}s — ${c.title}`).join("\n")}`
+    : PROMPT;
 
   const response = await ai.models.generateContent({
     model: TUTOR_MODEL,
@@ -124,7 +190,7 @@ export async function buildVideoGrounding(videoId: string): Promise<{
             // frames only need to catch slides and board work.
             videoMetadata: { fps: 0.1 },
           },
-          { text: PROMPT },
+          { text: instruction },
         ],
       },
     ],
@@ -140,7 +206,25 @@ export async function buildVideoGrounding(videoId: string): Promise<{
     JSON.parse(response.text?.trim() || "{}")
   );
 
-  const sections = parsed.sections
+  // With chapters, the creator's timeline wins: the model supplies wording,
+  // and each summary is matched to the nearest chapter it was written for.
+  const timeline = useChapters
+    ? chapters.map((chapter) => {
+        const match = parsed.sections.reduce((best, s) =>
+          Math.abs(s.startSeconds - chapter.startSeconds) <
+          Math.abs(best.startSeconds - chapter.startSeconds)
+            ? s
+            : best
+        );
+        return {
+          startSeconds: chapter.startSeconds,
+          title: chapter.title,
+          summary: match?.summary ?? chapter.title,
+        };
+      })
+    : parsed.sections;
+
+  const sections = timeline
     .sort((a, b) => a.startSeconds - b.startSeconds)
     .filter(
       (s, i, all) => i === 0 || s.startSeconds > all[i - 1].startSeconds + 5
@@ -153,6 +237,16 @@ export async function buildVideoGrounding(videoId: string): Promise<{
     }));
 
   if (sections.length === 0) throw new Error("No usable sections");
+
+  // Without chapters there is nothing to anchor the model's sense of time, and
+  // on long videos it drifts: an outline whose last section sits in the first
+  // half of a recording is describing a timeline that does not exist. Better
+  // no grounding than confident wrong timestamps.
+  const last = sections[sections.length - 1].startSeconds;
+  if (!useChapters && durationSec > 0 && last < durationSec * 0.5)
+    throw new Error(
+      `Timeline covers only ${Math.round((last / durationSec) * 100)}% of the video`
+    );
 
   return {
     data: {
