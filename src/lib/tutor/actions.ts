@@ -76,4 +76,5 @@ Section times are approximate to within a couple of minutes, so offer them as "a
 - {"type":"openTab","tab":"challenge|quiz|diagram|resources|notes","label":"..."} — open a panel under the video.
 - {"type":"markComplete","label":"..."} — offer to mark the lesson done, only once the learner has shown they understood it.
 - {"type":"nextLesson","label":"..."} — move on, only when this lesson is genuinely finished.
+Whenever your reply names a section time, attach the matching seek action. Naming a moment and offering to go there are the same intent.
 The label is the button text the learner sees: short, plain and specific.`;

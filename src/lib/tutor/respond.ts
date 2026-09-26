@@ -8,6 +8,7 @@ import {
 import { describeContext, type TutorLessonContext } from "@/lib/tutor/context";
 import {
   describeGrounding,
+  type GroundingSection,
   type LessonGroundingData,
 } from "@/lib/tutor/grounding";
 
@@ -109,39 +110,79 @@ export async function tutorTurn(input: {
     return { reply: text, suggestions: [], action: null };
   }
 
+  const { reply, citedSection } = groundTimes(
+    parsed.data.reply,
+    input.grounding
+  );
+
   return {
-    reply: redactUngroundedTimes(parsed.data.reply, input.grounding),
+    reply,
     suggestions: parsed.data.suggestions.slice(0, 3),
-    action: sanitizeAction(parsed.data.action, input.ctx, input.grounding),
+    action:
+      sanitizeAction(parsed.data.action, input.ctx, input.grounding) ??
+      jumpTo(citedSection),
   };
 }
 
 const TIMESTAMP = /\b(\d{1,3}):([0-5]\d)\b/g;
 
+const mmss = (s: number) =>
+  `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
+
 /**
- * Removes timestamps the grounding does not support.
+ * Turns a section the reply pointed at into the button that goes there.
+ *
+ * Left to the model, the jump arrives only sometimes: it named a section in
+ * prose on every attempt but attached the action on none of them. Naming a
+ * moment and offering to go there are the same intent, so the button is
+ * derived from the text rather than asked for a second time.
+ */
+function jumpTo(section?: GroundingSection): TutorAction | null {
+  if (!section) return null;
+  return {
+    type: "seek",
+    seconds: section.startSeconds,
+    label:
+      `Jump to about ${mmss(section.startSeconds)} — ${section.title}`.slice(
+        0,
+        80
+      ),
+  };
+}
+
+/**
+ * Checks every timestamp in a reply against the grounding, and reports the
+ * first supported one.
  *
  * The instruction not to name times is not reliably obeyed: asked where CS50's
  * memory lecture reaches pointers, an ungrounded tutor answered "around the
  * 23:44 mark" — right, as it happens, because the model has seen that lecture
  * before, but produced the same way it would have produced a wrong one. Times
- * the learner sees now trace back to sections we actually derived, or they do
- * not appear at all.
+ * the learner sees trace back to sections we actually derived, or they do not
+ * appear at all.
  */
-function redactUngroundedTimes(
+function groundTimes(
   reply: string,
   grounding?: LessonGroundingData | null
-): string {
-  const allowed = new Set<number>();
+): { reply: string; citedSection?: GroundingSection } {
+  const bySecond = new Map<number, GroundingSection>();
   for (const section of grounding?.sections ?? []) {
     // Both the rounded-down minute and the exact second read as the same
     // moment to a learner, so accept either spelling of a known start.
-    allowed.add(section.startSeconds);
-    allowed.add(section.startSeconds - (section.startSeconds % 60));
+    bySecond.set(section.startSeconds, section);
+    bySecond.set(section.startSeconds - (section.startSeconds % 60), section);
   }
 
-  return reply.replace(TIMESTAMP, (match, mins: string, secs: string) => {
-    const total = Number(mins) * 60 + Number(secs);
-    return allowed.has(total) ? match : "later in the video";
-  });
+  let citedSection: GroundingSection | undefined;
+  const grounded = reply.replace(
+    TIMESTAMP,
+    (match, mins: string, secs: string) => {
+      const hit = bySecond.get(Number(mins) * 60 + Number(secs));
+      if (!hit) return "later in the video";
+      citedSection ??= hit;
+      return match;
+    }
+  );
+
+  return { reply: grounded, citedSection };
 }
