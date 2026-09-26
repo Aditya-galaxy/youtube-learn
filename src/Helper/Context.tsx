@@ -7,8 +7,10 @@ import React, {
   useEffect,
   useMemo,
   useState,
+  useRef,
   type ReactNode,
 } from "react";
+import { useSession } from "next-auth/react";
 import type { Video } from "../../types/video";
 import { DEMO_VIDEOS } from "@/lib/demoVideos";
 
@@ -35,6 +37,9 @@ const STORAGE_KEYS = {
   saved: "ytlearn.saved",
   watched: "ytlearn.watched",
 } as const;
+
+/** How long a video must stay open before it counts as watched. */
+const WATCHED_AFTER_MS = 30_000;
 
 const MAX_WATCHED = 200;
 
@@ -67,6 +72,8 @@ function writeStored(key: string, videos: Video[]) {
 }
 
 const Context = ({ children }: { children: ReactNode }) => {
+  const { status } = useSession();
+  const signedIn = status === "authenticated";
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
   const [library, setLibrary] = useState<Video[]>([]);
   const [saved, setSaved] = useState<Video[]>([]);
@@ -74,6 +81,7 @@ const Context = ({ children }: { children: ReactNode }) => {
   // Reading localStorage during render would make the server and client markup
   // disagree, so we hydrate after mount and only start writing once we have.
   const [hydrated, setHydrated] = useState(false);
+  const watchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     setLibrary(readStored(STORAGE_KEYS.library));
@@ -94,17 +102,61 @@ const Context = ({ children }: { children: ReactNode }) => {
     if (hydrated) writeStored(STORAGE_KEYS.watched, watched);
   }, [watched, hydrated]);
 
-  const openVideo = useCallback((video: Video) => {
-    setSelectedVideo(video);
-    setWatched((prev) =>
-      [
-        { ...video, watched: true },
-        ...prev.filter((v) => v.id !== video.id),
-      ].slice(0, MAX_WATCHED)
-    );
+  const recordWatched = useCallback(
+    (video: Video) => {
+      setWatched((prev) =>
+        [
+          { ...video, watched: true },
+          ...prev.filter((v) => v.id !== video.id),
+        ].slice(0, MAX_WATCHED)
+      );
+
+      // Signed in, the watch also goes to the account, so History and the
+      // feed's "Watched" label follow the learner across devices.
+      if (signedIn) {
+        fetch("/api/me/watched", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ videoId: video.id }),
+        }).catch(() => undefined);
+      }
+    },
+    [signedIn]
+  );
+
+  /**
+   * Opening a video used to mark it watched immediately, so a single click —
+   * or a misclick closed a second later — labelled it "Watched" and pushed it
+   * into History for good. A video counts as watched once it has been open for
+   * WATCHED_AFTER_MS, which is also roughly when YouTube counts a view.
+   */
+  const openVideo = useCallback(
+    (video: Video) => {
+      setSelectedVideo(video);
+      if (watchTimer.current) clearTimeout(watchTimer.current);
+      watchTimer.current = setTimeout(
+        () => recordWatched(video),
+        WATCHED_AFTER_MS
+      );
+    },
+    [recordWatched]
+  );
+
+  const closeVideo = useCallback(() => {
+    if (watchTimer.current) {
+      clearTimeout(watchTimer.current);
+      watchTimer.current = null;
+    }
+    setSelectedVideo(null);
   }, []);
 
-  const closeVideo = useCallback(() => setSelectedVideo(null), []);
+  // A tab closed mid-video should still count: the timer dies with the page.
+  useEffect(
+    () => () => {
+      if (watchTimer.current) clearTimeout(watchTimer.current);
+    },
+    []
+  );
 
   const libraryIds = useMemo(
     () => new Set(library.map((v) => v.id)),

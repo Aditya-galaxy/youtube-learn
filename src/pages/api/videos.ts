@@ -1,4 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
+import { decodeDeep } from "@/lib/youtube/decodeEntities";
 import { getServerSession } from "next-auth/next";
 import { google, youtube_v3 } from "googleapis";
 import { z } from "zod";
@@ -77,6 +78,26 @@ async function getRecentlySeenVideoIds(userId: string): Promise<string[]> {
 }
 
 /**
+ * Videos the user actually watched, which is not the same set as the ones the
+ * feed has served them. The feed used to mark everything it had shown before
+ * as "Watched", so a video the user had never opened came back labelled.
+ */
+async function getWatchedVideoIds(userId: string): Promise<string[]> {
+  try {
+    const watched = await prisma.viewedVideos.findMany({
+      where: { userId, watchedAt: { not: null } },
+      select: { videoId: true },
+      orderBy: { watchedAt: "desc" },
+      take: 500,
+    });
+    return watched.map((v) => v.videoId);
+  } catch (error) {
+    console.error("Error fetching watched videos:", error);
+    return [];
+  }
+}
+
+/**
  * `create()` per video inside a transaction used to abort the whole batch the
  * first time a video was returned twice, because of @@unique([userId, videoId]).
  */
@@ -97,6 +118,7 @@ async function fetchYouTubeVideos({
   searchQuery,
   pageToken,
   seenVideoIds,
+  watchedVideoIds,
   category,
   language,
   region,
@@ -106,6 +128,7 @@ async function fetchYouTubeVideos({
   searchQuery?: string;
   pageToken?: string;
   seenVideoIds: string[];
+  watchedVideoIds: string[];
   category?: string;
   language: string;
   region: string;
@@ -156,6 +179,7 @@ async function fetchYouTubeVideos({
       (videoDetails.data.items ?? []).map((item) => [item.id, item])
     );
     const seen = new Set(seenVideoIds);
+    const watchedIds = new Set(watchedVideoIds);
 
     const videos: Video[] = [];
     for (const searchItem of searchItems) {
@@ -178,19 +202,19 @@ async function fetchYouTubeVideos({
 
       videos.push({
         id: videoId,
-        title: searchItem.snippet?.title ?? "",
+        title: decodeDeep(searchItem.snippet?.title ?? ""),
         thumbnail:
           searchItem.snippet?.thumbnails?.medium?.url ??
           `https://i.ytimg.com/vi/${videoId}/mqdefault.jpg`,
-        channelName: searchItem.snippet?.channelTitle ?? "",
+        channelName: decodeDeep(searchItem.snippet?.channelTitle ?? ""),
         channelId: searchItem.snippet?.channelId ?? "",
         // Kept as an ISO string so the client can format it in the viewer's
         // locale; `toLocaleDateString()` on the server used the server locale.
         publishedAt: searchItem.snippet?.publishedAt ?? "",
         duration,
         views: detail.statistics?.viewCount ?? "0",
-        description: searchItem.snippet?.description ?? "",
-        watched: seen.has(videoId),
+        description: decodeDeep(searchItem.snippet?.description ?? ""),
+        watched: watchedIds.has(videoId),
         inLibrary: false,
       });
     }
@@ -269,7 +293,10 @@ export default async function handler(
       auth: process.env.YOUTUBE_API_KEY,
     });
 
-    const seenVideoIds = await getRecentlySeenVideoIds(userId);
+    const [seenVideoIds, watchedVideoIds] = await Promise.all([
+      getRecentlySeenVideoIds(userId),
+      getWatchedVideoIds(userId),
+    ]);
 
     // search.list (100) + videos.list (1). Recorded pessimistically even when
     // the fetch fails partway: search.list is spent the moment it is called.
@@ -278,6 +305,7 @@ export default async function handler(
       searchQuery: q,
       pageToken,
       seenVideoIds,
+      watchedVideoIds,
       category,
       language,
       region,

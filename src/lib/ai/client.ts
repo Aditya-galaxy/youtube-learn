@@ -47,7 +47,13 @@ export class GenerationError extends Error {
   constructor(
     message: string,
     readonly stage: string,
-    readonly violations: string[] = []
+    readonly violations: string[] = [],
+    /**
+     * Transient upstream conditions — a rate limit, a busy backend. The job
+     * engine waits and retries these instead of failing the build, which it
+     * used to do on the very first 429.
+     */
+    readonly retryable: boolean = false
   ) {
     super(message);
     this.name = "GenerationError";

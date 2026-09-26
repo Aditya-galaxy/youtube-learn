@@ -255,6 +255,19 @@ export async function runNextStep(jobId: string): Promise<boolean> {
       return false;
     }
     if (error instanceof GenerationError) {
+      // Transient upstream trouble: hold the step and let a later kick run it
+      // again. Failing the whole build on the first rate limit threw away the
+      // work already done and told the user to start over.
+      if (error.retryable && job.attempts < MAX_ATTEMPTS) {
+        console.warn(
+          `[jobs] ${job.id} step ${job.step} hit a transient error (${error.stage}), attempt ${job.attempts}/${MAX_ATTEMPTS}: ${error.message}`
+        );
+        await prisma.courseGenerationJob.update({
+          where: { id: job.id },
+          data: { lockedAt: null },
+        });
+        return true;
+      }
       console.error(
         `[jobs] ${job.id} failed at step ${job.step} (${error.stage}):`,
         error.message,

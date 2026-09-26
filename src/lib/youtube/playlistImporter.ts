@@ -6,6 +6,7 @@
 // Pages Router API route, which that package treats as a client module and
 // throws on at runtime. Revisit when the route moves to the App Router.
 import { google, type youtube_v3 } from "googleapis";
+import { decodeDeep } from "@/lib/youtube/decodeEntities";
 import type { Course, Lesson, Module } from "../../../types/course";
 import { parseIsoDuration } from "./duration";
 import {
@@ -63,10 +64,15 @@ export async function importYouTubePlaylist({
       return { error: "Playlist not found or is private." };
     }
 
-    const playlistTitle = playlistItem.title || "Imported YouTube Playlist";
-    const playlistDescription =
-      playlistItem.description || "Course imported from YouTube Playlist";
-    const channelName = playlistItem.channelTitle || "YouTube Creator";
+    const playlistTitle = decodeDeep(
+      playlistItem.title || "Imported YouTube Playlist"
+    );
+    const playlistDescription = decodeDeep(
+      playlistItem.description || "Course imported from YouTube Playlist"
+    );
+    const channelName = decodeDeep(
+      playlistItem.channelTitle || "YouTube Creator"
+    );
     const thumbnail =
       playlistItem.thumbnails?.maxres?.url ||
       playlistItem.thumbnails?.high?.url ||
@@ -133,7 +139,8 @@ export async function importYouTubePlaylist({
       const vid = item.contentDetails?.videoId;
       if (!vid) continue;
 
-      const title = item.snippet?.title;
+      const rawTitle = item.snippet?.title;
+      const title = rawTitle ? decodeDeep(rawTitle) : rawTitle;
       if (!title || title === "Private video" || title === "Deleted video") {
         continue;
       }
@@ -151,7 +158,7 @@ export async function importYouTubePlaylist({
         channelName,
         durationSec,
         startSeconds: 0,
-        summary: item.snippet?.description || "",
+        summary: decodeDeep(item.snippet?.description || ""),
         isCompleted: false,
       });
     }
