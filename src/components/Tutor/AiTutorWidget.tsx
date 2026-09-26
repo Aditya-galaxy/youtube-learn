@@ -17,6 +17,7 @@ import {
   Code2,
   GraduationCap,
   Loader2,
+  Play,
 } from "lucide-react";
 import { useTutorContext } from "@/Helper/TutorContext";
 
@@ -29,6 +30,7 @@ export const AiTutorWidget: React.FC = () => {
     isTyping,
     learningContext,
     sendMessage,
+    performAction,
     clearMessages,
   } = useTutorContext();
 
@@ -149,11 +151,6 @@ export const AiTutorWidget: React.FC = () => {
                   </strong>
                 </span>
               </div>
-              {learningContext.tier && (
-                <span className="shrink-0 rounded bg-primary/10 px-1.5 py-0.5 text-[9px] font-semibold text-primary">
-                  {learningContext.tier}
-                </span>
-              )}
             </div>
           )}
 
@@ -184,6 +181,16 @@ export const AiTutorWidget: React.FC = () => {
                   </div>
 
                   {/* Suggestion Chips */}
+                  {msg.action && (
+                    <button
+                      onClick={() => performAction(msg.action!)}
+                      className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-[11px] font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+                    >
+                      <Play className="h-3 w-3" />
+                      {msg.action.label}
+                    </button>
+                  )}
+
                   {msg.suggestions && msg.suggestions.length > 0 && (
                     <div className="mt-3 pt-2.5 border-t border-border/40 flex flex-wrap gap-1.5">
                       {msg.suggestions.map((suggestion, sIdx) => (
