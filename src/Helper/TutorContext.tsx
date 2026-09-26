@@ -1,11 +1,13 @@
 "use client";
 
+import type { TutorAction } from "@/lib/tutor/actions";
 import React, {
   createContext,
   useContext,
   useState,
   useEffect,
   useCallback,
+  useRef,
   ReactNode,
 } from "react";
 
@@ -17,16 +19,22 @@ export interface TutorMessage {
   suggestions?: string[];
   /** A failure notice rather than tutoring, rendered so the learner can tell. */
   isError?: boolean;
+  /** One thing the tutor offers to do in the classroom, rendered as a button. */
+  action?: TutorAction | null;
 }
 
+/**
+ * What the classroom tells the tutor. Only the lesson id travels: the server
+ * looks the rest up from the learner's account, so the tutor cannot be told it
+ * is teaching something it is not.
+ */
 export interface TutorLearningContext {
-  courseTitle?: string;
+  lessonId?: string;
   lessonTitle?: string;
-  moduleTitle?: string;
-  tier?: string;
-  summary?: string;
-  videoId?: string;
 }
+
+/** Performs a tutor action in the classroom. Registered by ClassroomPlayer. */
+export type TutorActionHandler = (action: TutorAction) => void;
 
 interface TutorContextType {
   isOpen: boolean;
@@ -37,6 +45,10 @@ interface TutorContextType {
   learningContext: TutorLearningContext;
   setLearningContext: (ctx: Partial<TutorLearningContext>) => void;
   sendMessage: (content: string) => Promise<void>;
+  /** Asks the tutor to open the lesson with a plan. Runs once per lesson. */
+  startLesson: (lessonId: string, lessonTitle: string) => void;
+  performAction: (action: TutorAction) => void;
+  registerActionHandler: (handler: TutorActionHandler | null) => void;
   askTutorWithPrompt: (
     prompt: string,
     contextOverride?: Partial<TutorLearningContext>
@@ -95,85 +107,141 @@ export const TutorProvider: React.FC<{ children: ReactNode }> = ({
     ]);
   }, []);
 
+  const actionHandlerRef = useRef<TutorActionHandler | null>(null);
+  const openedLessonRef = useRef<string | null>(null);
+
+  const registerActionHandler = useCallback(
+    (handler: TutorActionHandler | null) => {
+      actionHandlerRef.current = handler;
+    },
+    []
+  );
+
+  const performAction = useCallback((action: TutorAction) => {
+    actionHandlerRef.current?.(action);
+  }, []);
+
+  const pushError = useCallback((err: unknown) => {
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: `tutor-error-${Date.now()}`,
+        sender: "tutor",
+        text:
+          err instanceof Error
+            ? err.message
+            : "The tutor is unavailable right now. Please try again.",
+        timestamp: new Date(),
+        isError: true,
+      },
+    ]);
+  }, []);
+
+  const callTutor = useCallback(
+    async (path: string, body: Record<string, unknown>) => {
+      const res = await fetch(path, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) {
+        const payload = await res.json().catch(() => ({}));
+        throw new Error(
+          typeof payload.error === "string"
+            ? payload.error
+            : res.status === 401
+              ? "Sign in to work with the tutor."
+              : "The tutor could not answer just now. Please try again."
+        );
+      }
+      return (await res.json()) as {
+        reply?: string;
+        suggestions?: string[];
+        action?: TutorAction | null;
+      };
+    },
+    []
+  );
+
   const sendMessage = useCallback(
     async (content: string) => {
       if (!content.trim()) return;
+      const lessonId = learningContext.lessonId;
+      if (!lessonId) {
+        pushError(
+          new Error("Open a lesson and I can work through it with you.")
+        );
+        return;
+      }
 
-      const userMsg: TutorMessage = {
-        id: `user-${Date.now()}`,
-        sender: "user",
-        text: content.trim(),
-        timestamp: new Date(),
-      };
-
-      setMessages((prev) => [...prev, userMsg]);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `user-${Date.now()}`,
+          sender: "user",
+          text: content.trim(),
+          timestamp: new Date(),
+        },
+      ]);
       setIsTyping(true);
 
       try {
-        const historyForApi = messages.slice(-8).map((m) => ({
-          role: m.sender === "user" ? ("user" as const) : ("model" as const),
-          text: m.text,
-        }));
-
-        const res = await fetch("/api/tutor/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            message: content,
-            history: historyForApi,
-            context: learningContext,
-          }),
+        const data = await callTutor("/api/tutor/chat", {
+          lessonId,
+          message: content,
+          history: messages.slice(-8).map((m) => ({
+            role: m.sender === "user" ? ("user" as const) : ("model" as const),
+            text: m.text,
+          })),
         });
-
-        if (!res.ok) {
-          const body = await res.json().catch(() => ({}));
-          throw new Error(
-            typeof body.error === "string"
-              ? body.error
-              : res.status === 401
-                ? "Sign in to chat with the tutor."
-                : "The tutor could not answer just now. Please try again."
-          );
-        }
-
-        const data = await res.json();
-        const tutorReply: TutorMessage = {
-          id: `tutor-${Date.now()}`,
-          sender: "tutor",
-          text:
-            data.reply ||
-            "Let's explore that! Could you elaborate on what part felt tricky?",
-          timestamp: new Date(),
-          suggestions: data.suggestions || [
-            "Explain it another way",
-            "Give me a concrete code example",
-            "Test me with a quick question",
-          ],
-        };
-
-        setMessages((prev) => [...prev, tutorReply]);
-      } catch (err) {
-        console.error("[TutorContext] Error sending message:", err);
-        // Report the failure instead of improvising a reply the tutor never
-        // gave: canned guidance dressed as an answer is worse than none.
         setMessages((prev) => [
           ...prev,
           {
-            id: `tutor-error-${Date.now()}`,
+            id: `tutor-${Date.now()}`,
             sender: "tutor",
-            text:
-              err instanceof Error
-                ? err.message
-                : "The tutor is unavailable right now. Please try again.",
+            text: data.reply || "Could you say a little more about that?",
             timestamp: new Date(),
-            isError: true,
+            suggestions: data.suggestions,
+            action: data.action ?? null,
           },
         ]);
+      } catch (err) {
+        pushError(err);
       } finally {
         setIsTyping(false);
       }
     },
-    [learningContext, messages]
+    [callTutor, learningContext.lessonId, messages, pushError]
+  );
+
+  /** The tutor's opening move for a lesson: fired once when it is opened. */
+  const startLesson = useCallback(
+    (lessonId: string, lessonTitle: string) => {
+      setContextState({ lessonId, lessonTitle });
+      if (openedLessonRef.current === lessonId) return;
+      openedLessonRef.current = lessonId;
+
+      setIsTyping(true);
+      callTutor("/api/tutor/opener", { lessonId })
+        .then((data) => {
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: `tutor-open-${lessonId}`,
+              sender: "tutor",
+              text: data.reply || "",
+              timestamp: new Date(),
+              suggestions: data.suggestions,
+              action: data.action ?? null,
+            },
+          ]);
+        })
+        // Silent: the learner did not ask for this, so a failure banner on
+        // every lesson would be noise. Their own questions still report.
+        .catch(() => undefined)
+        .finally(() => setIsTyping(false));
+    },
+    [callTutor]
   );
 
   const askTutorWithPrompt = useCallback(
@@ -198,6 +266,9 @@ export const TutorProvider: React.FC<{ children: ReactNode }> = ({
         learningContext,
         setLearningContext,
         sendMessage,
+        startLesson,
+        performAction,
+        registerActionHandler,
         askTutorWithPrompt,
         clearMessages,
       }}

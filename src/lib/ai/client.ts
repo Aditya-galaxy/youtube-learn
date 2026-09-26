@@ -32,6 +32,15 @@ export const GENERATION_MODEL =
   process.env.GEMINI_MODEL ||
   (useVertex ? "gemini-2.5-pro" : "gemini-pro-latest");
 
+/**
+ * Tutor dialogue runs on Flash, not Pro. A tutoring turn is short, frequent
+ * and latency-sensitive — the opposite of curriculum generation — and Pro cost
+ * roughly ten times as much per turn on the chattiest surface in the app.
+ */
+export const TUTOR_MODEL =
+  process.env.TUTOR_MODEL ||
+  (useVertex ? "gemini-2.5-flash" : "gemini-flash-latest");
+
 export const MAX_OUTPUT_TOKENS = 16_000;
 
 export class GenerationError extends Error {

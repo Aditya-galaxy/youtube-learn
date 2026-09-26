@@ -104,28 +104,19 @@ export const ClassroomPlayer: React.FC<ClassroomPlayerProps> = ({
   const pedagogy = resolveLessonPedagogy(currentLesson, course, currentModule);
 
   const {
-    setLearningContext,
+    startLesson,
+    registerActionHandler,
     setIsOpen: setTutorOpen,
     askTutorWithPrompt,
   } = useTutorContext();
 
+  const playerRef = useRef<HTMLIFrameElement | null>(null);
+
+  // Opening a lesson starts the tutor on it: it introduces the lesson and
+  // says what it will ask afterwards, rather than waiting to be prompted.
   useEffect(() => {
-    setLearningContext({
-      courseTitle: course.title,
-      lessonTitle: currentLesson.title,
-      moduleTitle: currentModule?.title,
-      tier: course.tier || course.difficulty,
-      summary: currentLesson.summary,
-      videoId: currentLesson.videoId,
-    });
-  }, [
-    course.title,
-    course.tier,
-    course.difficulty,
-    currentLesson,
-    currentModule,
-    setLearningContext,
-  ]);
+    startLesson(currentLesson.id, currentLesson.title);
+  }, [currentLesson.id, currentLesson.title, startLesson]);
 
   // Auto-advance countdown
   const [countdown, setCountdown] = useState<number | null>(null);
@@ -217,6 +208,35 @@ export const ClassroomPlayer: React.FC<ClassroomPlayerProps> = ({
     }
   };
 
+  // The tutor proposes; the classroom performs. Seeking uses the IFrame API's
+  // postMessage interface, which the embed already enables.
+  useEffect(() => {
+    registerActionHandler((action) => {
+      switch (action.type) {
+        case "replaySegment":
+          playerRef.current?.contentWindow?.postMessage(
+            JSON.stringify({
+              event: "command",
+              func: "seekTo",
+              args: [currentLesson.startSeconds || 0, true],
+            }),
+            "https://www.youtube.com"
+          );
+          break;
+        case "openTab":
+          setActiveTab(action.tab);
+          break;
+        case "markComplete":
+          markLessonComplete(course.id, currentLesson.id, true);
+          break;
+        case "nextLesson":
+          advanceNow();
+          break;
+      }
+    });
+    return () => registerActionHandler(null);
+  });
+
   return (
     <div className="flex h-[calc(100vh-5rem)] flex-col bg-background">
       {/* Top Classroom Navigation Bar */}
@@ -305,6 +325,7 @@ export const ClassroomPlayer: React.FC<ClassroomPlayerProps> = ({
           {/* YouTube Video Embed */}
           <div className="relative aspect-video w-full bg-black">
             <iframe
+              ref={playerRef}
               key={`${currentLesson.id}-${currentLesson.videoId}`}
               src={`https://www.youtube.com/embed/${currentLesson.videoId}?autoplay=1&enablejsapi=1&start=${currentLesson.startSeconds || 0}${
                 currentLesson.endSeconds
