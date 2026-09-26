@@ -9,15 +9,15 @@ SERVICE="${SERVICE:-youtube-learn}"
 SQL_INSTANCE="${SQL_INSTANCE:-kronagent:us-east4:youtube-learn-pg}"
 RUNTIME_SA="${RUNTIME_SA:-youtube-learn-vertex@kronagent.iam.gserviceaccount.com}"
 
-# The public URL is stable once the service exists; the first deploy falls
-# back to NEXTAUTH_URL being filled in by a second run.
-URL="$(gcloud run services describe "$SERVICE" --project "$PROJECT" --region "$REGION" \
-  --format='value(status.url)' 2>/dev/null || true)"
+# Build the canonical <service>-<project number>.<region>.run.app URL rather
+# than reading status.url: Cloud Run also answers on a legacy hostname, and
+# whichever one the API reports is the one NextAuth hands Google as
+# redirect_uri. When that is the unregistered hostname, every sign-in fails
+# with redirect_uri_mismatch.
+PROJECT_NUMBER="$(gcloud projects describe "$PROJECT" --format='value(projectNumber)')"
+URL="https://${SERVICE}-${PROJECT_NUMBER}.${REGION}.run.app"
 
-ENV_VARS="GOOGLE_GENAI_USE_VERTEXAI=true,GOOGLE_CLOUD_PROJECT=$PROJECT,GOOGLE_CLOUD_LOCATION=global"
-if [[ -n "$URL" ]]; then
-  ENV_VARS="$ENV_VARS,NEXTAUTH_URL=$URL,APP_URL=$URL"
-fi
+ENV_VARS="GOOGLE_GENAI_USE_VERTEXAI=true,GOOGLE_CLOUD_PROJECT=$PROJECT,GOOGLE_CLOUD_LOCATION=global,NEXTAUTH_URL=$URL,APP_URL=$URL"
 
 # --no-cpu-throttling: the job worker answers 202 and keeps running its step in
 # after(); with request-based CPU it would be throttled to near zero.
@@ -36,6 +36,4 @@ gcloud run deploy "$SERVICE" \
   --set-env-vars "$ENV_VARS" \
   --set-secrets "DATABASE_URL=ytlearn-database-url:latest,DIRECT_URL=ytlearn-database-url:latest,NEXTAUTH_SECRET=ytlearn-nextauth-secret:latest,GOOGLE_CLIENT_ID=ytlearn-google-client-id:latest,GOOGLE_CLIENT_SECRET=ytlearn-google-client-secret:latest,YOUTUBE_API_KEY=ytlearn-youtube-api-key:latest,JOB_RUNNER_SECRET=ytlearn-job-runner-secret:latest"
 
-if [[ -z "$URL" ]]; then
-  echo "First deploy done. Run this script once more so NEXTAUTH_URL and APP_URL point at the service URL."
-fi
+echo "Deployed to $URL"
