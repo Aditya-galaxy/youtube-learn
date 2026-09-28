@@ -43,7 +43,7 @@ export async function POST(request: Request) {
     // everyone, so only the first learner to arrive waits a turn for it.
     after(async () => {
       try {
-        await ensureGrounding(ctx.lessonId);
+        await ensureGrounding(ctx.lessonId, { userId: auth.userId });
       } catch (error) {
         console.error("[tutor-opener] grounding failed:", error);
       }

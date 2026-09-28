@@ -313,6 +313,22 @@ model CourseGenerationJob {
 /// shared counter matters because every user draws on the same key: without
 /// it, a few course builds can exhaust the day and take the video feed down for
 /// everyone.
+/// Spend on watching videos for lesson grounding, per day.
+///
+/// A pass costs real money (roughly a sixth of a dollar for a two-hour
+/// lecture), and grounding is triggered simply by opening a lesson, so without
+/// a ceiling one busy account could run up the project's Vertex bill.
+/// Attempts are counted before the call, so failures — which bill just the
+/// same — count against the day too.
+model GroundingUsage {
+  day          String   @id
+  passes       Int      @default(0)
+  promptTokens Int      @default(0)
+  updatedAt    DateTime @updatedAt
+
+  @@map("grounding_usage")
+}
+
 model YoutubeQuotaUsage {
   day       String   @id
   unitsUsed Int      @default(0)
