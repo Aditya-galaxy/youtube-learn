@@ -2,6 +2,14 @@ import { z } from "zod";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getGeminiClient, TUTOR_MODEL } from "@/lib/ai/client";
+import { chargeTokens } from "@/lib/rateLimit";
+import {
+  DAILY_PASS_LIMIT,
+  GROUNDING_PASS_COST,
+  canBuildGrounding,
+  recordGroundingAttempt,
+  recordGroundingTokens,
+} from "@/lib/tutor/groundingBudget";
 import { parseChaptersFromDescription } from "@/lib/youtube/chapterParser";
 import { hasSearchQuota, recordYouTubeUnits } from "@/lib/youtube/quota";
 
@@ -344,7 +352,14 @@ export async function readGrounding(
  * each pay for a pass; the upsert makes the loser of that race harmless.
  */
 export async function ensureGrounding(
-  lessonId: string
+  lessonId: string,
+  options: {
+    /**
+     * Charge this user's hourly budget for the pass. Omitted only by the
+     * backfill script, which is run deliberately rather than by a visitor.
+     */
+    userId?: string;
+  } = {}
 ): Promise<LessonGroundingData | null> {
   const existing = await readGrounding(lessonId);
   if (existing) return existing;
@@ -352,7 +367,35 @@ export async function ensureGrounding(
   const window = await lessonWindow(lessonId);
   if (!window) return null;
 
+  // Already grounded for another lesson on the same video: no pass needed, so
+  // no charge. Only a genuinely new video costs anything.
+  const alreadyGrounded = await prisma.videoGrounding.findUnique({
+    where: { videoId: window.videoId },
+    select: { videoId: true },
+  });
+  if (alreadyGrounded) return readGrounding(lessonId);
+
+  if (!(await canBuildGrounding())) {
+    console.warn(
+      `[grounding] daily pass limit (${DAILY_PASS_LIMIT}) reached; ${window.videoId} stays ungrounded today`
+    );
+    return null;
+  }
+
+  if (options.userId) {
+    const charge = await chargeTokens(options.userId, GROUNDING_PASS_COST);
+    if ("error" in charge) {
+      console.warn(
+        `[grounding] ${options.userId} is out of budget for a new pass`
+      );
+      return null;
+    }
+  }
+
+  // Counted before the request: a pass that fails is billed all the same.
+  await recordGroundingAttempt();
   const { data, promptTokens } = await buildVideoGrounding(window.videoId);
+  await recordGroundingTokens(promptTokens);
 
   await prisma.videoGrounding.upsert({
     where: { videoId: window.videoId },
