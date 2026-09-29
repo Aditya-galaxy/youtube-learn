@@ -33,6 +33,52 @@ generation and tutoring. It runs on Cloud Run against Cloud SQL in Google Cloud.
 
 ![The AI tutor](docs/screenshots/tutor.png)
 
+**In-video retrieval checkpoints & active comprehension.** As lectures play, the classroom pauses at natural conceptual boundaries (Mayer's Segmenting Effect). A retrieval check appears over the video, turning passive viewing into active recall (_Roediger & Karpicke, 2006_) with instant formative feedback and an escalation bridge to the AI tutor.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Learner
+    participant Player as Classroom Player
+    participant Iframe as YouTube Embed (postMessage)
+    participant Checkpoint as In-Video Modal
+    participant Tutor as Nova AI Tutor
+
+    Learner->>Player: Watches lecture with Auto-Pause Mode ON
+    Iframe-->>Player: Time updates (currentTime: 240s)
+    Note over Player: Checkpoint boundary matched (@ 240s)
+    Player->>Iframe: postMessage("pauseVideo")
+    Player->>Checkpoint: Render Retrieval Checkpoint Overlay
+    Learner->>Checkpoint: Answers Multiple Choice
+    Checkpoint-->>Learner: Formative feedback & explanation
+    alt Learner continues
+        Learner->>Checkpoint: Click "Continue Lecture"
+        Checkpoint->>Player: onContinue()
+        Player->>Iframe: postMessage("playVideo")
+    else Learner needs clarification
+        Learner->>Checkpoint: Click "Ask Nova Tutor"
+        Checkpoint->>Tutor: Opens drawer with checkpoint context
+        Tutor-->>Learner: Provides Socratic intuition
+    end
+```
+
+### Cognitive & Grounding Architecture
+
+```mermaid
+flowchart TD
+    Video[YouTube Lecture Source] --> Grounding[Gemini Video Grounding Pass]
+    Grounding --> Cache[(Prisma: LessonGrounding Cache)]
+    Cache --> Budget[Grounding Budget & Ceiling Guard]
+
+    Budget --> Stance{Pedagogical Stance Engine}
+    Stance -->|Beginner| WorkedEx[Worked Example: Scaffolded Steps & Analogy]
+    Stance -->|Intermediate| Guided[Guided Retrieval: Predict & Bridge Gap]
+    Stance -->|Advanced| GenEffect[Generation Effect: Problem-First & Edge Cases]
+
+    Cache --> SeekJump[Action: Jump to Timestamp]
+    SeekJump --> Classroom[Classroom Player + Active Recall + Challenge Lab]
+```
+
 ## Features
 
 - **Course generation.** A topic becomes a syllabus, then real lessons: the model plans the
