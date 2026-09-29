@@ -93,6 +93,8 @@ flowchart TD
 - **Open courseware catalogue** from Harvard, MIT and Stanford. Every lesson video is checked
   against the YouTube API for existence and embeddability (`npm run verify:videos`).
 - **Practice per lesson:** hands-on challenges, active-recall quizzes, diagrams and notes.
+- **Feynman Metacognitive Calibration:** In-classroom plain-English explanation studio audited by Nova Tutor across Causal Depth, Jargon Reliance, and Missing Invariants (_Feynman Technique / Chi et al., 1989_).
+- **Cross-Course Spaced Retrieval Engine:** Daily 3-minute recall workout scheduled via 5-box Leitner intervals (`[1, 3, 7, 14, 30]` days) and dynamic Ebbinghaus forgetting curve modeling (\(R = e^{-t/S}\)), complete with instant video timestamp jump-links (_Ebbinghaus, 1885; Bjork & Bjork, 2011_).
 - **Progress on your account:** enrolments, completion and notes follow you across devices,
   with the completion percentage always recomputed server-side.
 - **Google sign-in** via NextAuth with a Prisma adapter and JWT sessions.

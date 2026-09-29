@@ -18,6 +18,7 @@ import {
 import { useCourseContext } from "@/Helper/CourseContext";
 import { CourseCard } from "@/components/Courses/CourseCard";
 import SignOutButton from "@/components/auth/SignOutButton";
+import { DailySpacedReview } from "@/components/Dashboard/DailySpacedReview";
 
 interface DashboardClientProps {
   user?: {
@@ -185,6 +186,9 @@ export const DashboardClient: React.FC<DashboardClientProps> = ({ user }) => {
           </div>
         </div>
       )}
+
+      {/* Daily Spaced Retrieval Workout */}
+      <DailySpacedReview courses={courses} enrollments={enrollments} />
 
       {/* Enrolled Courses Section */}
       <div className="mt-12">

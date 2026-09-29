@@ -12,7 +12,11 @@ import {
 import { OPEN_COURSEWARE_COURSES } from "../src/lib/openCourseWareData";
 import { CURATED_COURSES } from "../src/lib/coursesData";
 import { resolveLessonPedagogy } from "../src/lib/pedagogyEngine";
-import type { Course, Lesson } from "../types/course";
+import {
+  LEITNER_INTERVAL_DAYS,
+  buildSpacedReviewQueue,
+} from "../src/lib/spacedRepetition";
+import type { Course, Lesson, CourseEnrollment } from "../types/course";
 
 let passedCount = 0;
 let failedCount = 0;
@@ -225,7 +229,59 @@ async function runTests() {
   );
 
   // -------------------------------------------------------------------------
-  // 4. API ROUTES
+  // 4. SPACED RETRIEVAL ENGINE & FORGETTING CURVE LOGIC
+  // -------------------------------------------------------------------------
+  console.log(
+    "\n4. Testing Spaced Retrieval Engine & Leitner Interval Model..."
+  );
+
+  assert(
+    LEITNER_INTERVAL_DAYS.length === 5 && LEITNER_INTERVAL_DAYS[0] === 1,
+    "Leitner intervals defined (1, 3, 7, 14, 30 days)"
+  );
+
+  // Diagnostic queue fallback when no courses completed
+  const diagnosticQueue = buildSpacedReviewQueue(allCourses, {});
+  assert(
+    diagnosticQueue.dueCards.length > 0,
+    `Spaced review generates diagnostic cards for new learners (${diagnosticQueue.dueCards.length} cards)`
+  );
+  assert(
+    diagnosticQueue.averageRetentionPct >= 50 &&
+      diagnosticQueue.averageRetentionPct <= 100,
+    `Spaced review estimates initial memory retention (${diagnosticQueue.averageRetentionPct}%)`
+  );
+
+  // Cross-course queue with completed lessons
+  const mockEnrollment: Record<string, CourseEnrollment> = {
+    [sampleCourse.id]: {
+      id: "mock-enr-1",
+      courseId: sampleCourse.id,
+      status: "IN_PROGRESS",
+      enrolledAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+      completedLessonIds: [firstLesson.id],
+      progressPct: 25,
+      lastAccessedAt: new Date().toISOString(),
+    },
+  };
+  const activeQueue = buildSpacedReviewQueue(allCourses, mockEnrollment);
+  assert(
+    activeQueue.dueCards.length > 0,
+    `Spaced review schedules completed lesson cards (${activeQueue.dueCards.length} cards due)`
+  );
+  const sampleCard = activeQueue.dueCards[0];
+  assert(
+    Boolean(sampleCard.question && sampleCard.options.length >= 2),
+    `Card has structured question and >= 2 options ("${sampleCard.question.slice(0, 35)}...")`
+  );
+  assert(
+    sampleCard.correctIndex >= 0 &&
+      sampleCard.correctIndex < sampleCard.options.length,
+    `Card correctIndex within valid bounds (${sampleCard.correctIndex})`
+  );
+
+  // -------------------------------------------------------------------------
+  // 5. API ROUTES
   // -------------------------------------------------------------------------
   // The route handlers are deliberately NOT imported and called here. Calling
   // them as functions skips the HTTP layer, which is exactly where auth and
