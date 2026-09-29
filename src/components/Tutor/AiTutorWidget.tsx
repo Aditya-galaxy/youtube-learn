@@ -18,6 +18,7 @@ import {
   GraduationCap,
   Loader2,
   Play,
+  Brain,
 } from "lucide-react";
 import { useTutorContext } from "@/Helper/TutorContext";
 
@@ -274,6 +275,20 @@ export const AiTutorWidget: React.FC = () => {
               >
                 <HelpCircle className="h-3 w-3 text-emerald-500" />
                 Quiz Me
+              </button>
+
+              <button
+                onClick={() =>
+                  sendMessage(
+                    `Feynman Challenge: Test my understanding of ${
+                      learningContext.lessonTitle || "this lesson"
+                    }. Prompt me to explain its core mechanism in simple terms as if to a beginner, and evaluate my explanation for causal depth, missing gaps, and jargon.`
+                  )
+                }
+                className="flex items-center gap-1 whitespace-nowrap rounded-md border border-purple-500/30 bg-purple-500/10 px-2 py-1 text-purple-600 dark:text-purple-400 hover:bg-purple-500/20 transition-colors"
+              >
+                <Brain className="h-3 w-3 text-purple-500" />
+                Feynman Test
               </button>
             </div>
           </div>

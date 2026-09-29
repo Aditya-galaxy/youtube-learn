@@ -8,8 +8,11 @@ import {
   RotateCcw,
   Sparkles,
   Award,
+  Brain,
+  Bot,
 } from "lucide-react";
 import type { LessonQuizQuestion } from "../../../types/course";
+import { useTutorContext } from "@/Helper/TutorContext";
 
 interface ActiveRecallQuizProps {
   questions: LessonQuizQuestion[];
@@ -20,6 +23,8 @@ export const ActiveRecallQuiz: React.FC<ActiveRecallQuizProps> = ({
   questions,
   lessonTitle,
 }) => {
+  const { setIsOpen: setTutorOpen, askTutorWithPrompt } = useTutorContext();
+  const [feynmanText, setFeynmanText] = useState("");
   const [selectedAnswers, setSelectedAnswers] = useState<
     Record<number, number>
   >({});
@@ -34,6 +39,22 @@ export const ActiveRecallQuiz: React.FC<ActiveRecallQuizProps> = ({
   const handleReset = () => {
     setSelectedAnswers({});
     setSubmitted({});
+  };
+
+  const handleFeynmanSubmit = (e?: React.FormEvent) => {
+    e?.preventDefault();
+    if (!feynmanText.trim()) return;
+
+    setTutorOpen(true);
+    askTutorWithPrompt(
+      `Feynman Metacognitive Calibration Audit for "${lessonTitle}":\n\n` +
+        `Learner's Explanation (Attempting to teach without jargon):\n"${feynmanText.trim()}"\n\n` +
+        `Please calibrate my mental model across 3 dimensions:\n` +
+        `1. Causal Mechanism: Did I explain WHY it works, not just WHAT it is?\n` +
+        `2. Jargon Check: Did I hide behind buzzwords without unpacking them?\n` +
+        `3. Missing Invariants: What critical boundary condition or edge case did I miss?\n` +
+        `Provide an overall rating ([🟢 Crystal Clear / 🟡 Partially Calibrated / 🔴 Surface Level]) and a targeted follow-up question.`
+    );
   };
 
   const totalQuestions = questions.length;
@@ -166,6 +187,61 @@ export const ActiveRecallQuiz: React.FC<ActiveRecallQuizProps> = ({
             </div>
           );
         })}
+      </div>
+
+      {/* Feynman Metacognitive Calibration Studio */}
+      <div className="rounded-2xl border border-purple-500/20 bg-purple-500/5 p-5 sm:p-6 transition-all">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-purple-500/15 pb-4">
+          <div className="flex items-center gap-2.5">
+            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400">
+              <Brain className="h-4 w-4" />
+            </span>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="rounded bg-purple-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">
+                  Feynman Technique
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  Chi et al. Self-Explanation Effect
+                </span>
+              </div>
+              <h4 className="mt-1 font-display text-sm sm:text-base font-bold text-foreground">
+                Teach It Simply: Metacognitive Calibration
+              </h4>
+            </div>
+          </div>
+        </div>
+
+        <p className="mt-3 text-xs text-muted-foreground leading-relaxed">
+          The ultimate test of comprehension is explaining the core mechanism to
+          a beginner without using jargon. Nova will audit your explanation for
+          causal clarity, identify buzzwords, and diagnose hidden gaps.
+        </p>
+
+        <form onSubmit={handleFeynmanSubmit} className="mt-4 space-y-3">
+          <textarea
+            value={feynmanText}
+            onChange={(e) => setFeynmanText(e.target.value)}
+            placeholder={`In 2-4 sentences, explain how ${lessonTitle} works to someone who has never studied this before...`}
+            rows={3}
+            className="w-full resize-none rounded-xl border border-border bg-card p-3.5 text-xs text-foreground placeholder:text-muted-foreground/70 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+          />
+
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span className="text-[11px] text-muted-foreground">
+              Tip: Avoid buzzwords. Focus on <em>cause and effect</em>.
+            </span>
+
+            <button
+              type="submit"
+              disabled={!feynmanText.trim()}
+              className="flex items-center gap-1.5 rounded-lg bg-purple-600 px-4 py-2 text-xs font-semibold text-white shadow-sm transition-all hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Bot className="h-3.5 w-3.5" />
+              <span>Calibrate with Nova Tutor</span>
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

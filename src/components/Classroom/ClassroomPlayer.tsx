@@ -578,6 +578,20 @@ export const ClassroomPlayer: React.FC<ClassroomPlayerProps> = ({
                 onClick={() => {
                   setTutorOpen(true);
                   askTutorWithPrompt(
+                    `Feynman Challenge: Test my understanding of "${currentLesson.title}". Prompt me to explain its core mechanism in simple terms as if to a beginner, and evaluate my explanation for causal depth, missing gaps, and jargon.`
+                  );
+                }}
+                className="flex items-center gap-1.5 rounded-lg border border-purple-500/30 bg-purple-500/10 px-3.5 py-2 text-xs font-semibold text-purple-600 dark:text-purple-400 transition-all hover:bg-purple-500/20"
+                title="Self-Explanation & Metacognitive Calibration"
+              >
+                <Brain className="h-4 w-4" />
+                <span>Feynman Test</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setTutorOpen(true);
+                  askTutorWithPrompt(
                     `I'm currently at "${currentLesson.title}". Can you give me a quick roadmap of what to watch out for in this video and how to approach the challenge?`
                   );
                 }}
