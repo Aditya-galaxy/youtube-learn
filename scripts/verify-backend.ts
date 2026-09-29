@@ -16,6 +16,10 @@ import {
   LEITNER_INTERVAL_DAYS,
   buildSpacedReviewQueue,
 } from "../src/lib/spacedRepetition";
+import {
+  buildScaffoldVariants,
+  SCAFFOLDING_LEVEL_CONFIG,
+} from "../src/lib/scaffoldingEngine";
 import type { Course, Lesson, CourseEnrollment } from "../types/course";
 
 let passedCount = 0;
@@ -281,7 +285,42 @@ async function runTests() {
   );
 
   // -------------------------------------------------------------------------
-  // 5. API ROUTES
+  // 5. COGNITIVE LOAD & SCAFFOLDING FADING ENGINE
+  // -------------------------------------------------------------------------
+  console.log("\n5. Testing Cognitive Scaffolding Fading Variants...");
+
+  const sampleChallenge = cs50Pedagogy.challenge;
+  const variants = buildScaffoldVariants(sampleChallenge);
+
+  assert(
+    variants.worked_example.level === "worked_example" &&
+      variants.worked_example.code.length > 0,
+    "Level 1: Worked Example contains complete reference solution"
+  );
+  assert(
+    variants.worked_example.keyInvariants.length >= 1,
+    `Level 1: Worked Example provides key invariants (${variants.worked_example.keyInvariants.length} invariants)`
+  );
+  assert(
+    variants.completion.level === "completion" &&
+      (variants.completion.code.includes("TODO") ||
+        variants.completion.code.includes("[SCAFFOLD STEP]")),
+    "Level 2: Completion Problem contains targeted algorithmic blank"
+  );
+  assert(
+    variants.independent.level === "independent" &&
+      variants.independent.code.length > 0,
+    "Level 3: Independent Synthesis provides minimal stub without boilerplate"
+  );
+  assert(
+    SCAFFOLDING_LEVEL_CONFIG.worked_example.scaffoldPct === 100 &&
+      SCAFFOLDING_LEVEL_CONFIG.completion.scaffoldPct === 50 &&
+      SCAFFOLDING_LEVEL_CONFIG.independent.scaffoldPct === 0,
+    "Scaffolding configuration adheres to 100% -> 50% -> 0% fading model"
+  );
+
+  // -------------------------------------------------------------------------
+  // 6. API ROUTES
   // -------------------------------------------------------------------------
   // The route handlers are deliberately NOT imported and called here. Calling
   // them as functions skips the HTTP layer, which is exactly where auth and

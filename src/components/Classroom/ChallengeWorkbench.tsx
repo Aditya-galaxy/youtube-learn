@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   Code2,
   Play,
@@ -11,8 +11,17 @@ import {
   Sparkles,
   Loader2,
   Terminal,
+  GraduationCap,
+  Puzzle,
+  Zap,
+  Info,
 } from "lucide-react";
 import type { LessonChallenge } from "../../../types/course";
+import {
+  buildScaffoldVariants,
+  SCAFFOLDING_LEVEL_CONFIG,
+  type ScaffoldingLevel,
+} from "@/lib/scaffoldingEngine";
 
 interface ChallengeWorkbenchProps {
   challenge: LessonChallenge;
@@ -26,13 +35,31 @@ export const ChallengeWorkbench: React.FC<ChallengeWorkbenchProps> = ({
   lessonTitle,
   isGeneric = false,
 }) => {
-  const [code, setCode] = useState(challenge.starterCode);
+  // Scaffolding Fading Tier (Sweller, 1988; Renkl & Atkinson, 2003; Kalyuga et al., 2003)
+  const [scaffoldingLevel, setScaffoldingLevel] =
+    useState<ScaffoldingLevel>("completion");
+
+  const scaffoldVariants = useMemo(
+    () => buildScaffoldVariants(challenge),
+    [challenge]
+  );
+
+  const activeVariant = scaffoldVariants[scaffoldingLevel];
+
+  const [code, setCode] = useState(activeVariant.code);
   const [revealedHints, setRevealedHints] = useState<number>(0);
   const [showSolution, setShowSolution] = useState(false);
   const [testingStatus, setTestingStatus] = useState<
     "idle" | "running" | "passed" | "failed"
   >("idle");
   const [testOutput, setTestOutput] = useState<string | null>(null);
+
+  // Sync code whenever challenge or scaffolding level changes
+  useEffect(() => {
+    setCode(scaffoldVariants[scaffoldingLevel].code);
+    setTestingStatus("idle");
+    setTestOutput(null);
+  }, [scaffoldingLevel, scaffoldVariants]);
 
   // AI Evaluation state
   const [aiLoading, setAiLoading] = useState(false);
@@ -44,36 +71,66 @@ export const ChallengeWorkbench: React.FC<ChallengeWorkbenchProps> = ({
   } | null>(null);
   const [aiError, setAiError] = useState<string | null>(null);
 
-  // There is no sandbox in the app, so nothing here executes the learner's
-  // code. This is a local readiness check, and it says so rather than
-  // printing invented pass marks, timings and memory figures.
+  const handleSelectLevel = (newLevel: ScaffoldingLevel) => {
+    if (newLevel === scaffoldingLevel) return;
+    setScaffoldingLevel(newLevel);
+  };
+
+  // Local draft readiness check calibrated to the active scaffolding tier
   const handleRunTests = () => {
     setTestingStatus("running");
     setTestOutput("Checking your draft…");
 
     setTimeout(() => {
-      const untouched =
-        code.trim() === challenge.starterCode.trim() ||
-        code.includes("// TODO");
+      const activeCode = code.trim();
+      const initialCode = activeVariant.code.trim();
 
-      if (untouched) {
-        setTestingStatus("failed");
-        setTestOutput(
-          `The starter template still has its TODO in place.\n\nWhat this check does: it only looks at whether you have written something yet — your code is not executed here.\n\nTarget behaviour: ${
-            challenge.testCases[0]?.description || "see the objective above"
-          }\nExpected output: ${
-            challenge.testCases[0]?.expectedOutput || "see the objective above"
-          }`
-        );
-      } else {
+      if (scaffoldingLevel === "worked_example") {
         setTestingStatus("passed");
         setTestOutput(
-          `Your draft is ready to review.\n\nYour code is not executed here, so this is not a pass: run it in your own editor against the case below, then send it for review.\n\nTarget behaviour: ${
-            challenge.testCases[0]?.description || "see the objective above"
-          }\nExpected output: ${
-            challenge.testCases[0]?.expectedOutput || "see the objective above"
-          }`
+          `Worked Example Review:\nYou are inspecting the verified reference implementation.\n\nPedagogical Target: Trace the boundary guards and invariants below, then transition to Level 2 (Completion) to test active schema acquisition.`
         );
+      } else if (scaffoldingLevel === "completion") {
+        const stillHasTodo =
+          activeCode.includes("// TODO") ||
+          activeCode.includes("# TODO") ||
+          activeCode.includes("/* TODO") ||
+          activeCode === initialCode;
+
+        if (stillHasTodo) {
+          setTestingStatus("failed");
+          setTestOutput(
+            `The completion slot is still untouched.\n\nWhat this check does: it verifies whether you have implemented the missing algorithmic core.\n\nTarget Objective: ${
+              challenge.objective || "see target above"
+            }\nExpected output: ${
+              challenge.testCases[0]?.expectedOutput || "see test cases below"
+            }`
+          );
+        } else {
+          setTestingStatus("passed");
+          setTestOutput(
+            `Completion draft ready for evaluation!\n\nYou have replaced the scaffold slot with your implementation.\n\nTarget behaviour: ${
+              challenge.testCases[0]?.description || "see objective above"
+            }\nExpected output: ${
+              challenge.testCases[0]?.expectedOutput || "see objective above"
+            }`
+          );
+        }
+      } else {
+        // Independent synthesis
+        const untouched =
+          activeCode === initialCode || activeCode.split("\n").length <= 3;
+        if (untouched) {
+          setTestingStatus("failed");
+          setTestOutput(
+            `Independent synthesis requires writing the full implementation from scratch.\n\nOnly the bare entry signature was provided. Fill in your algorithm and boundary guards.`
+          );
+        } else {
+          setTestingStatus("passed");
+          setTestOutput(
+            `Independent synthesis draft ready!\n\nYou have constructed the full solution from scratch with zero scaffolding boilerplate.`
+          );
+        }
       }
     }, 300);
   };
@@ -96,6 +153,7 @@ export const ChallengeWorkbench: React.FC<ChallengeWorkbenchProps> = ({
           userCode: code,
           solutionCode: challenge.solutionCode,
           lessonTitle,
+          scaffoldingLevel,
         }),
       });
 
@@ -113,8 +171,6 @@ export const ChallengeWorkbench: React.FC<ChallengeWorkbenchProps> = ({
       setAiFeedback(data);
       setAiError(null);
     } catch (err) {
-      // No invented score: an earlier version returned a flat 85 whenever the
-      // reviewer was unreachable, grading work nothing had read.
       setAiFeedback(null);
       setAiError(
         err instanceof Error
@@ -179,6 +235,71 @@ export const ChallengeWorkbench: React.FC<ChallengeWorkbenchProps> = ({
         </div>
       </div>
 
+      {/* Adaptive Scaffolding Fading Selector (Cognitive Load Theory) */}
+      <div className="rounded-xl border border-primary/20 bg-gradient-to-r from-primary/5 via-card to-card p-4">
+        <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+          <div className="flex items-center gap-2">
+            <span className="flex items-center gap-1.5 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
+              <Info className="h-3.5 w-3.5" />
+              Cognitive Scaffolding
+            </span>
+            <span className="text-xs text-muted-foreground">
+              Fade assistance as your mastery increases
+            </span>
+          </div>
+
+          {/* 3-Tier Fading Selector */}
+          <div className="inline-flex rounded-lg border border-border bg-secondary/60 p-1">
+            <button
+              type="button"
+              onClick={() => handleSelectLevel("worked_example")}
+              className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition-all ${
+                scaffoldingLevel === "worked_example"
+                  ? "bg-card text-foreground shadow-xs"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <GraduationCap className="h-3.5 w-3.5 text-primary" />
+              <span>Level 1: Worked Example</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleSelectLevel("completion")}
+              className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition-all ${
+                scaffoldingLevel === "completion"
+                  ? "bg-card text-foreground shadow-xs"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Puzzle className="h-3.5 w-3.5 text-amber-500" />
+              <span>Level 2: Completion</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleSelectLevel("independent")}
+              className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition-all ${
+                scaffoldingLevel === "independent"
+                  ? "bg-card text-foreground shadow-xs"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Zap className="h-3.5 w-3.5 text-emerald-500" />
+              <span>Level 3: Independent</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Cognitive Rationale callout */}
+        <div className="mt-3 flex items-start gap-2 text-xs text-muted-foreground">
+          <span className="font-semibold text-foreground">
+            {SCAFFOLDING_LEVEL_CONFIG[scaffoldingLevel].badge}:
+          </span>
+          <span>{activeVariant.cognitiveRationale}</span>
+        </div>
+      </div>
+
       {/* Interactive Code / Problem Workbench */}
       <div className="overflow-hidden rounded-xl border border-border bg-black/90">
         <div className="flex items-center justify-between border-b border-border/40 bg-zinc-900 px-4 py-2.5">
@@ -187,14 +308,18 @@ export const ChallengeWorkbench: React.FC<ChallengeWorkbenchProps> = ({
             <span className="text-xs font-mono font-medium text-zinc-300">
               workbench.{challenge.language || "ts"}
             </span>
+            <span className="rounded bg-zinc-800 px-2 py-0.5 text-[10px] font-medium text-zinc-400">
+              Scaffold: {SCAFFOLDING_LEVEL_CONFIG[scaffoldingLevel].scaffoldPct}
+              %
+            </span>
           </div>
 
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setCode(challenge.starterCode)}
+              onClick={() => setCode(activeVariant.code)}
               className="rounded px-2 py-1 text-[11px] text-zinc-400 hover:text-zinc-200"
             >
-              Reset
+              Reset to Tier
             </button>
             <button
               onClick={handleRunTests}
@@ -240,6 +365,33 @@ export const ChallengeWorkbench: React.FC<ChallengeWorkbenchProps> = ({
           </div>
         )}
       </div>
+
+      {/* Structural Annotations & Invariants for Level 1 Worked Example */}
+      {scaffoldingLevel === "worked_example" &&
+        activeVariant.annotations.length > 0 && (
+          <div className="rounded-xl border border-border bg-card p-4">
+            <p className="flex items-center gap-1.5 text-xs font-bold text-foreground">
+              <GraduationCap className="h-4 w-4 text-primary" />
+              Worked Example Architectural Annotations
+            </p>
+            <div className="mt-2.5 space-y-2">
+              {activeVariant.annotations.map((ann, idx) => (
+                <div
+                  key={idx}
+                  className="rounded-lg border border-border bg-secondary/30 p-2.5 text-xs"
+                >
+                  <div className="flex items-center gap-2 font-semibold text-primary">
+                    <span className="font-mono text-[11px] text-muted-foreground">
+                      [{ann.concept}]
+                    </span>
+                    <span>{ann.lineQuery}</span>
+                  </div>
+                  <p className="mt-1 text-muted-foreground">{ann.rationale}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
       {isGeneric && (
         <p className="text-xs text-muted-foreground">

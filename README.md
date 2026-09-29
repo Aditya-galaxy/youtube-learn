@@ -95,6 +95,7 @@ flowchart TD
 - **Practice per lesson:** hands-on challenges, active-recall quizzes, diagrams and notes.
 - **Feynman Metacognitive Calibration:** In-classroom plain-English explanation studio audited by Nova Tutor across Causal Depth, Jargon Reliance, and Missing Invariants (_Feynman Technique / Chi et al., 1989_).
 - **Cross-Course Spaced Retrieval Engine:** Daily 3-minute recall workout scheduled via 5-box Leitner intervals (`[1, 3, 7, 14, 30]` days) and dynamic Ebbinghaus forgetting curve modeling (\(R = e^{-t/S}\)), complete with instant video timestamp jump-links (_Ebbinghaus, 1885; Bjork & Bjork, 2011_).
+- **Cognitive Scaffolding Fading Engine:** 3-tier instructional fading in the Challenge Workbench (`Level 1: Worked Example` 100% scaffold with architectural annotations → `Level 2: Completion Problem` 50% scaffold with target algorithmic slots → `Level 3: Independent Synthesis` 0% scaffold), preventing cognitive overload while dodging the expertise reversal effect (_Sweller, 1988; Renkl & Atkinson, 2003; Kalyuga et al., 2003_).
 - **Progress on your account:** enrolments, completion and notes follow you across devices,
   with the completion percentage always recomputed server-side.
 - **Google sign-in** via NextAuth with a Prisma adapter and JWT sessions.

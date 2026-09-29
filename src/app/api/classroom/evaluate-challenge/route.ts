@@ -5,6 +5,7 @@ import { chargeTokens, CHALLENGE_REVIEW_COST } from "@/lib/rateLimit";
 import { getGeminiClient, GENERATION_MODEL } from "@/lib/ai/client";
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
 const EvaluateSchema = z.object({
   userCode: z.string().min(1).max(8_000),
@@ -12,6 +13,9 @@ const EvaluateSchema = z.object({
   challengeTitle: z.string().max(200).optional(),
   objective: z.string().max(1_000).optional(),
   lessonTitle: z.string().max(200).optional(),
+  scaffoldingLevel: z
+    .enum(["worked_example", "completion", "independent"])
+    .optional(),
 });
 
 const ReviewSchema = z.object({
@@ -38,8 +42,14 @@ export async function POST(request: Request) {
       { status: charge.status }
     );
 
-  const { userCode, solutionCode, challengeTitle, objective, lessonTitle } =
-    parsed.data;
+  const {
+    userCode,
+    solutionCode,
+    challengeTitle,
+    objective,
+    lessonTitle,
+    scaffoldingLevel,
+  } = parsed.data;
 
   let ai;
   try {
@@ -57,6 +67,7 @@ export async function POST(request: Request) {
 
   const prompt = `You are a world-class computer science educator and code reviewer.
 Analyze this student's solution to the challenge below.
+Cognitive Scaffolding Level: ${scaffoldingLevel || "completion"} (worked_example = studying/modifying reference implementation, completion = filling in key algorithmic blanks, independent = synthesizing solution from scratch with zero boilerplate).
 
 Lesson: ${lessonTitle || "CS Concept"}
 Challenge: ${challengeTitle || "Hands-on Exercise"}
