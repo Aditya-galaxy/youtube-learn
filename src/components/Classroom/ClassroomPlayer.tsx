@@ -699,7 +699,10 @@ export const ClassroomPlayer: React.FC<ClassroomPlayerProps> = ({
             )}
 
             {activeTab === "diagram" && (
-              <MentalModelViewer diagram={pedagogy.diagram} />
+              <MentalModelViewer
+                diagram={pedagogy.diagram}
+                lessonTitle={currentLesson.title}
+              />
             )}
 
             {activeTab === "quiz" && (
