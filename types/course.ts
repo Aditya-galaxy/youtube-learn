@@ -34,6 +34,17 @@ export interface LessonQuizQuestion {
   explanation: string;
 }
 
+export interface InVideoCheckpoint {
+  id: string;
+  timestampSeconds: number;
+  label: string;
+  question: string;
+  options: string[];
+  correctIndex: number;
+  explanation: string;
+  hint?: string;
+}
+
 export interface DiagramNode {
   id: string;
   label: string;
@@ -80,6 +91,7 @@ export interface Lesson {
   isCompleted?: boolean;
   challenge?: LessonChallenge;
   quiz?: LessonQuizQuestion[];
+  checkpoints?: InVideoCheckpoint[];
   diagram?: LessonDiagram;
   resources?: DeepDiveResource[];
   keyTakeaways?: string[];

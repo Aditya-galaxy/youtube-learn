@@ -7,8 +7,8 @@ import { tutorTurn, TutorUnavailableError } from "@/lib/tutor/respond";
 import { ensureGrounding, readGrounding } from "@/lib/tutor/grounding";
 
 export const dynamic = "force-dynamic";
-// Watching a two-hour lecture takes about 90 seconds.
-export const maxDuration = 300;
+// Watching a two-hour lecture takes about 90 seconds. Capped at 60s for Vercel Hobby plan.
+export const maxDuration = 60;
 
 const OpenerSchema = z.object({ lessonId: z.string().min(1).max(64) });
 

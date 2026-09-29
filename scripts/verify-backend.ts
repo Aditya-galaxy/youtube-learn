@@ -115,6 +115,14 @@ async function runTests() {
     "CS50x active recall quiz contains 2+ questions"
   );
   assert(
+    cs50Pedagogy.checkpoints.length >= 2,
+    "CS50x active retrieval checkpoints contain 2+ in-video timestamps"
+  );
+  assert(
+    cs50Pedagogy.checkpoints[0].timestampSeconds > 0,
+    "First checkpoint has a positive timestamp"
+  );
+  assert(
     cs50Pedagogy.resources.some((r) => r.type === "ocw"),
     "CS50x resources include official Harvard problem set"
   );
@@ -179,6 +187,14 @@ async function runTests() {
     assert(
       synthPedagogy.quiz.length >= 3,
       `Active recall quiz (3 questions) generated for ${tier} tier`
+    );
+    assert(
+      synthPedagogy.checkpoints.length >= 3,
+      `In-video checkpoints generated for ${tier} tier`
+    );
+    assert(
+      synthPedagogy.checkpoints.every((cp) => cp.timestampSeconds > 0),
+      `All checkpoints have valid positive timestamps for ${tier} tier`
     );
   }
 

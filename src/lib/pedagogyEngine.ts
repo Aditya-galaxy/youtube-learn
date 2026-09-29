@@ -4,6 +4,7 @@ import type {
   Module,
   LessonChallenge,
   LessonQuizQuestion,
+  InVideoCheckpoint,
   LessonDiagram,
   DeepDiveResource,
 } from "../../types/course";
@@ -11,6 +12,7 @@ import type {
 export interface ResolvedPedagogy {
   challenge: LessonChallenge;
   quiz: LessonQuizQuestion[];
+  checkpoints: InVideoCheckpoint[];
   diagram: LessonDiagram;
   resources: DeepDiveResource[];
   keyTakeaways: string[];
@@ -342,6 +344,36 @@ func (rf *RaftNode) OnElectionTimeout() {
 };
 
 /**
+ * Maps active recall questions to in-video checkpoint timestamps.
+ * Grounded in Mayer's Segmenting Effect and Roediger's Retrieval Practice.
+ */
+export function buildInVideoCheckpoints(
+  quiz: LessonQuizQuestion[],
+  durationSec: number,
+  startSeconds: number = 0
+): InVideoCheckpoint[] {
+  if (!quiz || quiz.length === 0) return [];
+  const safeDuration = Math.max(durationSec || 300, 180);
+
+  return quiz.map((q, idx) => {
+    // Distribute checkpoints evenly across lesson progress (e.g. 35%, 70%)
+    const fraction = (idx + 1) / (quiz.length + 1);
+    const offset = Math.round(safeDuration * fraction);
+    const timestampSeconds = (startSeconds || 0) + offset;
+
+    return {
+      id: `cp-${q.id || idx}`,
+      timestampSeconds,
+      label: `Checkpoint ${idx + 1}: Concept Check`,
+      question: q.question,
+      options: q.options,
+      correctIndex: q.correctIndex,
+      explanation: q.explanation,
+    };
+  });
+}
+
+/**
  * Deterministically constructs high-fidelity, research-backed learning
  * artifacts for any given lesson based on topic heuristics and mastery tier.
  */
@@ -362,9 +394,15 @@ export function resolveLessonPedagogy(
   if (lookupKey && CURATED_PEDAGOGY[lookupKey]) {
     const curated = CURATED_PEDAGOGY[lookupKey];
     const fallback = generateSyntheticPedagogy(lesson, course, module);
+    const finalQuiz = curated.quiz || fallback.quiz;
     return {
       challenge: curated.challenge || fallback.challenge,
-      quiz: curated.quiz || fallback.quiz,
+      quiz: finalQuiz,
+      checkpoints: buildInVideoCheckpoints(
+        finalQuiz,
+        lesson.durationSec,
+        lesson.startSeconds
+      ),
       diagram: curated.diagram || fallback.diagram,
       resources: curated.resources || fallback.resources,
       keyTakeaways: curated.keyTakeaways || fallback.keyTakeaways,
@@ -718,6 +756,11 @@ console.log(createSolution("test"));`,
   return {
     challenge,
     quiz,
+    checkpoints: buildInVideoCheckpoints(
+      quiz,
+      lesson.durationSec,
+      lesson.startSeconds
+    ),
     diagram,
     resources,
     keyTakeaways,

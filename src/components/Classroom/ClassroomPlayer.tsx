@@ -20,8 +20,9 @@ import {
   Sparkles,
   X,
   Bot,
+  Brain,
 } from "lucide-react";
-import type { Course, Lesson } from "../../../types/course";
+import type { Course, Lesson, InVideoCheckpoint } from "../../../types/course";
 import { useCourseContext } from "@/Helper/CourseContext";
 import { useTutorContext } from "@/Helper/TutorContext";
 import { formatSecondsToTime } from "@/lib/youtube/chapterParser";
@@ -35,6 +36,7 @@ import { ChallengeWorkbench } from "./ChallengeWorkbench";
 import { MentalModelViewer } from "./MentalModelViewer";
 import { ActiveRecallQuiz } from "./ActiveRecallQuiz";
 import { CuratedDeepDives } from "./CuratedDeepDives";
+import { InVideoCheckpointModal } from "./InVideoCheckpointModal";
 
 interface ClassroomPlayerProps {
   course: Course;
@@ -103,6 +105,15 @@ export const ClassroomPlayer: React.FC<ClassroomPlayerProps> = ({
   );
   const pedagogy = resolveLessonPedagogy(currentLesson, course, currentModule);
 
+  // In-Video Active Comprehension Checkpoints state
+  const [comprehensionMode, setComprehensionMode] = useState(true);
+  const [activeCheckpoint, setActiveCheckpoint] =
+    useState<InVideoCheckpoint | null>(null);
+  const [triggeredCheckpoints, setTriggeredCheckpoints] = useState<Set<string>>(
+    new Set()
+  );
+  const [, setPlaybackSeconds] = useState<number>(0);
+
   const {
     startLesson,
     registerActionHandler,
@@ -111,6 +122,102 @@ export const ClassroomPlayer: React.FC<ClassroomPlayerProps> = ({
   } = useTutorContext();
 
   const playerRef = useRef<HTMLIFrameElement | null>(null);
+
+  // Reset checkpoints when lesson changes
+  useEffect(() => {
+    setActiveCheckpoint(null);
+    setTriggeredCheckpoints(new Set());
+    setPlaybackSeconds(currentLesson.startSeconds || 0);
+  }, [currentLesson.id, currentLesson.startSeconds]);
+
+  const pauseVideo = () => {
+    playerRef.current?.contentWindow?.postMessage(
+      JSON.stringify({ event: "command", func: "pauseVideo", args: [] }),
+      "*"
+    );
+  };
+
+  const playVideo = () => {
+    playerRef.current?.contentWindow?.postMessage(
+      JSON.stringify({ event: "command", func: "playVideo", args: [] }),
+      "*"
+    );
+  };
+
+  const seekTo = (seconds: number) => {
+    playerRef.current?.contentWindow?.postMessage(
+      JSON.stringify({
+        event: "command",
+        func: "seekTo",
+        args: [seconds, true],
+      }),
+      "*"
+    );
+  };
+
+  // Listen for YouTube IFrame player status and time updates to trigger in-video checkpoints
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (typeof event.data !== "string") return;
+      try {
+        const payload = JSON.parse(event.data);
+        if (payload.event === "infoDelivery" && payload.info) {
+          if (typeof payload.info.currentTime === "number") {
+            const time = payload.info.currentTime;
+            setPlaybackSeconds(time);
+
+            if (
+              comprehensionMode &&
+              !activeCheckpoint &&
+              pedagogy.checkpoints &&
+              pedagogy.checkpoints.length > 0
+            ) {
+              const cp = pedagogy.checkpoints.find(
+                (c) =>
+                  !triggeredCheckpoints.has(c.id) &&
+                  time >= c.timestampSeconds &&
+                  time <= c.timestampSeconds + 4
+              );
+
+              if (cp) {
+                pauseVideo();
+                setTriggeredCheckpoints((prev) => new Set(prev).add(cp.id));
+                setActiveCheckpoint(cp);
+              }
+            }
+          }
+        }
+      } catch {
+        // Non-JSON message from other extensions or frames
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+
+    // Initial listening handshake
+    playerRef.current?.contentWindow?.postMessage(
+      JSON.stringify({ event: "listening" }),
+      "*"
+    );
+
+    // Polling currentTime periodically
+    const interval = setInterval(() => {
+      playerRef.current?.contentWindow?.postMessage(
+        JSON.stringify({ event: "command", func: "getCurrentTime", args: [] }),
+        "*"
+      );
+    }, 800);
+
+    return () => {
+      window.removeEventListener("message", handleMessage);
+      clearInterval(interval);
+    };
+  }, [
+    comprehensionMode,
+    activeCheckpoint,
+    pedagogy.checkpoints,
+    triggeredCheckpoints,
+  ]);
 
   // Opening a lesson starts the tutor on it: it introduces the lesson and
   // says what it will ask afterwards, rather than waiting to be prompted.
@@ -343,7 +450,101 @@ export const ClassroomPlayer: React.FC<ClassroomPlayerProps> = ({
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
             />
+
+            {/* In-Video Active Checkpoint Overlay */}
+            {activeCheckpoint && (
+              <InVideoCheckpointModal
+                checkpoint={activeCheckpoint}
+                lessonTitle={currentLesson.title}
+                onContinue={() => {
+                  setActiveCheckpoint(null);
+                  playVideo();
+                }}
+                onSkip={() => {
+                  setActiveCheckpoint(null);
+                  playVideo();
+                }}
+                onAskTutor={(prompt) => {
+                  setActiveCheckpoint(null);
+                  setTutorOpen(true);
+                  askTutorWithPrompt(prompt);
+                }}
+              />
+            )}
           </div>
+
+          {/* Active Retrieval Checkpoints Bar */}
+          {pedagogy.checkpoints && pedagogy.checkpoints.length > 0 && (
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-card/60 px-6 py-2.5 text-xs">
+              <div className="flex items-center gap-2">
+                <span className="flex h-5 w-5 items-center justify-center rounded-md bg-emerald-500/10 text-emerald-500">
+                  <Brain className="h-3.5 w-3.5" />
+                </span>
+                <span className="font-semibold text-foreground">
+                  Active Retrieval Checkpoints:
+                </span>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {pedagogy.checkpoints.map((cp, idx) => {
+                    const isPassed = triggeredCheckpoints.has(cp.id);
+                    return (
+                      <button
+                        key={cp.id}
+                        onClick={() => {
+                          seekTo(cp.timestampSeconds);
+                          pauseVideo();
+                          setActiveCheckpoint(cp);
+                        }}
+                        className={`flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-mono font-medium transition-all ${
+                          isPassed
+                            ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/25"
+                            : "bg-secondary text-muted-foreground hover:bg-primary/10 hover:text-primary"
+                        }`}
+                        title={`Jump to ${cp.label} at ${formatSecondsToTime(cp.timestampSeconds)}`}
+                      >
+                        <span>
+                          #{idx + 1} {formatSecondsToTime(cp.timestampSeconds)}
+                        </span>
+                        {isPassed && <span className="text-[10px]">✓</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Mode Toggle Switch */}
+              <div className="flex items-center gap-2">
+                <label className="flex items-center gap-2 cursor-pointer select-none">
+                  <span className="text-[11px] text-muted-foreground">
+                    Auto-Pause Mode:
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setComprehensionMode(!comprehensionMode)}
+                    className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden ${
+                      comprehensionMode ? "bg-emerald-500" : "bg-muted"
+                    }`}
+                    role="switch"
+                    aria-checked={comprehensionMode}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                        comprehensionMode ? "translate-x-4" : "translate-x-0"
+                      }`}
+                    />
+                  </button>
+                  <span
+                    className={`text-[11px] font-bold ${
+                      comprehensionMode
+                        ? "text-emerald-600 dark:text-emerald-400"
+                        : "text-muted-foreground"
+                    }`}
+                  >
+                    {comprehensionMode ? "ON" : "OFF"}
+                  </span>
+                </label>
+              </div>
+            </div>
+          )}
 
           {/* Player Controls & Action Bar */}
           <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border bg-card px-6 py-4">
