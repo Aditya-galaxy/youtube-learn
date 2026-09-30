@@ -7,6 +7,7 @@ import { tutorTurn, TutorUnavailableError } from "@/lib/tutor/respond";
 import { readGrounding } from "@/lib/tutor/grounding";
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
 /**
  * The learner's situation is looked up from their account by lessonId. Course

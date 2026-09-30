@@ -211,6 +211,25 @@ export const CourseProvider = ({ children }: { children: ReactNode }) => {
         };
         setEnrollments(server);
       }
+
+      const profileRes = await fetch("/api/me/profile").catch(() => null);
+      if (!cancelled && profileRes?.ok) {
+        const { profile } = (await profileRes.json()) as {
+          profile: {
+            learningGoal?: string;
+            skillLevel?: SkillLevel;
+            weeklyHours?: number;
+          };
+        };
+        if (profile) {
+          setUserProfile((prev) => ({
+            ...prev,
+            learningGoal: profile.learningGoal || prev.learningGoal,
+            skillLevel: profile.skillLevel || prev.skillLevel,
+            weeklyHours: profile.weeklyHours ?? prev.weeklyHours,
+          }));
+        }
+      }
     })();
 
     return () => {
@@ -471,8 +490,15 @@ export const CourseProvider = ({ children }: { children: ReactNode }) => {
   const updateUserProfile = useCallback(
     (partial: Partial<UserLearningProfile>) => {
       setUserProfile((prev) => ({ ...prev, ...partial }));
+      if (signedIn) {
+        sendJson("/api/me/profile", "PUT", {
+          learningGoal: partial.learningGoal,
+          skillLevel: partial.skillLevel,
+          weeklyHours: partial.weeklyHours,
+        });
+      }
     },
-    []
+    [signedIn]
   );
 
   const value = useMemo<CourseContextType>(

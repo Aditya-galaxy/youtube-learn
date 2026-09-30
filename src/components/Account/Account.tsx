@@ -23,6 +23,21 @@ const AccountPage: React.FC = () => {
         email: session.user.email || prev.email,
         image: session.user.image || prev.image,
       }));
+
+      fetch("/api/me/profile")
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (data?.profile) {
+            setProfile((prev) => ({
+              ...prev,
+              name: data.profile.name || prev.name,
+              email: data.profile.email || prev.email,
+              image: data.profile.image || prev.image,
+              bio: data.profile.bio ?? prev.bio,
+            }));
+          }
+        })
+        .catch(() => {});
     } else if (status === "unauthenticated") {
       setProfile(DUMMY_PROFILE);
     }
@@ -43,10 +58,19 @@ const AccountPage: React.FC = () => {
   const handleProfileSave = useCallback(
     (updatedProfile: UserProfile) => {
       if (status !== "authenticated") return;
-      // Local-only for now: there is no profile write endpoint yet, so this
-      // does not survive a reload.
       setProfile(updatedProfile);
       setIsEditing(false);
+
+      fetch("/api/me/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: updatedProfile.name,
+          bio: updatedProfile.bio,
+        }),
+      }).catch((err) => {
+        console.error("Failed to save profile:", err);
+      });
     },
     [status]
   );

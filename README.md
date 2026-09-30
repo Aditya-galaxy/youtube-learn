@@ -270,16 +270,16 @@ authentication fails; this tells the two apart without triggering a sign-in.
 Requires a session. Accepts `{ event, timestamp? }`. The user identity is taken from the
 session, never from the request body.
 
+### `GET /api/me/profile` & `PUT /api/me/profile`
+
+Requires a session. `GET` returns the learner's profile (name, email, bio, learning goal, skill level, weekly hours, and activity). `PUT` persists updates directly to PostgreSQL, allowing learning goals and preferences to sync across devices.
+
 ## Known limitations
 
 - Library, Saved and History live in `localStorage`, so they do not follow a user across
-  devices. Course enrolments, progress and notes do sync; these three do not yet.
-- The tutor has not watched the videos. It teaches from lesson metadata and the course
-  structure, so it can say what to listen for but cannot quote the lecture or point at a
-  timestamp. Transcript grounding is the next step.
+  devices. Course enrolments, progress, user profiles, and notes do sync; these three do not yet.
 - Per-lesson challenges and quizzes outside the curated set come from topic templates rather
   than the lecture itself, and are labelled as general practice in the classroom.
-- Profile edits on `/profile` are in-memory only; there is no profile write endpoint.
 - `/plans` and `/settings` are UI only — there is no payment provider, so the paid tiers are
   marked as planned, and settings are not stored.
 - Notifications in the navbar are placeholder content.
