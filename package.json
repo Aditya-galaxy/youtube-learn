@@ -18,7 +18,9 @@
     "db:seed": "tsx --require ./scripts/load-env.cjs prisma/seed.ts",
     "test:backend": "tsx --require ./scripts/load-env.cjs scripts/verify-backend.ts",
     "verify:videos": "tsx --require ./scripts/load-env.cjs scripts/verify-catalogue-videos.ts",
-    "ground": "tsx --require ./scripts/load-env.cjs scripts/ground-lesson.ts"
+    "ground": "tsx --require ./scripts/load-env.cjs scripts/ground-lesson.ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@google/genai": "^2.23.0",
@@ -60,10 +62,11 @@
     "prettier": "^3.9.6",
     "tailwindcss": "^3.4.17",
     "tsx": "^4.23.13",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^3.2.7"
   },
   "engines": {
-    "node": ">=18.18.0"
+    "node": ">=20.19.0"
   },
   "description": "Distraction-free YouTube for learning: an Education-only feed, search, and a library that persists.",
   "license": "MIT",

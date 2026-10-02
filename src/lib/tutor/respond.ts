@@ -159,6 +159,10 @@ function jumpTo(section?: GroundingSection): TutorAction | null {
  * Checks every timestamp in a reply against the grounding, and reports the
  * first supported one.
  *
+ * Exported for tests: this is the guard that keeps invented timestamps away
+ * from learners, so it is worth testing directly rather than through a model
+ * call.
+ *
  * The instruction not to name times is not reliably obeyed: asked where CS50's
  * memory lecture reaches pointers, an ungrounded tutor answered "around the
  * 23:44 mark" — right, as it happens, because the model has seen that lecture
@@ -166,7 +170,7 @@ function jumpTo(section?: GroundingSection): TutorAction | null {
  * the learner sees trace back to sections we actually derived, or they do not
  * appear at all.
  */
-function groundTimes(
+export function groundTimes(
   reply: string,
   grounding?: LessonGroundingData | null
 ): { reply: string; citedSection?: GroundingSection } {
