@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import {
   Brain,
@@ -17,8 +18,11 @@ import type { Course, CourseEnrollment } from "../../../types/course";
 import {
   buildSpacedReviewQueue,
   recordCardReview,
+  loadReviewSchedules,
+  saveReviewSchedules,
   LEITNER_INTERVAL_DAYS,
   type SpacedReviewCard,
+  type ReviewScheduleRecord,
 } from "@/lib/spacedRepetition";
 
 interface DailySpacedReviewProps {
@@ -38,6 +42,9 @@ export const DailySpacedReview: React.FC<DailySpacedReviewProps> = ({
   const [sessionCompletedCount, setSessionCompletedCount] = useState(0);
   const [retentionPct, setRetentionPct] = useState(85);
   const [masteredCount, setMasteredCount] = useState(0);
+  const { status: authStatus, data: session } = useSession();
+  const signedIn = authStatus === "authenticated";
+  const syncedRef = useRef(false);
 
   const refreshQueue = useCallback(() => {
     const queue = buildSpacedReviewQueue(courses, enrollments);
@@ -54,6 +61,49 @@ export const DailySpacedReview: React.FC<DailySpacedReviewProps> = ({
     refreshQueue();
   }, [refreshQueue]);
 
+  /**
+   * Signed in, the account owns the schedule: whatever this browser built up
+   * as a guest is handed over once, then the server copy is authoritative. A
+   * review history that disappears when someone clears their browser is worth
+   * very little, and the whole point of spacing is the long horizon.
+   */
+  useEffect(() => {
+    const userId = session?.user?.id;
+    if (!signedIn || !userId || syncedRef.current) return;
+    syncedRef.current = true;
+
+    const flag = `ytlearn.reviews.migrated.${userId}`;
+    const local = loadReviewSchedules();
+
+    const run = async () => {
+      try {
+        const alreadyImported =
+          typeof window !== "undefined" && localStorage.getItem(flag);
+        if (!alreadyImported && Object.keys(local).length > 0) {
+          await fetch("/api/me/reviews/import", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ schedules: local }),
+          });
+        }
+        if (typeof window !== "undefined") localStorage.setItem(flag, "1");
+
+        const res = await fetch("/api/me/reviews");
+        if (!res.ok) return;
+        const body = (await res.json()) as {
+          schedules: Record<string, ReviewScheduleRecord>;
+        };
+        saveReviewSchedules(body.schedules ?? {});
+        refreshQueue();
+      } catch {
+        // Offline or the request failed: the local schedule still works, and
+        // the next load tries again.
+      }
+    };
+
+    run();
+  }, [signedIn, session?.user?.id, refreshQueue]);
+
   if (!mounted) {
     return null;
   }
@@ -66,8 +116,30 @@ export const DailySpacedReview: React.FC<DailySpacedReviewProps> = ({
     setIsAnswered(true);
 
     const isCorrect = index === currentCard.correctIndex;
+    // Record locally for an immediate response, then let the server's own
+    // Leitner step decide the real due date.
     recordCardReview(currentCard.id, isCorrect);
     setSessionCompletedCount((prev) => prev + 1);
+
+    if (signedIn) {
+      fetch("/api/me/reviews", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          cardId: currentCard.id,
+          correct: isCorrect,
+          lessonId: currentCard.lessonId,
+        }),
+      })
+        .then((res) => (res.ok ? res.json() : null))
+        .then((body: { schedule?: ReviewScheduleRecord } | null) => {
+          if (!body?.schedule) return;
+          const schedules = loadReviewSchedules();
+          schedules[currentCard.id] = body.schedule;
+          saveReviewSchedules(schedules);
+        })
+        .catch(() => undefined);
+    }
   };
 
   const handleNextCard = () => {

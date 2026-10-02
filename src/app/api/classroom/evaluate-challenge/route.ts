@@ -5,7 +5,6 @@ import { chargeTokens, CHALLENGE_REVIEW_COST } from "@/lib/rateLimit";
 import { getGeminiClient, GENERATION_MODEL } from "@/lib/ai/client";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 60;
 
 const EvaluateSchema = z.object({
   userCode: z.string().min(1).max(8_000),
