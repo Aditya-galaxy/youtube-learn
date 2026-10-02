@@ -89,7 +89,9 @@ flowchart TD
   module, position, what you have finished — opens each lesson with what to listen for and
   the question it will ask afterwards, corrects wrong answers instead of flattering them,
   and can act: replay the segment, open the challenge or quiz, mark the lesson done, move on.
-  It is told plainly that it has not watched the video, so it never invents timestamps.
+  It teaches from an outline built by watching the lecture itself, so it can say roughly
+  where a topic appears; any timestamp the outline does not support is stripped before the
+  learner sees it.
 - **Open courseware catalogue** from Harvard, MIT and Stanford. Every lesson video is checked
   against the YouTube API for existence and embeddability (`npm run verify:videos`).
 - **Practice per lesson:** hands-on challenges, active-recall quizzes, diagrams and notes.
@@ -277,12 +279,16 @@ Requires a session. `GET` returns the learner's profile (name, email, bio, learn
 ## Known limitations
 
 - Library, Saved and History live in `localStorage`, so they do not follow a user across
-  devices. Course enrolments, progress, user profiles, and notes do sync; these three do not yet.
+  devices. Course enrolments, progress, profiles, notes and the spaced-review schedule all
+  sync; these three do not yet.
 - Per-lesson challenges and quizzes outside the curated set come from topic templates rather
   than the lecture itself, and are labelled as general practice in the classroom.
 - `/plans` and `/settings` are UI only — there is no payment provider, so the paid tiers are
   marked as planned, and settings are not stored.
 - Notifications in the navbar are placeholder content.
+- Section times in the tutor's outline are approximate to within a couple of minutes, so they
+  are offered as "around" and never as an exact claim.
+- There is no automated test suite; `npm run verify:backend` is a smoke check over static data.
 
 ## License
 

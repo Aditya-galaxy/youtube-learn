@@ -30,6 +30,7 @@ model User {
   notes          LessonNote[]
   createdCourses Course[]              @relation("CreatedCourses")
   generationJobs CourseGenerationJob[]
+  reviews        ReviewSchedule[]
 
   @@map("users")
 }
@@ -313,6 +314,32 @@ model CourseGenerationJob {
 /// shared counter matters because every user draws on the same key: without
 /// it, a few course builds can exhaust the day and take the video feed down for
 /// everyone.
+/// A learner's spaced-retrieval schedule, one row per card.
+///
+/// The Leitner box and the due date are computed on the server, like course
+/// progress: a browser can say whether an answer was right, but not when it
+/// should next be asked. Kept in the account so a review schedule survives a
+/// cleared browser and follows the learner between devices.
+model ReviewSchedule {
+  id              String    @id @default(cuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cardId          String
+  /// The lesson the card came from, for grouping. Not a foreign key: cards
+  /// outlive the lesson rows they were generated from.
+  lessonId        String?
+  repetitionLevel Int       @default(0)
+  reviewCount     Int       @default(0)
+  lapseCount      Int       @default(0)
+  lastReviewedAt  DateTime?
+  dueAt           DateTime
+  updatedAt       DateTime  @updatedAt
+
+  @@unique([userId, cardId])
+  @@index([userId, dueAt])
+  @@map("review_schedules")
+}
+
 /// Spend on watching videos for lesson grounding, per day.
 ///
 /// A pass costs real money (roughly a sixth of a dollar for a two-hour
