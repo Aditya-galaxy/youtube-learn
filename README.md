@@ -288,7 +288,9 @@ Requires a session. `GET` returns the learner's profile (name, email, bio, learn
 - Notifications in the navbar are placeholder content.
 - Section times in the tutor's outline are approximate to within a couple of minutes, so they
   are offered as "around" and never as an exact claim.
-- There is no automated test suite; `npm run verify:backend` is a smoke check over static data.
+- Test coverage is deliberately narrow: the guards that protect learners and spend (timestamp
+  grounding, Leitner scheduling, the grounding budget, quota days, entity decoding, chapter
+  parsing). UI components and database-backed routes are not covered yet.
 
 ## License
 

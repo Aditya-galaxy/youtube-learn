@@ -36,6 +36,9 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      - name: Unit tests
+        run: npm test
+
       # No secrets needed: the build reads no database and treats missing auth
       # variables as a startup warning rather than a fatal error.
       - name: Build
